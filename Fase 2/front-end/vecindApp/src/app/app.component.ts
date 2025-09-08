@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { MenuComponent } from './menu/menu.component'; // <- ajusta la ruta si está en otra carpeta
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  standalone: true,
+  imports: [RouterOutlet, MenuComponent] // <- clave
 })
-export class AppComponent {
-  title = 'vecindApp';
-}
+export class AppComponent {}
