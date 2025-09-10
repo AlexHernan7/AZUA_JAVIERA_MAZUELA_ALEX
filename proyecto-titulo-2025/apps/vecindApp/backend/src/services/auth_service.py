@@ -15,7 +15,7 @@ from src.database.models.junta import Junta
 from src.database.models.comuna import Comuna
 from src.database.models.rol import Rol
 from src.database.models.usuario_rol import UsuarioRol
-from src.core.security import hash_password, validate_password_strength
+from src.core.security import hash_password, validate_password_strength, verify_password
 from src.schemas.auth_schemas import UsuarioRegistroRequest
 from src.schemas.user_schemas import VecinoCreate
 
@@ -76,13 +76,21 @@ class AuthService:
             await self.db.flush()  # Para obtener el ID sin hacer commit
             
             # 5. Crear perfil de vecino
+            # Limpiar número de teléfono (remover +56 si está presente)
+            telefono_limpio = user_data.telefono
+            if telefono_limpio.startswith('+56'):
+                telefono_limpio = telefono_limpio[3:]  # Remover +56
+            elif telefono_limpio.startswith('56') and len(telefono_limpio) == 11:
+                telefono_limpio = telefono_limpio[2:]  # Remover 56 si tiene 11 dígitos
+            
             vecino = Vecino(
                 id_junta=user_data.id_junta,
                 id_usuario=usuario.id_usuario,
                 nombres=user_data.nombres,
                 apellidos=user_data.apellidos,
+                email=user_data.email,  # ¡AGREGAR EMAIL!
                 fecha_nacimiento=user_data.fecha_nacimiento,
-                telefono=user_data.telefono,
+                telefono=telefono_limpio,  # Usar teléfono limpio
                 direccion=user_data.direccion,
                 id_comuna=user_data.id_comuna
             )
@@ -170,3 +178,45 @@ class AuthService:
         """
         result = await self.db.execute(select(Comuna))
         return list(result.scalars().all())
+    
+    async def login_user(self, email: str, password: str) -> tuple[Usuario, Vecino]:
+        """
+        Autentica un usuario con email y contraseña.
+        
+        Args:
+            email: Email del usuario
+            password: Contraseña en texto plano
+            
+        Returns:
+            Tupla (Usuario, Vecino) si la autenticación es exitosa
+            
+        Raises:
+            ValueError: Si las credenciales son inválidas o el usuario está inactivo
+        """
+        # 1. Buscar usuario por email
+        result = await self.db.execute(
+            select(Usuario).where(Usuario.email == email)
+        )
+        usuario = result.scalar_one_or_none()
+        
+        if not usuario:
+            raise ValueError("Credenciales inválidas")
+        
+        # 2. Verificar contraseña
+        if not verify_password(password, usuario.pass_hash):
+            raise ValueError("Credenciales inválidas")
+        
+        # 3. Verificar que el usuario esté activo
+        if not usuario.activo:
+            raise ValueError("Usuario inactivo")
+        
+        # 4. Obtener datos del vecino asociado
+        result = await self.db.execute(
+            select(Vecino).where(Vecino.id_usuario == usuario.id_usuario)
+        )
+        vecino = result.scalar_one_or_none()
+        
+        if not vecino:
+            raise ValueError("No se encontró perfil de vecino asociado")
+        
+        return usuario, vecino

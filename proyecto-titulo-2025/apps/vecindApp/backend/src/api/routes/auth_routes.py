@@ -14,9 +14,15 @@ from src.schemas.auth_schemas import (
     UsuarioRegistroRequest, 
     UsuarioRegistroResponse, 
     VecinoResponse,
-    ErrorResponse
+    ErrorResponse,
+    LoginRequest,
+    LoginResponse,
+    UserLoginData,
+    VecinoLoginData
 )
 from src.schemas.user_schemas import JuntasList, ComunasList
+from src.core.security import create_access_token
+from src.core.config import settings
 
 # Crear router para rutas de autenticación
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -194,6 +200,99 @@ async def get_juntas_by_comuna(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "error": "Error al obtener juntas",
+                "detalle": str(e)
+            }
+        )
+
+
+@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
+async def login_user(
+    credentials: LoginRequest, 
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Endpoint para autenticar usuario y generar JWT token.
+    
+    Args:
+        credentials: Email y contraseña del usuario
+        db: Sesión de base de datos
+        
+    Returns:
+        LoginResponse con token JWT y datos del usuario
+        
+    Raises:
+        HTTPException: 401 si las credenciales son inválidas
+        HTTPException: 500 si hay error interno
+    """
+    logger.info(f"🔐 Intento de login para: {credentials.email}")
+    
+    try:
+        # 1. Crear servicio de autenticación
+        auth_service = AuthService(db)
+        logger.info("✅ Servicio de autenticación creado")
+        
+        # 2. Autenticar usuario
+        logger.info(f"🔄 Autenticando usuario: {credentials.email}")
+        usuario, vecino = await auth_service.login_user(
+            credentials.email, 
+            credentials.password
+        )
+        
+        # 3. Crear JWT token
+        token_data = {
+            "sub": str(usuario.id_usuario),  # subject = user id
+            "email": usuario.email,
+            "nombres": vecino.nombres if vecino else "",
+            "apellidos": vecino.apellidos if vecino else ""
+        }
+        
+        access_token = create_access_token(token_data)
+        logger.info(f"✅ Token JWT creado para usuario ID: {usuario.id_usuario}")
+        
+        # 4. Preparar respuesta
+        user_data = UserLoginData(
+            id_usuario=usuario.id_usuario,
+            email=usuario.email,
+            nombres=vecino.nombres if vecino else "",
+            apellidos=vecino.apellidos if vecino else "",
+            activo=usuario.activo,
+            vecino=VecinoLoginData(
+                id_vecino=vecino.id_vecino,
+                nombres=vecino.nombres,
+                apellidos=vecino.apellidos,
+                telefono=vecino.telefono,
+                direccion=vecino.direccion
+            ) if vecino else None
+        )
+        
+        response = LoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.api.access_token_expire_minutes,
+            user=user_data
+        )
+        
+        logger.info(f"✅ Login exitoso para: {credentials.email}")
+        return response
+        
+    except ValueError as e:
+        # Error de credenciales inválidas
+        logger.warning(f"❌ Login fallido para {credentials.email}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Credenciales inválidas",
+                "detalle": str(e)
+            }
+        )
+        
+    except Exception as e:
+        # Error interno del servidor
+        logger.error(f"💥 Error interno en login para {credentials.email}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Error interno del servidor",
                 "detalle": str(e)
             }
         )
