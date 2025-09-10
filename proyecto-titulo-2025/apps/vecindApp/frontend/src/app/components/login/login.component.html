@@ -1,0 +1,62 @@
+<div class="min-h-screen flex items-center justify-center bg-cover bg-center "
+  style="background-image: url('images/fondo_login.png')">
+  <div class="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+  <div class="w-[92%] max-w-md rounded-3xl bg-white/70 backdrop-blur-md shadow-lg p-8">
+    <!-- Logo y título -->
+    <div class="flex flex-col items-center gap-0 mb-8">
+      
+        <img
+            src="/images/Logo_vecindapp.png"
+            alt="VecindApp"
+            class="w-52 h-auto  "
+            />
+      <p class="text-teal-600 text-2xl font-semibold">Bienvenido a tu comunidad!</p>
+    </div>
+
+    <!-- Inputs -->
+    <form class="space-y-4">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="#79909a" stroke-width="1.6" viewBox="0 0 24 24">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M22 4L12 13 2 4"/>
+          </svg>
+        </span>
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          class="w-full pl-12 pr-4 py-3 rounded-xl bg-white/80 border border-teal-200 focus:ring-2 focus:ring-teal-400 outline-none"
+        />
+      </div>
+
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="#79909a" stroke-width="1.6" viewBox="0 0 24 24">
+            <rect x="4" y="11" width="16" height="9" rx="2"/>
+            <path d="M8 11V8a4 4 0 1 1 8 0v3"/>
+          </svg>
+        </span>
+        <input
+          type="password"
+          placeholder="Contraseña"
+          class="w-full pl-12 pr-12 py-3 rounded-xl bg-white/80 border border-teal-200 focus:ring-2 focus:ring-teal-400 outline-none"
+        />
+      </div>
+
+      <!-- Botón -->
+      <button
+        type="button"
+        class="w-full py-3 rounded-xl bg-teal-500 text-white font-semibold shadow hover:opacity-90 transition"
+      >
+        Ingresar
+      </button>
+    </form>
+
+    <!-- Enlaces -->
+    <div class="text-center mt-6 space-y-2">
+      <a href="#" class="text-sm text-teal-700 hover:underline">¿Olvidaste tu contraseña?</a>
+      <br/>
+      <a href="#" class="text-sm text-teal-700 hover:underline">Registrarme como vecino</a>
+    </div>
+  </div>
+</div>

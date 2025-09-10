@@ -1,1 +1,52 @@
-<p>menu works!</p>
+<nav class="w-full bg-white/80 backdrop-blur-md shadow">
+  <div class="max-w-7xl mx-auto px-0 py-3 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 px-0">
+      <img src="images/Logo_vecindapp_menu.png" alt="VecindApp" class="h-12 w-auto">
+      <span class="text-xl font-semibold text-teal-700">VecindApp</span>
+    </div>
+
+    <!-- Links (centro en desktop) -->
+    <div class="hidden md:flex items-center justify-center gap-8">
+      <a href="#" class="text-teal-700 text-lg hover:text-teal-900 font-medium">Inicio</a>
+      <a href="#" class="text-teal-700 text-lg hover:text-teal-900 font-medium ">Quiénes somos</a>
+      <a href="#" class="text-teal-700 text-lg hover:text-teal-900 font-medium ">Quiénes somos</a>
+    </div>
+
+    <!-- Botones (derecha en desktop) -->
+    <div class="hidden md:flex items-center justify-end gap-3 ">
+      <button class="px-4 py-2  rounded-lg border border-teal-500 text-teal-600 font-medium hover:bg-teal-50 transition">
+        Iniciar sesión
+      </button>
+      <button class="px-4 py-2  rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 transition">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Botón hamburguesa (solo móvil) -->
+    <button class="md:hidden flex items-center text-teal-700 focus:outline-none"
+            (click)="toggle()">
+      <!-- Icono hamburguesa -->
+      <svg *ngIf="!menuOpen" xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+      <!-- Icono X -->
+      <svg *ngIf="menuOpen" xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Menú desplegable en móvil -->
+  <div *ngIf="menuOpen" class="md:hidden px-6 pb-4 space-y-4 bg-white/95 backdrop-blur-md">
+    <a href="#" class="block text-teal-700 text-lg font-medium hover:text-teal-900">Inicio</a>
+    <a href="#" class="block text-teal-700 text-lg font-medium hover:text-teal-900">Quiénes somos</a>
+    <hr class="border-teal-100"/>
+    <button class="w-full px-4 py-2 rounded-lg border border-teal-500 text-teal-600 font-medium hover:bg-teal-50 transition">
+      Iniciar sesión
+    </button>
+    <button class="w-full px-4 py-2 rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 transition">
+      Registrarse
+    </button>
+  </div>
+</nav>
