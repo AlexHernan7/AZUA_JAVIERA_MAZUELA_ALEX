@@ -1,31 +1,89 @@
 /* Import Bootstrap CSS */
 @use "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
 
-/* Colores personalizados estilo Tailwind */
-.text-teal-700 {
-  color: #0f766e !important; /* texto teal */
+//principal 
+html, body { height: 100%; }
+:root{
+  --ink-900: #0c2a33;   /* título muy oscuro */
+  --ink-700: #183a47;   /* subtítulo */
+  --cta-500: #f59e0b;   /* botón naranja */
+  --cta-600: #ea8a00;
+  --teal-700: #0f766e;
+  --teal-600: #0d9488;
+  --ink-900: #0c2a33;
 }
 
-.btn-teal {
-  background-color: #0d9488; /* teal base */
-  color: #fff;
-  border: 1px solid #0d9488;
-}
+/* Colores personalizados de texto */
+.text-teal-700 { color: #0f766e !important; }/* texto teal */
+.text-teal-600 { color: #0d9488 !important; }
+.ink-900 { color: #0f766e;  }     /* título oscuro */
+.ink-700{ color:#183a47;  }    /* subtítulo */
+.cta-500 {color:#f59e0b;  }    /* naranja botón */
+.cta-600 {color:#ea8a00;}
+.card-shadow {box-shadow:  10px 25px rgba(0,0,0,.08);}
 
-.btn-teal:hover {
-  background-color: #0f766e; /* teal oscuro */
-  border-color: #0f766e;
-}
+/*colores botones*/ 
+//                                      B O T O N E S
+// boton login 
+.btn-teal {  background-color: #0d9488;   color: #fff;  border: 1px solid #0d9488;}
+.btn-teal:hover {  background-color: #0f766e;   border-color: #0f766e;}
+.btn-outline-teal {  background-color: transparent;  color: #0d9488;  border: 1px solid #0d9488;}
+.btn-outline-teal:hover {  background-color: #0d9488;  color: #fff;}
 
-.btn-outline-teal {
-  background-color: transparent;
-  color: #0d9488;
-  border: 1px solid #0d9488;
-}
+// boton menu
+.btn-teal-menu {  background-color: #0f766e;   color: #fff;  border: none;}
+.btn-teal-menu:hover {  background-color: #0d9488; }
+.btn-outline-teal-menu {  border: 1px solid #0f766e;  color: #0f766e;}
+.btn-outline-teal-menu:hover {  background-color: #0f766e;  color: #fff;}
 
-.btn-outline-teal:hover {
-  background-color: #0d9488;
-  color: #fff;
-}
+// BOTON HOME
+.btn-cta{ --bs-btn-padding-y: .9rem; --bs-btn-padding-x: 1.5rem; --bs-btn-font-weight: 700; --bs-btn-font-size: clamp(1rem, 1.3vw, 1.2rem); background: var(--cta-500);
+  color:#fff; border:0; border-radius: .6rem; box-shadow: 0 8px 18px rgba(245,158,11,.35);}
+.btn-cta:hover{ background: var(--cta-600); color:#fff; }
 
+//                                             S T Y L E S    M E N U
+/* Subrayado animado en los links del menú */
+.navbar-nav .nav-link {  position: relative;  color: #0f766e; /* teal */  transition: color 0.2s ease-in-out;}
+/* La línea naranja que aparece al pasar el mouse */
+.navbar-nav .nav-link::after { content: ""; position: absolute;  left: 0;bottom: 0;width: 0%; height: 3px; background-color: #f59e0b;  transition: width 0.3s ease-in-out;}
+/* Al hacer hover, se expande la línea */
+.navbar-nav .nav-link:hover::after {  width: 100%;}
+/* ACTIVO → línea fija */
+.navbar-nav .nav-link.active::after {  width: 100%;}
 
+ 
+//                                            S T Y L E S    L O G I N 
+/* Contenedor del fondo */
+.login-bg {  position: relative;  min-height: 100vh;   width: 100%;  overflow: hidden; }
+/* Capa que duplica el fondo y lo difumina por completo */
+.login-bg::before {content: ""; position: absolute; inset: 0; background: inherit; background-attachment: inherit; filter: blur(8px); transform: scale(1.08); z-index: 0; }
+/* (Opcional) velo suave encima del fondo para suavizar */
+.login-bg::after {content: ""; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.08); z-index: 0;}
+/* La tarjeta debe ir por encima del blur */
+.login-card {position: relative; z-index: 1; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);border-radius: 1rem;} 
+
+//                                           S T Y L E S    H O M E
+
+.home-hero{position: relative; min-height: clamp(520px, 70vh, 680px); display: grid; align-items: center;
+  overflow: hidden;}
+/* Vignette/velo para legibilidad del texto */
+.home-hero::before{ content:""; position:absolute; inset:0; background: linear-gradient(90deg, rgba(255,255,255,.86) 0%, rgba(255,255,255,.65) 45%, rgba(255,255,255,.15) 70%, rgba(255,255,255,0) 100%),
+    radial-gradient(80% 100% at 0% 50%, rgba(255,255,255,.6) 0%, rgba(255,255,255,0) 70%); pointer-events:none;}
+/* contenedor del texto para que quede a la izquierda */
+.home-hero__content{position: relative; z-index: 1; max-width: 1100px; width: 100%; margin-inline: auto; padding: clamp(1rem, 3vw, 2rem);}
+/* Tipografías */
+.home-title{color: var(--ink-900); font-weight: 800; line-height: .98; letter-spacing: -.02em; font-size: clamp(2.25rem, 6vw, 4.25rem); margin-bottom: .5rem;}
+.home-subtitle{color: var(--ink-700); font-weight: 600;font-size: clamp(1.125rem, 2.5vw, 2rem);margin-bottom: 1.5rem;}
+.features{position: relative; z-index: 1; margin-top: -90px;  padding: 0 clamp(1rem, 3vw, 2rem) clamp(2rem, 5vw, 3rem);}
+.feature-card{ background: #fff; border-radius: 16px; box-shadow: 0 14px 32px rgba(0,0,0,.20); border: 1px solid rgba(12,42,51,.06); transition: transform .18s ease, box-shadow .18s ease; padding: 2rem 1.5rem;
+  height: 100%; display: flex;  flex-direction: column;  align-items: center;    justify-content: center; text-align: center;  }
+.feature-card:hover{ transform: translateY(-10px); box-shadow: 0 16px 35px rgba(0,0,0,.20);}
+/* Icono dentro del card */
+.feature-icon{  margin-bottom: 12px;  line-height: 1;}
+.feature-icon .bi{  font-size: 3.5rem;  color: var(--teal-700);   }
+/* Título y texto del card */
+.feature-title{ color: var(--ink-900); font-weight: 600; font-size: clamp(1.4rem, 1.8vw, 1.25rem); line-height: 1.15; margin-bottom: .25rem;}
+.feature-text{ color: #2b3f49; font-weight: 600; font-size: clamp(.95rem, 1.6vw, 1.1rem); line-height: 1.2;}
+
+/* utilidades pequeñas para los SVG */

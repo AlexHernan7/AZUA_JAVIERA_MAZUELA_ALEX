@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-md bg-white shadow-sm">
+<nav class="navbar navbar-expand-md bg-white shadow-sm mb-5 fixed-top" >
   <div class="container-fluid px-3">
     <!-- Logo -->
-    <a class="navbar-brand d-flex align-items-center ps-5" href="#">
+    <a class="navbar-brand d-flex align-items-center ps-5" (click)="goToHome()" href="#">
       <img src="images/Logo_vecindapp_menu.png" alt="VecindApp" class="me-2" style="height: 48px;">
       <span class="fw-semibold text-teal-700">VecindApp</span>
     </a>
@@ -17,17 +17,27 @@
       <!-- Links centrados -->
       <ul class="navbar-nav mx-auto mb-2 mb-md-0 gap-md-4">
         <li class="nav-item">
-          <a class="nav-link fw-medium text-teal-700" href="#">Inicio</a>
+          <a class="nav-link fw-medium text-teal-700 fs-5" href="javascript:void(0)"
+       [ngClass]="{ 'active': isActive('/home') }" (click)="goToHome()" href="" >Inicio</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link fw-medium text-teal-700" href="#">Quiénes somos</a>
+          <a class="nav-link fw-medium text-teal-700 fs-5" href="javascript:void(0)"
+       [ngClass]="{ 'active': isActive('/quienes-somos') }" (click)="goToHome()" href="">Quiénes somos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fw-medium text-teal-700 fs-5" href="javascript:void(0)"
+       [ngClass]="{ 'active': isActive('/certificados') }" (click)="goToHome()" href="">Certificados</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fw-medium text-teal-700 fs-5" href="javascript:void(0)"
+       [ngClass]="{ 'active': isActive('/noticias') }" (click)="goToHome()" href="">Noticias</a>
         </li>
       </ul>
 
       <!-- Botones -->
       <div class="d-flex gap-2">
-        <button class="btn btn-outline-teal fw-medium">Iniciar sesión</button>
-        <button class="btn btn-teal fw-medium me-5">Registrarse</button>
+        <button class="btn btn-outline-teal-menu fw-medium" (click)="goToLogin()">Iniciar sesión</button>
+        <button class="btn btn-teal-menu fw-medium me-5"(click)="goToRegister()">Registrarse</button>
       </div>
     </div>
   </div>
