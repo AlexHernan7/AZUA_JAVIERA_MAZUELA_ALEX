@@ -1,9 +1,11 @@
 from fastapi import FastAPI, APIRouter
+from src.api.routes.auth_routes import router as auth_router
+from src.api.routes.user_routes import router as user_router
 
 # Crear una instancia de FastAPI con prefijo /api
 app = FastAPI(
     title="VecindApp API",
-    description="API para la aplicación VecindApp",
+    description="API para la aplicación VecindApp - Sistema de gestión de juntas de vecinos",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
@@ -13,22 +15,6 @@ app = FastAPI(
 # Crear un router para las rutas de la API
 api_router = APIRouter(prefix="/api")
 
-# Endpoint básico que retorna "Hola mundo"
-@api_router.get("/")
-async def hola_mundo():
-    """
-    Endpoint que retorna un saludo básico
-    """
-    return {"mensaje": "Hola mundoo"}
-
-# Endpoint adicional para probar la API
-@api_router.get("/saludo/{nombre}")
-async def saludo_personalizado(nombre: str):
-    """
-    Endpoint que retorna un saludo personalizado
-    """
-    return {"mensaje": f"Hola {nombre}, bienvenido a VecindApp"}
-
 # Endpoint de salud de la API
 @api_router.get("/health")
 async def health_check():
@@ -36,6 +22,23 @@ async def health_check():
     Endpoint para verificar el estado de la API
     """
     return {"estado": "OK", "mensaje": "API funcionando correctamente"}
+
+# Endpoint básico que retorna información de la API
+@api_router.get("/")
+async def api_info():
+    """
+    Endpoint que retorna información básica de la API
+    """
+    return {
+        "mensaje": "Bienvenido a VecindApp API",
+        "version": "1.0.0",
+        "descripcion": "Sistema de gestión de juntas de vecinos",
+        "documentacion": "/api/docs"
+    }
+
+# Incluir las rutas de autenticación y usuarios
+api_router.include_router(auth_router)
+api_router.include_router(user_router)
 
 # Incluir el router en la aplicación
 app.include_router(api_router)

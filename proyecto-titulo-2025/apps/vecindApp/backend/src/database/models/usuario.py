@@ -4,9 +4,14 @@ Modelo Usuario para la tabla usuario.
 Representa los usuarios del sistema VecindApp.
 """
 
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, BigInteger, Text, Boolean, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 from src.database import Base
+
+if TYPE_CHECKING:
+    from .reserva import Reserva
+    from .certificado_pedido import CertificadoPedido
 
 
 class Usuario(Base):
@@ -47,8 +52,8 @@ class Usuario(Base):
     junta = relationship("Junta", back_populates="usuarios")
     roles = relationship("UsuarioRol", back_populates="usuario", cascade="all, delete-orphan")
     vecino = relationship("Vecino", back_populates="usuario", uselist=False)
-    reservas_creadas = relationship("Reserva", back_populates="creado_por_usuario", foreign_keys="Reserva.creado_por")
-    certificados_pedidos = relationship("CertificadoPedido", back_populates="creado_por_usuario", foreign_keys="CertificadoPedido.creado_por")
+    reservas_creadas = relationship("Reserva", back_populates="creado_por_usuario", foreign_keys="[Reserva.creado_por]")
+    certificados_pedidos = relationship("CertificadoPedido", back_populates="creado_por_usuario", foreign_keys="[CertificadoPedido.creado_por]")
     transacciones = relationship("Transaccion", back_populates="usuario")
     
     def __repr__(self) -> str:
