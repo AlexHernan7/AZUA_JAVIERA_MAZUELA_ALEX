@@ -1,11 +1,14 @@
 """
 Módulo de seguridad para VecindApp.
 
-Contiene funciones para el manejo seguro de contraseñas y autenticación.
+Contiene funciones para el manejo seguro de contraseñas y autenticación JWT.
 """
 
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 from passlib.context import CryptContext
-from typing import Optional
+from jose import JWTError, jwt
+from src.core.config import settings
 
 # Configuración para hash de contraseñas
 # bcrypt es muy seguro y recomendado para contraseñas
@@ -74,3 +77,83 @@ def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
         return False, "La contraseña debe tener al menos un número"
     
     return True, None
+
+
+# === JWT FUNCTIONS ===
+
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    """
+    Crea un JWT access token.
+    
+    Args:
+        data: Datos a incluir en el token (user_id, email, etc.)
+        expires_delta: Tiempo de expiración personalizado
+        
+    Returns:
+        Token JWT codificado
+        
+    Example:
+        >>> create_access_token({"sub": "123", "email": "user@example.com"})
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    """
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=settings.api.access_token_expire_minutes)
+    
+    to_encode.update({"exp": expire})
+    
+    encoded_jwt = jwt.encode(
+        to_encode, 
+        settings.api.secret_key, 
+        algorithm=settings.api.algorithm
+    )
+    
+    return encoded_jwt
+
+
+def verify_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Verifica y decodifica un JWT token.
+    
+    Args:
+        token: Token JWT a verificar
+        
+    Returns:
+        Payload del token si es válido, None si no es válido
+        
+    Example:
+        >>> verify_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+        {"sub": "123", "email": "user@example.com", "exp": 1234567890}
+    """
+    try:
+        payload = jwt.decode(
+            token, 
+            settings.api.secret_key, 
+            algorithms=[settings.api.algorithm]
+        )
+        return payload
+    except JWTError:
+        return None
+
+
+def get_user_id_from_token(token: str) -> Optional[int]:
+    """
+    Extrae el user_id de un JWT token.
+    
+    Args:
+        token: Token JWT
+        
+    Returns:
+        ID del usuario si el token es válido, None si no
+        
+    Example:
+        >>> get_user_id_from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+        123
+    """
+    payload = verify_token(token)
+    if payload:
+        return payload.get("sub")
+    return None
