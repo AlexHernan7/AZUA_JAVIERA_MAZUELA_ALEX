@@ -1,4 +1,31 @@
-/* You can add global styles to this file, and also import other style files */
-
 /* Import Bootstrap CSS */
-@import 'bootstrap/scss/bootstrap';
+@use "bootstrap/scss/bootstrap";
+
+/* Colores personalizados estilo Tailwind */
+.text-teal-700 {
+  color: #0f766e !important; /* texto teal */
+}
+
+.btn-teal {
+  background-color: #0d9488; /* teal base */
+  color: #fff;
+  border: 1px solid #0d9488;
+}
+
+.btn-teal:hover {
+  background-color: #0f766e; /* teal oscuro */
+  border-color: #0f766e;
+}
+
+.btn-outline-teal {
+  background-color: transparent;
+  color: #0d9488;
+  border: 1px solid #0d9488;
+}
+
+.btn-outline-teal:hover {
+  background-color: #0d9488;
+  color: #fff;
+}
+
+
