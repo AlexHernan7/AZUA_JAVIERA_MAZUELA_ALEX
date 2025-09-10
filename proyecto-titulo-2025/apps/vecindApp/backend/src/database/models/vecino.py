@@ -4,7 +4,7 @@ Modelo Vecino para la tabla vecino.
 Representa los vecinos en el sistema VecindApp.
 """
 
-from sqlalchemy import Column, BigInteger, Text, Date, ForeignKey, DateTime, func
+from sqlalchemy import Column, BigInteger, Text, Date, ForeignKey, DateTime, CheckConstraint, func
 from sqlalchemy.orm import relationship
 from src.database import Base
 
@@ -33,7 +33,14 @@ class Vecino(Base):
     """
     
     __tablename__ = "vecino"
-    __table_args__ = {"schema": "vecindApp"}
+    __table_args__ = (
+        # Constraint para garantizar que el vecino vive en la misma comuna que su junta
+        CheckConstraint(
+            "id_comuna = (SELECT id_comuna FROM vecindApp.junta WHERE id_junta = vecino.id_junta)",
+            name="ck_vecino_comuna_consistency"
+        ),
+        {"schema": "vecindApp"}
+    )
     
     id_vecino = Column(BigInteger, primary_key=True, autoincrement=True)
     id_junta = Column(BigInteger, ForeignKey("vecindApp.junta.id_junta", ondelete="CASCADE"), nullable=False)
@@ -53,6 +60,11 @@ class Vecino(Base):
     comuna = relationship("Comuna", back_populates="vecinos")
     reservas = relationship("Reserva", back_populates="vecino", cascade="all, delete-orphan")
     certificados_pedidos = relationship("CertificadoPedido", back_populates="vecino", cascade="all, delete-orphan")
+    
+    # Nota: id_comuna es redundante con junta.comuna, pero se mantiene para:
+    # 1. Facilitar el flujo UX (selección comuna → junta)
+    # 2. Optimizar consultas que filtran por comuna
+    # La consistencia se garantiza con el constraint ck_vecino_comuna_consistency
     
     def __repr__(self) -> str:
         return f"<Vecino(id_vecino={self.id_vecino}, nombres='{self.nombres}', apellidos='{self.apellidos}')>"

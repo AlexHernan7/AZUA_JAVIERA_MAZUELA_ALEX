@@ -19,7 +19,7 @@ class Comuna(Base):
         nombre: Nombre de la comuna (TEXT NOT NULL)
         region: Relación con la región
         juntas: Relación con las juntas de vecinos de esta comuna
-        vecinos: Relación con los vecinos de esta comuna
+        vecinos: Relación con los vecinos que viven en esta comuna
     """
     
     __tablename__ = "comuna"
