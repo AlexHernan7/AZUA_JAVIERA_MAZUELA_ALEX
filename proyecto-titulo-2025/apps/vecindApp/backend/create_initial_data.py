@@ -18,11 +18,18 @@ async def create_initial_data():
             print("🔧 Creando datos iniciales...")
             
             # 1. Crear Región Metropolitana
-            await session.execute(text("""
-                INSERT INTO "vecindApp".region (nombre) 
-                VALUES ('Región Metropolitana de Santiago')
-                ON CONFLICT (nombre) DO NOTHING
+            # Verificar si ya existe
+            result = await session.execute(text("""
+                SELECT id_region FROM "vecindApp".region 
+                WHERE nombre = 'Región Metropolitana de Santiago'
             """))
+            existing_region = result.scalar()
+            
+            if not existing_region:
+                await session.execute(text("""
+                    INSERT INTO "vecindApp".region (nombre) 
+                    VALUES ('Región Metropolitana de Santiago')
+                """))
             
             # Obtener ID de la región
             result = await session.execute(text("""
@@ -33,11 +40,18 @@ async def create_initial_data():
             print(f"✅ Región: Región Metropolitana (ID: {id_region})")
             
             # 2. Crear Comuna de Maipú
-            await session.execute(text("""
-                INSERT INTO "vecindApp".comuna (id_region, nombre) 
-                VALUES (:id_region, 'Maipú')
-                ON CONFLICT (id_region, nombre) DO NOTHING
+            # Verificar si ya existe
+            result = await session.execute(text("""
+                SELECT id_comuna FROM "vecindApp".comuna 
+                WHERE nombre = 'Maipú' AND id_region = :id_region
             """), {"id_region": id_region})
+            existing_comuna = result.scalar()
+            
+            if not existing_comuna:
+                await session.execute(text("""
+                    INSERT INTO "vecindApp".comuna (id_region, nombre) 
+                    VALUES (:id_region, 'Maipú')
+                """), {"id_region": id_region})
             
             # Obtener ID de la comuna
             result = await session.execute(text("""
@@ -55,19 +69,28 @@ async def create_initial_data():
             ]
             
             for nombre, direccion, telefono, email, descripcion in juntas:
-                await session.execute(text("""
-                    INSERT INTO "vecindApp".junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
-                    VALUES (:id_comuna, :nombre, :direccion, :telefono, :email, :descripcion)
-                    ON CONFLICT DO NOTHING
-                """), {
-                    "id_comuna": id_comuna,
-                    "nombre": nombre,
-                    "direccion": direccion,
-                    "telefono": telefono,
-                    "email": email,
-                    "descripcion": descripcion
-                })
-                print(f"✅ Junta creada: {nombre}")
+                # Verificar si ya existe
+                result = await session.execute(text("""
+                    SELECT id_junta FROM "vecindApp".junta 
+                    WHERE nombre = :nombre AND id_comuna = :id_comuna
+                """), {"nombre": nombre, "id_comuna": id_comuna})
+                existing_junta = result.scalar()
+                
+                if not existing_junta:
+                    await session.execute(text("""
+                        INSERT INTO "vecindApp".junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
+                        VALUES (:id_comuna, :nombre, :direccion, :telefono, :email, :descripcion)
+                    """), {
+                        "id_comuna": id_comuna,
+                        "nombre": nombre,
+                        "direccion": direccion,
+                        "telefono": telefono,
+                        "email": email,
+                        "descripcion": descripcion
+                    })
+                    print(f"✅ Junta creada: {nombre}")
+                else:
+                    print(f"ℹ️  Junta ya existe: {nombre}")
             
             # 4. Crear roles del sistema
             roles = [
@@ -77,16 +100,25 @@ async def create_initial_data():
             ]
             
             for codigo, nombre, descripcion in roles:
-                await session.execute(text("""
-                    INSERT INTO "vecindApp".rol (codigo, nombre, descripcion) 
-                    VALUES (:codigo, :nombre, :descripcion)
-                    ON CONFLICT (codigo) DO NOTHING
-                """), {
-                    "codigo": codigo,
-                    "nombre": nombre,
-                    "descripcion": descripcion
-                })
-                print(f"✅ Rol creado: {nombre} (código: {codigo})")
+                # Verificar si ya existe
+                result = await session.execute(text("""
+                    SELECT id_rol FROM "vecindApp".rol 
+                    WHERE codigo = :codigo
+                """), {"codigo": codigo})
+                existing_rol = result.scalar()
+                
+                if not existing_rol:
+                    await session.execute(text("""
+                        INSERT INTO "vecindApp".rol (codigo, nombre, descripcion) 
+                        VALUES (:codigo, :nombre, :descripcion)
+                    """), {
+                        "codigo": codigo,
+                        "nombre": nombre,
+                        "descripcion": descripcion
+                    })
+                    print(f"✅ Rol creado: {nombre} (código: {codigo})")
+                else:
+                    print(f"ℹ️  Rol ya existe: {nombre} (código: {codigo})")
             
             # Confirmar todos los cambios
             await session.commit()

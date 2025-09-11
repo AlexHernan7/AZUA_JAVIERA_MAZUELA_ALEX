@@ -14,7 +14,7 @@ export class MenuComponent {
   toggle() { this.menuOpen = !this.menuOpen; } 
 
 goToLogin() { this.router.navigate(['/login']); }
-  goToHome() { this.router.navigate(['/home']); }
+  goToHome() { this.router.navigate(['/']); }  // Corregido: navegar a la ruta raíz
   goToRegister() { this.router.navigate(['/register']); }
 
 isActive(route: string): boolean {

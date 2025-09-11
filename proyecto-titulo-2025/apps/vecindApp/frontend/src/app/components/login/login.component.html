@@ -7,14 +7,26 @@
     </div>
 
     <!-- Formulario -->
-    <form class="d-grid gap-3">
+    <form class="d-grid gap-3" (ngSubmit)="onLogin()">
+      <!-- Mostrar errores -->
+      <div *ngIf="errorMessage" class="alert alert-danger py-2 small">
+        {{ errorMessage }}
+      </div>
+
       <div class="input-group">
         <span class="input-group-text bg-white border-teal-200">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#79909a" stroke-width="1.6" viewBox="0 0 24 24">
             <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/>
           </svg>
         </span>
-        <input type="email" class="form-control border-teal-200" placeholder="Correo electrónico">
+        <input 
+          type="email" 
+          class="form-control border-teal-200" 
+          placeholder="Correo electrónico"
+          [(ngModel)]="loginData.email"
+          name="email"
+          required
+          [disabled]="isLoading">
       </div>
 
       <div class="input-group">
@@ -23,10 +35,23 @@
             <rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/>
           </svg>
         </span>
-        <input type="password" class="form-control border-teal-200" placeholder="Contraseña">
+        <input 
+          type="password" 
+          class="form-control border-teal-200" 
+          placeholder="Contraseña"
+          [(ngModel)]="loginData.password"
+          name="password"
+          required
+          [disabled]="isLoading">
       </div>
 
-      <button type="button" class="btn btn-teal-menu fw-semibold py-2">Ingresar</button>
+      <button 
+        type="submit" 
+        class="btn btn-teal-menu fw-semibold py-2"
+        [disabled]="isLoading">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ isLoading ? 'Ingresando...' : 'Ingresar' }}
+      </button>
     </form>
 
     <div class="text-center mt-4">

@@ -23,6 +23,7 @@ from src.schemas.auth_schemas import (
 from src.schemas.user_schemas import JuntasList, ComunasList
 from src.core.security import create_access_token
 from src.core.config import settings
+from src.utils import binary_to_base64
 
 # Crear router para rutas de autenticación
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -78,15 +79,27 @@ async def register_user(
         usuario, vecino = await auth_service.register_user(user_data)
         logger.info(f"✅ Usuario registrado exitosamente: ID {usuario.id_usuario}, Vecino ID {vecino.id_vecino}")
         
+        # Convertir foto de perfil binaria a base64 para respuesta
+        foto_perfil_base64 = None
+        if vecino.foto_perfil:
+            # Detectar si es SVG o imagen rasterizada
+            if vecino.foto_perfil.startswith(b'<svg') or b'<svg' in vecino.foto_perfil[:100]:
+                foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/svg+xml")
+            else:
+                foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/jpeg")
+        
         # Preparar respuesta
         vecino_response = VecinoResponse(
             id_vecino=vecino.id_vecino,
+            rut=vecino.rut,
             nombres=vecino.nombres,
-            apellidos=vecino.apellidos,
+            apellido_paterno=vecino.apellido_paterno,
+            apellido_materno=vecino.apellido_materno,
             email=usuario.email,
             telefono=vecino.telefono,
             direccion=vecino.direccion,
-            fecha_nacimiento=vecino.fecha_nacimiento
+            fecha_nacimiento=vecino.fecha_nacimiento,
+            foto_perfil=foto_perfil_base64
         )
         
         return UsuarioRegistroResponse(
@@ -243,25 +256,38 @@ async def login_user(
             "sub": str(usuario.id_usuario),  # subject = user id
             "email": usuario.email,
             "nombres": vecino.nombres if vecino else "",
-            "apellidos": vecino.apellidos if vecino else ""
+            "apellido_paterno": vecino.apellido_paterno if vecino else "",
+            "apellido_materno": vecino.apellido_materno if vecino else ""
         }
         
         access_token = create_access_token(token_data)
         logger.info(f"✅ Token JWT creado para usuario ID: {usuario.id_usuario}")
+        
+        # Convertir foto de perfil binaria a base64 para respuesta
+        foto_perfil_base64 = None
+        if vecino and vecino.foto_perfil:
+            # Detectar si es SVG o imagen rasterizada
+            if vecino.foto_perfil.startswith(b'<svg') or b'<svg' in vecino.foto_perfil[:100]:
+                foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/svg+xml")
+            else:
+                foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/jpeg")
         
         # 4. Preparar respuesta
         user_data = UserLoginData(
             id_usuario=usuario.id_usuario,
             email=usuario.email,
             nombres=vecino.nombres if vecino else "",
-            apellidos=vecino.apellidos if vecino else "",
+            apellido_paterno=vecino.apellido_paterno if vecino else "",
+            apellido_materno=vecino.apellido_materno if vecino else "",
             activo=usuario.activo,
             vecino=VecinoLoginData(
                 id_vecino=vecino.id_vecino,
                 nombres=vecino.nombres,
-                apellidos=vecino.apellidos,
+                apellido_paterno=vecino.apellido_paterno,
+                apellido_materno=vecino.apellido_materno,
                 telefono=vecino.telefono,
-                direccion=vecino.direccion
+                direccion=vecino.direccion,
+                foto_perfil=foto_perfil_base64
             ) if vecino else None
         )
         

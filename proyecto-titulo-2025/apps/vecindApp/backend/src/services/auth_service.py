@@ -18,6 +18,7 @@ from src.database.models.usuario_rol import UsuarioRol
 from src.core.security import hash_password, validate_password_strength, verify_password
 from src.schemas.auth_schemas import UsuarioRegistroRequest
 from src.schemas.user_schemas import VecinoCreate
+from src.utils import base64_to_binary, load_default_profile_image
 
 
 class AuthService:
@@ -76,22 +77,36 @@ class AuthService:
             await self.db.flush()  # Para obtener el ID sin hacer commit
             
             # 5. Crear perfil de vecino
-            # Limpiar número de teléfono (remover +56 si está presente)
-            telefono_limpio = user_data.telefono
-            if telefono_limpio.startswith('+56'):
-                telefono_limpio = telefono_limpio[3:]  # Remover +56
-            elif telefono_limpio.startswith('56') and len(telefono_limpio) == 11:
-                telefono_limpio = telefono_limpio[2:]  # Remover 56 si tiene 11 dígitos
+            # Mantener teléfono con formato +56
+            telefono_formateado = user_data.telefono
+            if not telefono_formateado.startswith('+56'):
+                # Si no tiene +56, agregarlo
+                if telefono_formateado.startswith('56'):
+                    telefono_formateado = f"+{telefono_formateado}"
+                else:
+                    telefono_formateado = f"+56{telefono_formateado}"
+            
+            # Manejar foto de perfil (usar por defecto si no se proporciona)
+            foto_perfil_binaria = None
+            if user_data.foto_perfil:
+                # Convertir base64 a binario
+                foto_perfil_binaria = base64_to_binary(user_data.foto_perfil)
+            else:
+                # Usar imagen por defecto
+                foto_perfil_binaria = load_default_profile_image()
             
             vecino = Vecino(
                 id_junta=user_data.id_junta,
                 id_usuario=usuario.id_usuario,
+                rut=user_data.rut,
                 nombres=user_data.nombres,
-                apellidos=user_data.apellidos,
-                email=user_data.email,  # ¡AGREGAR EMAIL!
+                apellido_paterno=user_data.apellido_paterno,
+                apellido_materno=user_data.apellido_materno,
+                email=user_data.email,
                 fecha_nacimiento=user_data.fecha_nacimiento,
-                telefono=telefono_limpio,  # Usar teléfono limpio
+                telefono=telefono_formateado,  # Almacenar con formato +56
                 direccion=user_data.direccion,
+                foto_perfil=foto_perfil_binaria,
                 id_comuna=user_data.id_comuna
             )
             self.db.add(vecino)
