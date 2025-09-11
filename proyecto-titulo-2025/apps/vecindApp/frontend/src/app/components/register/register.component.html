@@ -66,40 +66,30 @@
 
       <!-- Región / Comuna -->
       <div class="col-12 col-md-6">
-        <label class="form-label fw-semibold">Región</label>
-        <select class="form-select">
-             <option class="options" value="" selected>Selecciona una región</option>
-           <!-- <option value="Arica y Parinacota">Arica y Parinacota</option>
-            <option value="Tarapacá">Tarapacá</option>
-            <option value="Antofagasta">Antofagasta</option>
-            <option value="Atacama">Atacama</option>
-            <option value="Coquimbo">Coquimbo</option>
-            <option value="Valparaíso">Valparaíso</option> -->
-            <option value="Metropolitana">Región Metropolitana de Santiago</option>
-            <option value="Valparaíso">Valparaíso</option>
-        <option value="O'Higgins">Libertador General Bernardo O’Higgins</option>
-        <!--    <option value="Maule">Maule</option>
-            <option value="Ñuble">Ñuble</option>
-            <option value="Biobío">Biobío</option>
-            <option value="Araucanía">La Araucanía</option>
-            <option value="Los Ríos">Los Ríos</option>
-            <option value="Los Lagos">Los Lagos</option>
-            <option value="Aysén">Aysén del General Carlos Ibáñez del Campo</option>
-            <option value="Magallanes">Magallanes y Antártica Chilena</option> -->
-        </select>
-      </div>
+  <label class="form-label fw-semibold">Región</label>
+  <select class="form-select"
+          (change)="onRegionChange($event)"
+          [(ngModel)]="regionSeleccionada"
+          name="region">
+    <option value="" disabled selected>Selecciona una región</option>
+    <option *ngFor="let region of regiones" [value]="region">{{ region }}</option>
+  </select>
+</div>
       <div class="col-12 col-md-6">
-        <label class="form-label fw-semibold">Comuna</label>
-        <select class="form-select">
-          <option value="" selected>Selecciona una comuna</option>
-           <option value="Maipu">Maipú</option> 
-        </select>
-      </div>
+  <label class="form-label fw-semibold">Comuna</label>
+  <select class="form-select"
+          [(ngModel)]="comunaSeleccionada"
+          name="comuna">
+    <option value="" disabled selected>Selecciona una comuna</option>
+    <option *ngFor="let comuna of comunas" [value]="comuna">{{ comuna }}</option>
+  </select>
+</div>
 
       <div class="col-12 col-md-12">
         <label class="form-label fw-semibold">Junta de Vecinos</label>
         <select class="form-select">
           <option value="" selected>Selecciona una junta de vecinos</option>
+          <option value="" >Junta de Vecinos Barrio Oeste</option>
           <!-- TODO: opciones -->
         </select>
       </div>
