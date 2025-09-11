@@ -1,1 +1,146 @@
-<p>register works!</p>
+<div class=" register-fondo py-5 my-5" style=" background: url('/images/parque-fondo1.png') center/cover no-repeat;">
+  <div class="mx-auto register-card shadow rounded-4 p-4 p-md-5" style="max-width: 900px; background: rgba(255,255,255,.9);">
+    <!-- Títulos -->
+    <div class="text-center mb-4">
+      <h1 class="fw-bold text-teal-750 mb-1">Inscríbete en VecindApp</h1>
+      <p class="text-muted mb-0">Crea tu cuenta y valida tu residencia</p>
+      <hr>
+    </div>
+
+    <!-- FORM -->
+    <form class="row g-3">
+
+      <!-- FOTO PERFIL (primero) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Foto de perfil</label>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="avatar-preview border">
+            <img [src]="photoPreview || 'images/avatar-placeholder2.svg'" alt="Foto de perfil">
+          </div>
+
+          <div class="ms-3">
+            <label class="btn btn-outline-teal-menu fw-medium me-5 mb-2">
+              Subir imagen
+              <input type="file" class="d-none" accept="image/*" (change)="onFileChange($event)">
+            </label>
+            <div class="small text-muted">Formatos: JPG/PNG. Tamaño sugerido 400×400.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nombres y Apellidos -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Nombres</label>
+        <input type="text" class="form-control" placeholder="Tus nombres">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Apellido Paterno</label>
+        <input type="text" class="form-control" placeholder="Paterno">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Apellido Materno</label>
+        <input type="text" class="form-control" placeholder="Materno">
+      </div>
+
+      <!-- RUT, Fecha nacimiento -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">RUT</label>
+        <input type="text" class="form-control" placeholder="12.345.678-9">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Fecha de nacimiento</label>
+        <input type="date" class="form-control">
+      </div>
+
+      <!-- Teléfono -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Teléfono</label>
+        <input type="tel" class="form-control" placeholder="+56 9 1234 5678">
+      </div>
+
+      <!-- Dirección -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Dirección</label>
+        <input type="text" class="form-control" placeholder="Calle, número, depto">
+      </div>
+
+      <!-- Región / Comuna -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Región</label>
+        <select class="form-select">
+             <option class="options" value="" selected>Selecciona una región</option>
+           <!-- <option value="Arica y Parinacota">Arica y Parinacota</option>
+            <option value="Tarapacá">Tarapacá</option>
+            <option value="Antofagasta">Antofagasta</option>
+            <option value="Atacama">Atacama</option>
+            <option value="Coquimbo">Coquimbo</option>
+            <option value="Valparaíso">Valparaíso</option> -->
+            <option value="Metropolitana">Región Metropolitana de Santiago</option>
+            <option value="Valparaíso">Valparaíso</option>
+        <option value="O'Higgins">Libertador General Bernardo O’Higgins</option>
+        <!--    <option value="Maule">Maule</option>
+            <option value="Ñuble">Ñuble</option>
+            <option value="Biobío">Biobío</option>
+            <option value="Araucanía">La Araucanía</option>
+            <option value="Los Ríos">Los Ríos</option>
+            <option value="Los Lagos">Los Lagos</option>
+            <option value="Aysén">Aysén del General Carlos Ibáñez del Campo</option>
+            <option value="Magallanes">Magallanes y Antártica Chilena</option> -->
+        </select>
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Comuna</label>
+        <select class="form-select">
+          <option value="" selected>Selecciona una comuna</option>
+           <option value="Maipu">Maipú</option> 
+        </select>
+      </div>
+
+      <div class="col-12 col-md-12">
+        <label class="form-label fw-semibold">Junta de Vecinos</label>
+        <select class="form-select">
+          <option value="" selected>Selecciona una junta de vecinos</option>
+          <!-- TODO: opciones -->
+        </select>
+      </div>
+      
+
+      <!-- Correo / Contraseña -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Correo electrónico</label>
+        <input type="email" class="form-control" placeholder="tucorreo@correo.com">
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Contraseña</label>
+        <input type="password" class="form-control" placeholder="********">
+      </div>
+
+      <!-- Checks -->
+      <div class="col-12 mt-4">
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="chkTyC">
+          <label class="form-check-label" for="chkTyC">
+            Acepto los <a href="#" class="text-teal-700 text-decoration-none fw-semibold">Términos y Condiciones</a>
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="chkNews">
+          <label class="form-check-label" for="chkNews">
+            Deseo recibir noticias y actividades
+          </label>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="col-12 mt-5 d-flex justiify-content-center  gap-4 ms-5">
+        <div class="ms-5 ps-3"></div>
+        <button type="button" class="btn btn-cta1 w-25 ms-5 py-2 ">Crear cuenta</button>
+        <button type="button" class="btn btn-cta2 w-25 py-2 ">Volver</button>
+      </div>
+
+      <div class="col-12 text-center">
+        <a href="#" class="text-teal-700 text-decoration-none fw-semibold small">Ya tengo cuenta</a>
+      </div>
+    </form>
+  </div>
+</div>
