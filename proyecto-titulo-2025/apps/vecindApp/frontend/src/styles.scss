@@ -7,7 +7,9 @@ html, body { height: 100%; }
 :root{
   --ink-900: #0c2a33;   /* título muy oscuro */
   --ink-700: #183a47;   /* subtítulo */
-  --cta-500: #f59e0b;   /* botón naranja */
+  --cta-500: #f59e0b;  
+  --cta-400: #ff5555;  
+  --cta-450: #ff3737; 
   --cta-600: #ea8a00;
   --teal-700: #0f766e;
   --teal-600: #0d9488;
@@ -16,6 +18,7 @@ html, body { height: 100%; }
 
 /* Colores personalizados de texto */
 .text-teal-700 { color: #0f766e !important; }/* texto teal */
+.text-teal-750 {color :#2c5b6e;}
 .text-teal-600 { color: #0d9488 !important; }
 .ink-900 { color: #0f766e;  }     /* título oscuro */
 .ink-700{ color:#183a47;  }    /* subtítulo */
@@ -86,4 +89,25 @@ html, body { height: 100%; }
 .feature-title{ color: var(--ink-900); font-weight: 600; font-size: clamp(1.4rem, 1.8vw, 1.25rem); line-height: 1.15; margin-bottom: .25rem;}
 .feature-text{ color: #2b3f49; font-weight: 600; font-size: clamp(.95rem, 1.6vw, 1.1rem); line-height: 1.2;}
 
-/* utilidades pequeñas para los SVG */
+//                                           S T Y L E S    R E G I S T E R
+
+.register-card { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);}
+/* Avatar redondo */
+.avatar-preview{width: 110px; height: 110px; border-radius: 50%; background: #f1f5f9;  display: grid; place-items: center;  overflow: hidden;}
+.avatar-preview img{ width: 100%; height: 100%; object-fit: cover;}
+/* Inputs más suaves */
+form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-color: #ffffff;  border-radius: .8rem;}
+.form-control:focus, .form-select:focus{ border-color: #14b8a6; box-shadow: 0 0 0 .2rem rgba(20,184,166,.15);}
+.btn-cta1{  --bs-btn-font-weight: 500; --bs-btn-font-size: clamp(0.5rem, 0.9vw, 1.2rem); background: var(--teal-700);
+  color:#fff; border:0; border-radius: .6rem; box-shadow: 0 8px 18px rgba(2, 100, 76, 0.3);}
+.btn-cta1:hover{ background: var(--teal-600); color:#fff; }
+.btn-cta2{  --bs-btn-font-weight: 500; --bs-btn-font-size: clamp(0.5rem, 0.9vw, 1.2rem); background: var(--cta-500);
+  color:#fff; border:0; border-radius: .6rem; box-shadow: 0 8px 18px rgba(245,158,11,.35);}
+.btn-cta2:hover{ background: var(--cta-600); color:#fff; }
+.register-fondo{position: relative; min-height: 100vh; display: grid; align-items: center ;  overflow: hidden;}
+/* Vignette/velo para legibilidad del texto */
+.register-fondo::before{ content:""; position:absolute; inset:0; background: rgba(255, 255, 255, 0.3); /* velo blanco muy suave */
+  backdrop-filter: blur(6px);           /* 👈 blur al fondo */
+  -webkit-backdrop-filter: blur(6px);   /* soporte Safari */
+  z-index: 0; pointer-events:none;}
+    
