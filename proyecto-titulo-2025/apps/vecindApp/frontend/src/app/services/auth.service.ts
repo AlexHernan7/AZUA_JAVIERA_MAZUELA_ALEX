@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { LoginRequest, LoginResponse, UserLoginData, ApiError } from '../interfaces/auth.interface';
+import { 
+  LoginRequest, 
+  LoginResponse, 
+  UserLoginData, 
+  ApiError, 
+  RegisterRequest, 
+  RegisterResponse 
+} from '../interfaces/auth.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -115,6 +122,16 @@ export class AuthService {
     return true;
   }
 
+  /**
+   * Registra un nuevo usuario
+   */
+  register(userData: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.API_URL}/auth/register`, userData)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Error desconocido';
     
@@ -123,9 +140,43 @@ export class AuthService {
       errorMessage = `Error: ${error.error.message}`;
     } else {
       // Error del servidor
+      console.error('Error completo del servidor:', error);
+      console.error('Status:', error.status);
+      console.error('Error body:', error.error);
+      
       if (error.error && typeof error.error === 'object') {
-        const apiError = error.error as ApiError;
-        errorMessage = apiError.detalle || apiError.error || 'Error del servidor';
+        const apiError = error.error as any;
+        
+        // Para errores 422 de validación, mostrar más detalles
+        if (error.status === 422 && apiError.detail) {
+          if (Array.isArray(apiError.detail)) {
+            // Errores de validación de Pydantic
+            const validationErrors = apiError.detail.map((err: any) => 
+              `${err.loc?.join('.')} - ${err.msg}`
+            ).join('; ');
+            errorMessage = `Error de validación: ${validationErrors}`;
+          } else if (typeof apiError.detail === 'string') {
+            errorMessage = `Error de validación: ${apiError.detail}`;
+          } else {
+            errorMessage = apiError.detalle || apiError.error || 'Error de validación';
+          }
+        } else if (error.status === 400) {
+          // Errores 400 - Bad Request (como duplicados)
+          const detalle = apiError.detalle || apiError.error || '';
+          if (detalle.includes('llave duplicada') || detalle.includes('UniqueViolationError')) {
+            if (detalle.includes('rut')) {
+              errorMessage = 'Este RUT ya está registrado en el sistema';
+            } else if (detalle.includes('email')) {
+              errorMessage = 'Este email ya está registrado en el sistema';
+            } else {
+              errorMessage = 'Ya existe un registro con estos datos';
+            }
+          } else {
+            errorMessage = detalle || 'Error en los datos enviados';
+          }
+        } else {
+          errorMessage = apiError.detalle || apiError.error || 'Error del servidor';
+        }
       } else {
         errorMessage = `Error ${error.status}: ${error.message}`;
       }

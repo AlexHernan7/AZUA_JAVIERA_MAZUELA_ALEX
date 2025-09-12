@@ -1,8 +1,4 @@
-"""
-Modelo Usuario para la tabla usuario.
-
-Representa los usuarios del sistema VecindApp.
-"""
+"""Modelo Usuario del sistema."""
 
 from typing import TYPE_CHECKING
 from sqlalchemy import Column, BigInteger, Text, Boolean, DateTime, ForeignKey, UniqueConstraint, func
@@ -15,33 +11,16 @@ if TYPE_CHECKING:
 
 
 class Usuario(Base):
-    """
-    Modelo que representa un usuario del sistema.
-    
-    Attributes:
-        id_usuario: Identificador único del usuario (BIGSERIAL PRIMARY KEY)
-        id_junta: ID de la junta a la que pertenece (BIGINT NOT NULL REFERENCES junta)
-        email: Email del usuario (TEXT NOT NULL)
-        pass_hash: Hash de la contraseña (TEXT NOT NULL)
-        activo: Estado activo del usuario (BOOLEAN NOT NULL DEFAULT TRUE)
-        ultimo_acceso: Fecha del último acceso (TIMESTAMPTZ)
-        created_at: Fecha de creación (TIMESTAMPTZ NOT NULL DEFAULT now())
-        junta: Relación con la junta
-        roles: Relación con los roles del usuario
-        vecino: Relación con el perfil de vecino
-        reservas_creadas: Relación con las reservas creadas por este usuario
-        certificados_pedidos: Relación con los pedidos de certificados creados
-        transacciones: Relación con las transacciones realizadas
-    """
+    """Usuario del sistema con roles y permisos."""
     
     __tablename__ = "usuario"
     __table_args__ = (
         UniqueConstraint("id_junta", "email", name="ux_usuario_email"),
-        {"schema": "vecindApp"}
+        {"schema": "vecindapp"}
     )
     
     id_usuario = Column(BigInteger, primary_key=True, autoincrement=True)
-    id_junta = Column(BigInteger, ForeignKey("vecindApp.junta.id_junta", ondelete="CASCADE"), nullable=False)
+    id_junta = Column(BigInteger, ForeignKey("vecindapp.junta.id_junta", ondelete="CASCADE"), nullable=False)
     email = Column(Text, nullable=False)
     pass_hash = Column(Text, nullable=False)
     activo = Column(Boolean, nullable=False, default=True)

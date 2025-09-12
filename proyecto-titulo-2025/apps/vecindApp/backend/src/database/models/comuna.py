@@ -1,8 +1,4 @@
-"""
-Modelo Comuna para la tabla comuna.
-
-Representa las comunas de Chile en el sistema VecindApp.
-"""
+"""Modelo Comuna."""
 
 from sqlalchemy import Column, BigInteger, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -10,26 +6,16 @@ from src.database import Base
 
 
 class Comuna(Base):
-    """
-    Modelo que representa una comuna de Chile.
-    
-    Attributes:
-        id_comuna: Identificador único de la comuna (BIGSERIAL PRIMARY KEY)
-        id_region: ID de la región a la que pertenece (BIGINT NOT NULL REFERENCES region)
-        nombre: Nombre de la comuna (TEXT NOT NULL)
-        region: Relación con la región
-        juntas: Relación con las juntas de vecinos de esta comuna
-        vecinos: Relación con los vecinos que viven en esta comuna
-    """
+    """Comuna perteneciente a una región."""
     
     __tablename__ = "comuna"
     __table_args__ = (
         UniqueConstraint("id_region", "nombre", name="ux_comuna"),
-        {"schema": "vecindApp"}
+        {"schema": "vecindapp"}
     )
     
     id_comuna = Column(BigInteger, primary_key=True, autoincrement=True)
-    id_region = Column(BigInteger, ForeignKey("vecindApp.region.id_region", ondelete="RESTRICT"), nullable=False)
+    id_region = Column(BigInteger, ForeignKey("vecindapp.region.id_region", ondelete="RESTRICT"), nullable=False)
     nombre = Column(Text, nullable=False)
     
     # Relaciones

@@ -1,8 +1,4 @@
-"""
-Modelo Rol para la tabla rol.
-
-Representa los roles de usuario en el sistema VecindApp.
-"""
+"""Modelo Rol - Roles del sistema."""
 
 from sqlalchemy import Column, BigInteger, Text, CheckConstraint
 from sqlalchemy.orm import relationship
@@ -10,21 +6,12 @@ from src.database import Base
 
 
 class Rol(Base):
-    """
-    Modelo que representa un rol de usuario en el sistema.
-    
-    Attributes:
-        id_rol: Identificador único del rol (BIGSERIAL PRIMARY KEY)
-        codigo: Código único del rol (TEXT NOT NULL UNIQUE CHECK)
-        nombre: Nombre del rol (TEXT NOT NULL)
-        descripcion: Descripción del rol (TEXT)
-        usuarios: Relación con los usuarios que tienen este rol
-    """
+    """Rol con permisos específicos."""
     
     __tablename__ = "rol"
     __table_args__ = (
         CheckConstraint("codigo IN ('vecino','directiva','admin')", name="ck_rol_codigo"),
-        {"schema": "vecindApp"}
+        {"schema": "vecindapp"}
     )
     
     id_rol = Column(BigInteger, primary_key=True, autoincrement=True)

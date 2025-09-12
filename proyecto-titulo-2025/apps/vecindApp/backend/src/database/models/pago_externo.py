@@ -1,8 +1,4 @@
-"""
-Modelo PagoExterno para la tabla pago_externo.
-
-Representa los pagos externos en el sistema VecindApp.
-"""
+"""Modelo PagoExterno - Pagos externos."""
 
 from sqlalchemy import Column, BigInteger, Text, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,27 +7,16 @@ from src.database import Base
 
 
 class PagoExterno(Base):
-    """
-    Modelo que representa un pago externo.
-    
-    Attributes:
-        id_pago_externo: Identificador único del pago externo (BIGSERIAL PRIMARY KEY)
-        id_transaccion: ID de la transacción asociada (BIGINT NOT NULL REFERENCES transaccion)
-        codigo_respuesta: Código de respuesta del proveedor (TEXT)
-        estado_pago: Estado del pago según el proveedor (TEXT)
-        payload: Datos adicionales del proveedor (JSONB)
-        fecha_respuesta: Fecha de respuesta del proveedor (TIMESTAMPTZ)
-        transaccion: Relación con la transacción
-    """
+    """Pago procesado por sistema externo."""
     
     __tablename__ = "pago_externo"
     __table_args__ = (
         UniqueConstraint("id_transaccion", name="ux_pagoext_tx"),
-        {"schema": "vecindApp"}
+        {"schema": "vecindapp"}
     )
     
     id_pago_externo = Column(BigInteger, primary_key=True, autoincrement=True)
-    id_transaccion = Column(BigInteger, ForeignKey("vecindApp.transaccion.id_transaccion", ondelete="CASCADE"), nullable=False)
+    id_transaccion = Column(BigInteger, ForeignKey("vecindapp.transaccion.id_transaccion", ondelete="CASCADE"), nullable=False)
     codigo_respuesta = Column(Text)
     estado_pago = Column(Text)
     payload = Column(JSONB)

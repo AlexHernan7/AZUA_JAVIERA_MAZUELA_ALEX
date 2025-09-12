@@ -1,8 +1,4 @@
-"""
-Script para crear datos iniciales en la base de datos.
-
-Ejecuta este script DESPUÉS de las migraciones para tener datos base.
-"""
+"""Crea datos iniciales en la base de datos."""
 
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +7,7 @@ from src.database.session import get_transaction_session
 
 
 async def create_initial_data():
-    """Crea los datos iniciales necesarios para que funcione el sistema usando SQL directo."""
+    """Crea datos base: región, comuna, juntas y roles."""
     
     async with get_transaction_session() as session:
         try:
@@ -20,20 +16,20 @@ async def create_initial_data():
             # 1. Crear Región Metropolitana
             # Verificar si ya existe
             result = await session.execute(text("""
-                SELECT id_region FROM "vecindApp".region 
+                SELECT id_region FROM "vecindapp".region 
                 WHERE nombre = 'Región Metropolitana de Santiago'
             """))
             existing_region = result.scalar()
             
             if not existing_region:
                 await session.execute(text("""
-                    INSERT INTO "vecindApp".region (nombre) 
+                    INSERT INTO "vecindapp".region (nombre) 
                     VALUES ('Región Metropolitana de Santiago')
                 """))
             
             # Obtener ID de la región
             result = await session.execute(text("""
-                SELECT id_region FROM "vecindApp".region 
+                SELECT id_region FROM "vecindapp".region 
                 WHERE nombre = 'Región Metropolitana de Santiago'
             """))
             id_region = result.scalar()
@@ -42,20 +38,20 @@ async def create_initial_data():
             # 2. Crear Comuna de Maipú
             # Verificar si ya existe
             result = await session.execute(text("""
-                SELECT id_comuna FROM "vecindApp".comuna 
+                SELECT id_comuna FROM "vecindapp".comuna 
                 WHERE nombre = 'Maipú' AND id_region = :id_region
             """), {"id_region": id_region})
             existing_comuna = result.scalar()
             
             if not existing_comuna:
                 await session.execute(text("""
-                    INSERT INTO "vecindApp".comuna (id_region, nombre) 
+                    INSERT INTO "vecindapp".comuna (id_region, nombre) 
                     VALUES (:id_region, 'Maipú')
                 """), {"id_region": id_region})
             
             # Obtener ID de la comuna
             result = await session.execute(text("""
-                SELECT id_comuna FROM "vecindApp".comuna 
+                SELECT id_comuna FROM "vecindapp".comuna 
                 WHERE nombre = 'Maipú' AND id_region = :id_region
             """), {"id_region": id_region})
             id_comuna = result.scalar()
@@ -71,14 +67,14 @@ async def create_initial_data():
             for nombre, direccion, telefono, email, descripcion in juntas:
                 # Verificar si ya existe
                 result = await session.execute(text("""
-                    SELECT id_junta FROM "vecindApp".junta 
+                    SELECT id_junta FROM "vecindapp".junta 
                     WHERE nombre = :nombre AND id_comuna = :id_comuna
                 """), {"nombre": nombre, "id_comuna": id_comuna})
                 existing_junta = result.scalar()
                 
                 if not existing_junta:
                     await session.execute(text("""
-                        INSERT INTO "vecindApp".junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
+                        INSERT INTO "vecindapp".junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
                         VALUES (:id_comuna, :nombre, :direccion, :telefono, :email, :descripcion)
                     """), {
                         "id_comuna": id_comuna,
@@ -102,14 +98,14 @@ async def create_initial_data():
             for codigo, nombre, descripcion in roles:
                 # Verificar si ya existe
                 result = await session.execute(text("""
-                    SELECT id_rol FROM "vecindApp".rol 
+                    SELECT id_rol FROM "vecindapp".rol 
                     WHERE codigo = :codigo
                 """), {"codigo": codigo})
                 existing_rol = result.scalar()
                 
                 if not existing_rol:
                     await session.execute(text("""
-                        INSERT INTO "vecindApp".rol (codigo, nombre, descripcion) 
+                        INSERT INTO "vecindapp".rol (codigo, nombre, descripcion) 
                         VALUES (:codigo, :nombre, :descripcion)
                     """), {
                         "codigo": codigo,
@@ -125,7 +121,7 @@ async def create_initial_data():
             print("\n🎉 ¡Datos iniciales creados exitosamente!")
             
             # Mostrar resumen con IDs reales
-            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindApp\".junta WHERE id_comuna = :id_comuna"), {"id_comuna": id_comuna})
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".junta WHERE id_comuna = :id_comuna"), {"id_comuna": id_comuna})
             total_juntas = result.scalar()
             
             print("\n📋 RESUMEN:")

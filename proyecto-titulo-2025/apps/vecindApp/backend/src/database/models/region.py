@@ -1,8 +1,4 @@
-"""
-Modelo Region para la tabla region.
-
-Representa las regiones de Chile en el sistema VecindApp.
-"""
+"""Modelo Region - Regiones de Chile."""
 
 from sqlalchemy import Column, BigInteger, Text, DateTime, func
 from sqlalchemy.orm import relationship
@@ -10,19 +6,10 @@ from src.database import Base
 
 
 class Region(Base):
-    """
-    Modelo que representa una región de Chile.
-    
-    Attributes:
-        id_region: Identificador único de la región (BIGSERIAL PRIMARY KEY)
-        nombre: Nombre de la región (TEXT NOT NULL)
-        codigo: Código ISO de la región (TEXT UNIQUE)
-        created_at: Fecha de creación (TIMESTAMPTZ NOT NULL DEFAULT now())
-        comunas: Relación con las comunas de esta región
-    """
+    """Región de Chile con sus comunas asociadas."""
     
     __tablename__ = "region"
-    __table_args__ = {"schema": "vecindApp"}
+    __table_args__ = {"schema": "vecindapp"}
     
     id_region = Column(BigInteger, primary_key=True, autoincrement=True)
     nombre = Column(Text, nullable=False)

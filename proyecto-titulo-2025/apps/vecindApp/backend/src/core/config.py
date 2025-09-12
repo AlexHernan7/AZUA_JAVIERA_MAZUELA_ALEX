@@ -20,9 +20,9 @@ class DotEnvLoader(EnvironmentLoader):
 
 
 class APISettings(BaseModel):
-    """API specific settings."""
+    """Configuración de API."""
     v1_str: str = "/api"
-    project_name: str = "vecindApp"
+    project_name: str = "vecindapp"
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
@@ -30,7 +30,7 @@ class APISettings(BaseModel):
 
 
 class GoogleOAuthSettings(BaseModel):
-    """Google OAuth settings."""
+    """Configuración OAuth."""
     client_id: str
     client_secret: str
     redirect_uri: str
@@ -38,24 +38,21 @@ class GoogleOAuthSettings(BaseModel):
 
 
 class FileSettings(BaseModel):
-    """File storage specific settings."""
-    upload_directory: str = Field(default="uploads", description="Directorio base para archivos subidos")
-    base_url: str = Field(default="/files", description="URL base para servir archivos")
-    max_file_size: int = Field(default=10 * 1024 * 1024, description="Tamaño máximo de archivo en bytes")
-    allowed_extensions: list[str] = Field(
-        default=[".jpg", ".jpeg", ".png", ".pdf"], 
-        description="Extensiones de archivo permitidas"
-    )
+    """Configuración de archivos."""
+    upload_directory: str = Field(default="uploads")
+    base_url: str = Field(default="/files")
+    max_file_size: int = Field(default=10 * 1024 * 1024)
+    allowed_extensions: list[str] = Field(default=[".jpg", ".jpeg", ".png", ".pdf"])
 
 
 class DatabaseSettings(BaseModel):
-    """Database connection settings."""
+    """Configuración de base de datos."""
     user: str
     password: str
     host: str
     port: str
     name: str
-    db_schema: str = "vecindApp"
+    db_schema: str = "vecindapp"
     pool_size: int = 20
     max_overflow: int = 10
 
@@ -69,20 +66,20 @@ class DatabaseSettings(BaseModel):
 
 
 class MigrationSettings(BaseModel):
-    """Alembic migration settings."""
+    """Configuración de migraciones."""
     base_dir: str = Field(default="alembic")
     development_versions_dir: str = Field(default="versions/development")
     production_versions_dir: str = Field(default="versions/production")
 
     def get_versions_path(self, environment: str, script_location: str) -> str:
-        """Get the versions path based on environment."""
+        """Obtiene la ruta de versiones según el entorno."""
         if environment.upper() in ["DEVELOPMENT", "STAGING"]:
             return path.join(script_location, self.development_versions_dir)
         return path.join(script_location, self.production_versions_dir)
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Configuración principal de la aplicación."""
     debug: bool = False
     environment: Literal["DEVELOPMENT", "STAGING", "PRODUCTION"]
     database: DatabaseSettings
@@ -93,7 +90,7 @@ class Settings(BaseSettings):
 
     @classmethod
     def get_database_settings(cls, environment: str) -> dict[str, Any]:
-        """Get database settings based on environment."""
+        """Configuración de BD según el entorno."""
         if environment.upper() == "DEVELOPMENT":
             return {
                 "user": "postgres",
@@ -101,7 +98,7 @@ class Settings(BaseSettings):
                 "host": "localhost",
                 "port": "5432",
                 "name": "postgres",
-                "db_schema": "vecindApp",
+                "db_schema": "vecindapp",
                 "pool_size": 20,
                 "max_overflow": 10,
             }
@@ -127,7 +124,7 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
-    """Get cached settings instance."""
+    """Obtiene configuración cacheada."""
     env_loader.load()
     environment = getenv("ENVIRONMENT")
 
