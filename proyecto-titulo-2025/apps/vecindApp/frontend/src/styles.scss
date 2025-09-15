@@ -111,3 +111,24 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
   -webkit-backdrop-filter: blur(6px);   /* soporte Safari */
   z-index: 0; pointer-events:none;}
     
+  //                                           S T Y L E S    P R O F I L E
+
+  /* Caja con sombra suave */
+.shadow-soft {  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);}
+/* Colores ya usados en tu app */
+.text-ink-900 { color: #0c2a33; }
+/* Portada */
+.profile-cover {  height: clamp(140px, 28vw, 220px);  background: #e9f2ef;}
+.profile-cover .object-cover {  object-fit: cover;  display: block;}
+/* Avatar circular superpuesto */
+.avatar-wrap {  width: clamp(96px, 18vw, 120px);  height: clamp(96px, 18vw, 120px);  border-radius: 999px;  overflow: hidden;  border: 6px solid #fff;  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  margin-top: -60px;  background: #f1f5f9;}
+.avatar-img {  width: 100%;  height: 100%;  object-fit: cover;}
+/* Etiqueta/valor en info personal */
+.label {  width: 150px;  min-width: 150px;  color: #6b7280;    font-weight: 600;}
+.value {  flex: 1 1 auto;  color: #111827;}
+/* Hover sutil en Actividad */
+.hover-row {  transition: background-color .15s ease, padding-left .15s ease;  cursor: pointer;}
+.hover-row:hover {  background-color: #f8fafc;  padding-left: .25rem;}
+/* Responsive finos */
+@media (max-width: 576px) {  .label { width: 120px; min-width: 120px; }  .avatar-wrap { margin-top: -48px; }}

@@ -1,0 +1,112 @@
+<div class="container-xxl py-4 py-md-5">
+
+  <!-- Tarjeta principal -->
+  <div class="card border-0 shadow-soft rounded-4 overflow-hidden">
+
+    <!-- Portada -->
+    <div class="profile-cover position-relative">
+      <img src="/images/fondo_perfil.png" alt="Portada" class="w-100 h-100 object-cover">
+    </div>
+
+    <!-- Header con avatar + nombre -->
+    <div class="position-relative bg-transparent">
+      <div class="text-center pt-0 pt-md-1 pb-3 pb-md-4 px-3 px-md-4">
+
+        <!-- Avatar superpuesto -->
+        <div class="avatar-wrap mx-auto">
+          <img [src]="user.avatarUrl" alt="Avatar" class="avatar-img">
+        </div>
+
+        <h1 class="fw-bold display-6 mt-3 mb-1 text-ink-900">{{ user.nombreCompleto }}</h1>
+        <p class="text-muted mb-0">{{ user.subtitulo }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información personal -->
+  <div class="card border-0 shadow-soft rounded-4 mt-4">
+    <div class="d-flex align-items-center justify-content-between p-3 p-md-4">
+      <h5 class="mb-0 fw-bold">Información personal</h5>
+      <button class="btn btn-outline-teal-menu px-3" (click)="editarPerfil()">
+        Editar perfil
+      </button>
+    </div>
+
+    <hr class="my-0">
+
+    <!-- Grid de datos -->
+    <div class="p-3 p-md-4">
+      <div class="row gy-3">
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Nombre</div>
+            <div class="value">{{ user.nombreCompleto }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">RUT</div>
+            <div class="value">{{ user.rut }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Fecha de nac.</div>
+            <div class="value">{{ user.fechaNac }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Email</div>
+            <div class="value">{{ user.email }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Teléfono</div>
+            <div class="value">{{ user.telefono }}</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex">
+            <div class="label">Dirección</div>
+            <div class="value">{{ user.direccion }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Comuna</div>
+            <div class="value">{{ user.comuna }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="d-flex">
+            <div class="label">Región</div>
+            <div class="value">{{ user.region }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actividad -->
+  <div class="card border-0 shadow-soft rounded-4 mt-4">
+    <div class="p-3 p-md-4">
+      <h5 class="mb-3 fw-bold">Actividad</h5>
+
+      <ul class="list-group list-group-flush rounded-4 overflow-hidden">
+        <li class="list-group-item py-3 py-md-3 hover-row">Mis trámites</li>
+        <li class="list-group-item py-3 py-md-3 hover-row">Mis proyectos</li>
+        <li class="list-group-item py-3 py-md-3 hover-row">Mis noticias guardadas</li>
+      </ul>
+    </div>
+  </div>
+
+</div>

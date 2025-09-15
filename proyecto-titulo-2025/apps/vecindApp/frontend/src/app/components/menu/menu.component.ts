@@ -16,6 +16,7 @@ export class MenuComponent {
   goToLogin() { this.router.navigate(['/login']); }
   goToHome() { this.router.navigate(['/']); }
   goToRegister() { this.router.navigate(['/register']); }
+  goToProfile() { this.router.navigate(['/profile']); }
 
   isActive(route: string): boolean {
     return this.router.url === route;
