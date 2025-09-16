@@ -13,6 +13,7 @@ from src.database.models.vecino import Vecino
 from src.database.models.junta import Junta
 from src.database.models.rol import Rol
 from src.database.models.usuario_rol import UsuarioRol
+from src.utils.image_utils import base64_to_binary
 
 
 class UserService:
@@ -103,14 +104,15 @@ class UserService:
         )
         return result.scalar_one_or_none() is not None
     
-    async def update_vecino_profile(self, vecino_id: int, email: Optional[str] = None, telefono: Optional[str] = None) -> Optional[Vecino]:
+    async def update_vecino_profile(self, vecino_id: int, email: Optional[str] = None, telefono: Optional[str] = None, foto_perfil: Optional[str] = None) -> Optional[Vecino]:
         """
-        Actualiza email y/o teléfono del vecino.
+        Actualiza email, teléfono y/o foto de perfil del vecino.
         
         Args:
             vecino_id: ID del vecino
             email: Nuevo email (opcional)
             telefono: Nuevo teléfono (opcional)
+            foto_perfil: Nueva foto de perfil en base64 (opcional)
             
         Returns:
             Vecino actualizado o None si no existe
@@ -146,6 +148,14 @@ class UserService:
         
         if telefono is not None:
             update_data['telefono'] = telefono
+        
+        if foto_perfil is not None:
+            try:
+                # Convertir base64 a binario
+                foto_binaria = base64_to_binary(foto_perfil)
+                update_data['foto_perfil'] = foto_binaria
+            except ValueError as e:
+                raise ValueError(f"Error al procesar la foto de perfil: {str(e)}")
         
         if not update_data:
             return vecino

@@ -6,13 +6,17 @@ export interface LoginRequest {
 }
 
 export interface VecinoLoginData {
-  id_vecino: number;
   nombres: string;
   apellido_paterno: string;
   apellido_materno: string;
+  rut: string;
+  fecha_nacimiento?: string;
   telefono?: string;
   direccion?: string;
   foto_perfil?: string;
+  comuna?: string;
+  region?: string;
+  junta?: string;
 }
 
 export interface UserLoginData {
