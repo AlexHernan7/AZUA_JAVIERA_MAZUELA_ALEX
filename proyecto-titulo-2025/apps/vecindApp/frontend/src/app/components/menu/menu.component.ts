@@ -1,24 +1,24 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule],       
+  imports: [CommonModule, RouterModule],       
   templateUrl: './menu.component.html',
 })
 export class MenuComponent {
   constructor(private router: Router) {}
+
   menuOpen = false;               
   toggle() { this.menuOpen = !this.menuOpen; } 
+  closeMenu() { this.menuOpen = false; }
 
   goToLogin() { this.router.navigate(['/login']); }
   goToHome() { this.router.navigate(['/']); }
   goToRegister() { this.router.navigate(['/register']); }
   goToProfile() { this.router.navigate(['/profile']); }
 
-  isActive(route: string): boolean {
-    return this.router.url === route;
-  }
+  
 }

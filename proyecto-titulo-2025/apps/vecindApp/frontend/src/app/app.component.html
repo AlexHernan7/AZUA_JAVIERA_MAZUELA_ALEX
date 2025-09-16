@@ -1,3 +1,20 @@
-<app-menu-auth *ngIf="auth.isAuthenticated(); else publicMenu"></app-menu-auth>
-<ng-template #publicMenu><app-menu></app-menu></ng-template>
-<router-outlet></router-outlet>
+<!-- app.component.html -->
+<ng-container *ngIf="auth.isAuthenticated(); else publicShell">
+  <!-- Menú lateral autenticado -->
+  <app-menu-auth></app-menu-auth>
+
+  <!-- Contenido cuando HAY sidebar -->
+  <div class="auth-shell">
+    <router-outlet></router-outlet>
+  </div>
+</ng-container>
+
+<ng-template #publicShell>
+  <!-- Navbar pública (fixed-top) -->
+  <app-menu></app-menu>
+
+  <!-- Contenido cuando NO hay sidebar -->
+  <div class="public-shell">
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>
