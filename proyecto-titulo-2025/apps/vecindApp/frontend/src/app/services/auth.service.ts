@@ -1,19 +1,27 @@
 import { Injectable } from '@angular/core';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+//import { AuthService } from '../services/auth.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { 
-  LoginRequest, 
-  LoginResponse, 
-  UserLoginData, 
-  ApiError, 
-  RegisterRequest, 
-  RegisterResponse 
-} from '../interfaces/auth.interface';
+import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse } from '../interfaces/auth.interface';
+
+export const authGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) return true;
+  router.navigate(['/login']);
+  return false;
+};
 
 @Injectable({
   providedIn: 'root'
 })
+
+
+
 export class AuthService {
   private readonly API_URL = 'http://localhost:8000/api'; // URL base del backend con prefijo /api
   private readonly TOKEN_KEY = 'vecindapp_token';

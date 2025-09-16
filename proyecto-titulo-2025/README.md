@@ -148,6 +148,7 @@ npx nx generate @nx/angular:component nombre-componente --project=vecindApp
 
 # Componente con módulo propio
 npx nx generate @nx/angular:component apps/vecindApp/frontend/src/app/components/nombre_componente/nombre_componente
+npx nx generate @nx/angular:component src/app/components/nombre_componente/nombre_componente
 
 # Componente standalone (Angular 14+)
 npx nx generate @nx/angular:component nombre-componente --project=vecindApp --standalone

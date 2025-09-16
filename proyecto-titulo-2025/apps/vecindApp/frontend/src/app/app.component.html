@@ -1,4 +1,3 @@
-
-<app-menu></app-menu>
+<app-menu-auth *ngIf="auth.isAuthenticated(); else publicMenu"></app-menu-auth>
+<ng-template #publicMenu><app-menu></app-menu></ng-template>
 <router-outlet></router-outlet>
-

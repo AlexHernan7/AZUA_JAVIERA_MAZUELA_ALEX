@@ -1,0 +1,29 @@
+<!-- src/app/components/menu-auth/menu-auth.component.html -->
+<nav class="navbar navbar-expand-md bg-white shadow-sm fixed-top">
+  <div class="container-fluid px-3">
+    <a class="navbar-brand d-flex align-items-center ps-5" (click)="go('/')">
+      <img src="images/Logo_vecindapp_menu.png" alt="VecindApp" class="me-2" style="height:48px">
+      <span class="fw-semibold text-teal-700">VecindApp</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#authNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-between" id="authNavbar">
+      <ul class="navbar-nav mx-auto mb-2 mb-md-0 gap-md-4">
+        <li class="nav-item"><a class="nav-link fw-medium text-teal-700" (click)="go('/dashboard')">Panel</a></li>
+        <li class="nav-item"><a class="nav-link fw-medium text-teal-700" (click)="go('/tramites')">Trámites</a></li>
+        <li class="nav-item"><a class="nav-link fw-medium text-teal-700" (click)="go('/proyectos')">Proyectos</a></li>
+        <li class="nav-item"><a class="nav-link fw-medium text-teal-700" (click)="go('/profile')">Perfil</a></li>
+      </ul>
+
+      <div class="d-flex align-items-center gap-3 pe-4">
+        <span class="small text-muted d-none d-md-inline">
+          <!-- {{ auth.getCurrentUser()?.nombre || 'Vecino/a' }} -->
+        </span>
+        <button class="btn btn-outline-teal-menu fw-medium" (click)="logout()">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+</nav>
