@@ -94,6 +94,7 @@ class VecinoUpdateRequest(BaseModel):
     """
     email: Optional[EmailStr] = Field(None, description="Nuevo email del vecino")
     telefono: Optional[str] = Field(None, description="Nuevo teléfono del vecino")
+    foto_perfil: Optional[str] = Field(None, description="Nueva foto de perfil en base64")
     
     @validator('telefono')
     def validate_telefono(cls, v):
@@ -120,11 +121,47 @@ class VecinoUpdateRequest(BaseModel):
         
         return telefono_limpio
     
+    @validator('foto_perfil')
+    def validate_foto_perfil(cls, v):
+        if v is None:
+            return v
+        
+        # Validar formato base64
+        if not v.startswith('data:image/'):
+            raise ValueError("La foto debe estar en formato base64 con prefijo data:image/")
+        
+        try:
+            # Extraer el tipo MIME y los datos
+            header, data = v.split(',', 1)
+            mime_type = header.split(';')[0].split(':')[1]
+            
+            # Validar tipos MIME permitidos
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml']
+            if mime_type not in allowed_types:
+                raise ValueError(f"Tipo de imagen no permitido. Use: {', '.join(allowed_types)}")
+            
+            # Validar que los datos base64 sean válidos
+            import base64
+            decoded = base64.b64decode(data)
+            
+            # Validar tamaño (máximo 2MB)
+            max_size = 2 * 1024 * 1024  # 2MB
+            if len(decoded) > max_size:
+                raise ValueError("La imagen es demasiado grande. Máximo 2MB permitido")
+            
+            return v
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error al validar imagen: {str(e)}")
+    
     class Config:
         json_schema_extra = {
             "example": {
                 "email": "nuevo@email.com",
-                "telefono": "+56987654321"
+                "telefono": "+56987654321",
+                "foto_perfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD..."
             }
         }
 
@@ -139,6 +176,7 @@ class VecinoUpdateResponse(BaseModel):
     apellido_materno: Optional[str]
     email: str
     telefono: Optional[str]
+    foto_perfil: Optional[str] = None
     mensaje: str = "Datos actualizados correctamente"
     
     class Config:

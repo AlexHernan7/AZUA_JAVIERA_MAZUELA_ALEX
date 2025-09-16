@@ -281,13 +281,17 @@ async def login_user(
             apellido_materno=vecino.apellido_materno if vecino else "",
             activo=usuario.activo,
             vecino=VecinoLoginData(
-                id_vecino=vecino.id_vecino,
                 nombres=vecino.nombres,
                 apellido_paterno=vecino.apellido_paterno,
                 apellido_materno=vecino.apellido_materno,
+                rut=vecino.rut,
+                fecha_nacimiento=vecino.fecha_nacimiento,
                 telefono=vecino.telefono,
                 direccion=vecino.direccion,
-                foto_perfil=foto_perfil_base64
+                foto_perfil=foto_perfil_base64,
+                comuna=vecino.comuna.nombre if vecino.comuna else None,
+                region=vecino.comuna.region.nombre if vecino.comuna and vecino.comuna.region else None,
+                junta=vecino.junta.nombre if vecino.junta else None
             ) if vecino else None
         )
         

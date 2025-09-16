@@ -397,13 +397,17 @@ class LoginResponse(BaseModel):
                     "apellido_materno": "González",
                     "activo": True,
                     "vecino": {
-                        "id_vecino": 1,
                         "nombres": "Juan Carlos",
                         "apellido_paterno": "Pérez",
                         "apellido_materno": "González",
+                        "rut": "12345678K",
+                        "fecha_nacimiento": "1990-05-15",
                         "telefono": "+56912345678",
                         "direccion": "Los Aromos 123",
-                        "foto_perfil": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iYmx1ZSIgLz4KICA8dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE2Ij5UZXN0PC90ZXh0Pgo8L3N2Zz4="
+                        "foto_perfil": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iYmx1ZSIgLz4KICA8dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE2Ij5UZXN0PC90ZXh0Pgo8L3N2Zz4=",
+                        "comuna": "Maipú",
+                        "region": "Región Metropolitana",
+                        "junta": "Junta de Vecinos Los Aromos"
                     }
                 }
             }
@@ -432,13 +436,17 @@ class VecinoLoginData(BaseModel):
     """
     Schema con datos del vecino para la respuesta de login.
     """
-    id_vecino: int
     nombres: str
     apellido_paterno: str
     apellido_materno: Optional[str] = None
+    rut: str
+    fecha_nacimiento: Optional[date] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None
     foto_perfil: Optional[str] = None
+    comuna: Optional[str] = None
+    region: Optional[str] = None
+    junta: Optional[str] = None
     
     class Config:
         from_attributes = True

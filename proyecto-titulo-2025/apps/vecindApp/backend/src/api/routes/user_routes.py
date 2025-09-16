@@ -11,6 +11,7 @@ from src.services.user_service import UserService
 from src.schemas.auth_schemas import VecinoResponse
 from src.schemas.user_schemas import UsuariosList, UsuarioListResponse, VecinoUpdateRequest, VecinoUpdateResponse
 from src.core.security import verify_token
+from src.utils.image_utils import binary_to_base64
 
 # Crear router para rutas de usuarios
 router = APIRouter(prefix="/users", tags=["Usuarios"])
@@ -178,7 +179,7 @@ async def get_all_users_admin(
     "/vecino/{vecino_id}/profile",
     response_model=VecinoUpdateResponse,
     summary="Actualizar perfil de vecino",
-    description="Permite al vecino actualizar su email y teléfono. TEMPORAL: Sin autenticación para pruebas."
+    description="Permite al vecino actualizar su email, teléfono y foto de perfil. TEMPORAL: Sin autenticación para pruebas."
 )
 async def update_vecino_profile(
     vecino_id: int,
@@ -186,7 +187,7 @@ async def update_vecino_profile(
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Actualiza email y/o teléfono del vecino.
+    Actualiza email, teléfono y/o foto de perfil del vecino.
     TEMPORAL: Sin autenticación para pruebas.
     """
     try:
@@ -196,7 +197,8 @@ async def update_vecino_profile(
         updated_vecino = await user_service.update_vecino_profile(
             vecino_id=vecino_id,
             email=update_data.email,
-            telefono=update_data.telefono
+            telefono=update_data.telefono,
+            foto_perfil=update_data.foto_perfil
         )
         
         if not updated_vecino:
@@ -205,6 +207,15 @@ async def update_vecino_profile(
                 detail="Vecino no encontrado"
             )
         
+        # Convertir foto de perfil binaria a base64 para respuesta
+        foto_perfil_base64 = None
+        if updated_vecino.foto_perfil:
+            # Detectar si es SVG o imagen rasterizada
+            if updated_vecino.foto_perfil.startswith(b'<svg') or b'<svg' in updated_vecino.foto_perfil[:100]:
+                foto_perfil_base64 = binary_to_base64(updated_vecino.foto_perfil, "image/svg+xml")
+            else:
+                foto_perfil_base64 = binary_to_base64(updated_vecino.foto_perfil, "image/jpeg")
+        
         return VecinoUpdateResponse(
             id_vecino=updated_vecino.id_vecino,
             nombres=updated_vecino.nombres,
@@ -212,6 +223,7 @@ async def update_vecino_profile(
             apellido_materno=updated_vecino.apellido_materno,
             email=updated_vecino.email or "",
             telefono=updated_vecino.telefono,
+            foto_perfil=foto_perfil_base64,
             mensaje="Datos actualizados correctamente"
         )
         

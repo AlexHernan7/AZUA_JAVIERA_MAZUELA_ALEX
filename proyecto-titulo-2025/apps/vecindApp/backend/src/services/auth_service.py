@@ -7,12 +7,14 @@ Maneja el registro, login y validaciones de usuarios.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from typing import Optional, Tuple
 
 from src.database.models.usuario import Usuario
 from src.database.models.vecino import Vecino
 from src.database.models.junta import Junta
 from src.database.models.comuna import Comuna
+from src.database.models.region import Region
 from src.database.models.rol import Rol
 from src.database.models.usuario_rol import UsuarioRol
 from src.core.security import hash_password, validate_password_strength, verify_password
@@ -225,9 +227,14 @@ class AuthService:
         if not usuario.activo:
             raise ValueError("Usuario inactivo")
         
-        # 4. Obtener datos del vecino asociado
+        # 4. Obtener datos del vecino asociado con todas las relaciones necesarias
         result = await self.db.execute(
-            select(Vecino).where(Vecino.id_usuario == usuario.id_usuario)
+            select(Vecino)
+            .options(
+                selectinload(Vecino.junta),
+                selectinload(Vecino.comuna).selectinload(Comuna.region)
+            )
+            .where(Vecino.id_usuario == usuario.id_usuario)
         )
         vecino = result.scalar_one_or_none()
         
