@@ -25,6 +25,7 @@ export interface NewsErrorResponse {
 export interface NewsHealthCheck {
   status: string;
   message: string;
-  api_connection: string;
+  rss_connection: string;
+  feed_source: string;
   test_results: string;
 }

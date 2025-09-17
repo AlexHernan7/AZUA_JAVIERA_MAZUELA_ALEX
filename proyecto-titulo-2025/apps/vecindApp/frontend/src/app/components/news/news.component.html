@@ -1,14 +1,12 @@
 <div class="news-container">
   <!-- Header -->
   <div class="news-header">
-    <h1>Noticias de Chile</h1>
+    <h1>Noticias de Maipú</h1>
     <div class="news-controls">
       <select class="limit-selector" (change)="onLimitChange($event)" [value]="limit">
         <option value="5">5 noticias</option>
         <option value="10">10 noticias</option>
         <option value="20">20 noticias</option>
-        <option value="30">30 noticias</option>
-        <option value="50">50 noticias</option>
       </select>
       <button class="refresh-btn" (click)="refreshNews()" [disabled]="loading">
         <span [class.spinning]="loading">⟲</span>
@@ -20,7 +18,7 @@
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="loading-spinner"></div>
-    <p>Cargando noticias...</p>
+    <p>Cargando noticias de Maipú...</p>
   </div>
 
   <!-- Error State -->
@@ -43,7 +41,7 @@
         class="news-card"
         (click)="openArticle(article.url)"
       >
-        <div class="card-image" *ngIf="article.image_url">
+        <div class="card-image" *ngIf="article.image_url" [ngClass]="getImageTypeClass(article.image_url)">
           <img 
             [src]="article.image_url" 
             [alt]="article.title"
@@ -54,6 +52,11 @@
           >
           <div class="image-loading" *ngIf="imageLoadingStates[article.image_url]">
             <div class="loading-spinner-small"></div>
+          </div>
+          
+          <!-- Indicador de tipo de imagen -->
+          <div class="image-type-indicator" *ngIf="isPlaceholderImage(article.image_url)">
+            <span class="indicator-text">{{ getPlaceholderType(article.image_url) }}</span>
           </div>
         </div>
         <div class="card-image-placeholder" *ngIf="!article.image_url">
@@ -93,7 +96,7 @@
   <div *ngIf="!loading && !error && articles.length === 0" class="empty-state">
     <div class="empty-icon">📭</div>
     <h3>No hay noticias disponibles</h3>
-    <p>No se encontraron noticias en este momento. Intenta nuevamente más tarde.</p>
+    <p>No se encontraron noticias de Maipú en este momento. Intenta nuevamente más tarde.</p>
     <button class="retry-btn" (click)="refreshNews()">Reintentar</button>
   </div>
 </div>

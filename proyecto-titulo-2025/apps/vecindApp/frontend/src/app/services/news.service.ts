@@ -13,13 +13,15 @@ export class NewsService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Obtiene las noticias de Chile
-   * @param limit Número de noticias a obtener (1-50, por defecto 10)
+   * Obtiene las noticias de Maipú desde La Voz de Maipú
+   * @param limit Número de noticias a obtener (1-20, por defecto 10)
    */
-  getChileNews(limit: number = 10): Observable<NewsResponse> {
-    const params = new HttpParams().set('limit', limit.toString());
+  getMaipuNews(limit: number = 10): Observable<NewsResponse> {
+    // Validar límite según las nuevas restricciones del RSS
+    const validLimit = Math.min(Math.max(limit, 1), 20);
+    const params = new HttpParams().set('limit', validLimit.toString());
     
-    return this.http.get<NewsResponse>(`${this.API_URL}/news/chile`, { params })
+    return this.http.get<NewsResponse>(`${this.API_URL}/news/maipu`, { params })
       .pipe(
         catchError(this.handleError)
       );
@@ -51,13 +53,13 @@ export class NewsService {
         const apiError = error.error as any;
         
         if (error.status === 503) {
-          errorMessage = 'Servicio de noticias no disponible temporalmente';
+          errorMessage = 'Servicio de noticias RSS no disponible temporalmente';
         } else if (error.status === 422 && apiError.detail) {
-          errorMessage = 'Parámetros inválidos para obtener noticias';
+          errorMessage = 'Parámetros inválidos para obtener noticias (límite: 1-20)';
         } else if (apiError.message) {
           errorMessage = apiError.message;
         } else {
-          errorMessage = `Error ${error.status}: No se pudieron obtener las noticias`;
+          errorMessage = `Error ${error.status}: No se pudieron obtener las noticias de Maipú`;
         }
       } else {
         errorMessage = `Error ${error.status}: ${error.message}`;

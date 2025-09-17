@@ -12,31 +12,31 @@ router = APIRouter(prefix="/news", tags=["Noticias"])
 
 
 @router.get(
-    "/chile",
+    "/maipu",
     response_model=Union[NewsResponse, NewsErrorResponse],
-    summary="Obtener noticias de Chile",
-    description="Obtiene las últimas noticias de Chile usando APITube. "
-    "Las noticias se obtienen en tiempo real y no se almacenan en la base de datos. "
-    "Incluye noticias específicas de Chile filtradas por país y términos de búsqueda.",
+    summary="Obtener noticias de Maipú",
+    description="Obtiene las últimas noticias de la comuna de Maipú desde La Voz de Maipú. "
+    "Las noticias se obtienen del feed RSS en tiempo real y no se almacenan en la base de datos. "
+    "Incluye noticias locales relevantes para los vecinos de Maipú.",
 )
-async def get_chile_news(
-    limit: int = Query(default=10, ge=1, le=50, description="Número de noticias a obtener (1-50)")
+async def get_maipu_news(
+    limit: int = Query(default=10, ge=1, le=20, description="Número de noticias a obtener (1-20)")
 ):
     """
-    Obtiene las últimas noticias de Chile.
+    Obtiene las últimas noticias de Maipú.
     
     Args:
-        limit: Número de noticias a obtener (1-50, defecto 10)
+        limit: Número de noticias a obtener (1-20, defecto 10)
     """
     try:
         news_service = NewsService()
-        articles, total_results = await news_service.get_chile_news(limit=limit)
+        articles, total_results = await news_service.get_maipu_news(limit=limit)
         
         return NewsResponse(
             articles=articles,
             total_results=total_results,
             status="success",
-            message=f"Se obtuvieron {len(articles)} noticias de Chile correctamente"
+            message=f"Se obtuvieron {len(articles)} noticias de Maipú correctamente"
         )
         
     except Exception as e:
@@ -48,8 +48,8 @@ async def get_chile_news(
 
 @router.get(
     "/health",
-    summary="Verificar estado del servicio de noticias",
-    description="Endpoint para verificar si el servicio de noticias está funcionando correctamente."
+    summary="Verificar estado del servicio de noticias RSS",
+    description="Endpoint para verificar si el servicio de noticias RSS está funcionando correctamente."
 )
 async def news_health_check():
     """
@@ -58,12 +58,13 @@ async def news_health_check():
     try:
         news_service = NewsService()
         # Intentar obtener solo 1 noticia para verificar conectividad
-        articles, total = await news_service.get_chile_news(limit=1)
+        articles, total = await news_service.get_maipu_news(limit=1)
         
         return {
             "status": "OK",
-            "message": "Servicio de noticias funcionando correctamente",
-            "api_connection": "active",
+            "message": "Servicio de noticias RSS funcionando correctamente",
+            "rss_connection": "active",
+            "feed_source": "La Voz de Maipú",
             "test_results": f"Obtenida {len(articles)} noticia de prueba"
         }
     except Exception as e:

@@ -39,13 +39,13 @@ class GoogleOAuthSettings(BaseModel):
     scope: str = "openid email profile"
 
 
-class NewsAPISettings(BaseModel):
-    """Configuración de la API de noticias APITube."""
+class NewsRSSSettings(BaseModel):
+    """Configuración del feed RSS de noticias."""
 
-    api_key: str
-    base_url: str = Field(default="https://api.apitube.io/v1")
+    feed_url: str = Field(default="https://lavozdemaipu.cl/feed/")
     timeout: int = Field(default=30)
-    max_articles: int = Field(default=100)
+    max_articles: int = Field(default=20)
+    cache_ttl_minutes: int = Field(default=60)
 
 
 class FileSettings(BaseModel):
@@ -101,7 +101,7 @@ class Settings(BaseSettings):
     migrations: MigrationSettings = MigrationSettings()
     api: APISettings
     google_oauth: GoogleOAuthSettings
-    news_api: NewsAPISettings
+    news_rss: NewsRSSSettings
     files: FileSettings = Field(default_factory=FileSettings)
 
     @classmethod
@@ -153,9 +153,7 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             client_secret=getenv("GOOGLE_OAUTH_CLIENT_SECRET", "ADMIN"),
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
         ),
-        news_api=NewsAPISettings(
-            api_key=getenv("NEWS_API_KEY", "demo_key"),  # Usar una key de demo por defecto
-        ),
+        news_rss=NewsRSSSettings(),
     )
 
 
