@@ -9,8 +9,8 @@ from .user_schemas import *
 
 __all__ = [
     "UsuarioRegistroRequest",
-    "UsuarioRegistroResponse", 
+    "UsuarioRegistroResponse",
     "VecinoCreate",
     "VecinoResponse",
-    "ErrorResponse"
+    "ErrorResponse",
 ]

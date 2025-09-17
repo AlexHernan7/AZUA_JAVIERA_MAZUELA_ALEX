@@ -6,6 +6,7 @@ export interface LoginRequest {
 }
 
 export interface VecinoLoginData {
+  id_vecino?: number;
   nombres: string;
   apellido_paterno: string;
   apellido_materno: string;
@@ -75,4 +76,22 @@ export interface VecinoResponse {
 export interface RegisterResponse {
   id_usuario: number;
   vecino: VecinoResponse;
+}
+
+// Interfaces para actualización de perfil
+export interface UpdateProfileRequest {
+  email?: string;
+  telefono?: string;
+  foto_perfil?: string; // base64 opcional
+}
+
+export interface UpdateProfileResponse {
+  id_vecino: number;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno: string;
+  email: string;
+  telefono?: string;
+  foto_perfil?: string;
+  mensaje: string;
 }

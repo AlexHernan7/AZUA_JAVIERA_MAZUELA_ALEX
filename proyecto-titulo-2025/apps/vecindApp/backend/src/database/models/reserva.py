@@ -1,38 +1,70 @@
 """Modelo Reserva - Reservas de espacios."""
 
-from sqlalchemy import Column, BigInteger, Text, ForeignKey, DateTime, CheckConstraint, Index, func
+from sqlalchemy import (
+    Column,
+    BigInteger,
+    Text,
+    ForeignKey,
+    DateTime,
+    CheckConstraint,
+    Index,
+    func,
+)
 from sqlalchemy.orm import relationship
 from src.database import Base
 
 
 class Reserva(Base):
     """Reserva de espacio por un vecino."""
-    
+
     __tablename__ = "reserva"
     __table_args__ = (
-        CheckConstraint("estado IN ('pendiente','pagada','aprobada','rechazada','cancelada','confirmada')", name="ck_reserva_estado"),
+        CheckConstraint(
+            "estado IN ('pendiente','pagada','aprobada','rechazada','cancelada','confirmada')",
+            name="ck_reserva_estado",
+        ),
         CheckConstraint("fin > inicio", name="ck_reserva_intervalo"),
         Index("ix_reserva_estado", "id_junta", "estado"),
         Index("ix_reserva_espacio_tiempo", "id_espacio", "inicio", "fin"),
-        {"schema": "vecindapp"}
+        {"schema": "vecindapp"},
     )
-    
+
     id_reserva = Column(BigInteger, primary_key=True, autoincrement=True)
-    id_junta = Column(BigInteger, ForeignKey("vecindapp.junta.id_junta", ondelete="CASCADE"), nullable=False)
-    id_espacio = Column(BigInteger, ForeignKey("vecindapp.espacio.id_espacio", ondelete="CASCADE"), nullable=False)
-    id_vecino = Column(BigInteger, ForeignKey("vecindapp.vecino.id_vecino", ondelete="CASCADE"), nullable=False)
-    creado_por = Column(BigInteger, ForeignKey("vecindapp.usuario.id_usuario", ondelete="RESTRICT"), nullable=False)
+    id_junta = Column(
+        BigInteger,
+        ForeignKey("vecindapp.junta.id_junta", ondelete="CASCADE"),
+        nullable=False,
+    )
+    id_espacio = Column(
+        BigInteger,
+        ForeignKey("vecindapp.espacio.id_espacio", ondelete="CASCADE"),
+        nullable=False,
+    )
+    id_vecino = Column(
+        BigInteger,
+        ForeignKey("vecindapp.vecino.id_vecino", ondelete="CASCADE"),
+        nullable=False,
+    )
+    creado_por = Column(
+        BigInteger,
+        ForeignKey("vecindapp.usuario.id_usuario", ondelete="RESTRICT"),
+        nullable=False,
+    )
     inicio = Column(DateTime(timezone=True), nullable=False)
     fin = Column(DateTime(timezone=True), nullable=False)
     estado = Column(Text, nullable=False, default="pendiente")
     observaciones = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
     # Relaciones
     junta = relationship("Junta", back_populates="reservas")
     espacio = relationship("Espacio", back_populates="reservas")
     vecino = relationship("Vecino", back_populates="reservas")
-    creado_por_usuario = relationship("Usuario", back_populates="reservas_creadas", foreign_keys=[creado_por])
-    
+    creado_por_usuario = relationship(
+        "Usuario", back_populates="reservas_creadas", foreign_keys=[creado_por]
+    )
+
     def __repr__(self) -> str:
         return f"<Reserva(id_reserva={self.id_reserva}, id_espacio={self.id_espacio}, estado='{self.estado}')>"

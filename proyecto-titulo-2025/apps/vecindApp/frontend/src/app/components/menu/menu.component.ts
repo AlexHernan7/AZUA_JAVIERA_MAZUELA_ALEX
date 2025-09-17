@@ -18,7 +18,7 @@ export class MenuComponent {
   goToLogin() { this.router.navigate(['/login']); }
   goToHome() { this.router.navigate(['/']); }
   goToRegister() { this.router.navigate(['/register']); }
-  goToProfile() { this.router.navigate(['/profile']); }
+  goToNews() { this.router.navigate(['/news']); }
 
   
 }

@@ -26,12 +26,6 @@
       <!-- Portada -->
       <div class="profile-cover position-relative">
         <img src="/images/fondo_perfil.png" alt="Portada" class="w-100 h-100 object-cover">
-        
-        <!-- Botón de logout en la esquina superior derecha -->
-        <button class="btn btn-outline-light btn-sm position-absolute top-0 end-0 m-3" (click)="logout()">
-          <i class="bi bi-box-arrow-right me-1"></i>
-          Cerrar sesión
-        </button>
       </div>
 
       <!-- Header con avatar + nombre -->
@@ -157,5 +151,91 @@
     </div>
 
   </div> <!-- Cierre del div *ngIf="currentUser && !isLoading && !error" -->
+
+  <!-- Modal de edición de perfil -->
+  <div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="editProfileModal" *ngIf="showEditModal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar perfil</h5>
+          <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Close"></button>
+        </div>
+        
+        <form [formGroup]="editForm" (ngSubmit)="updateProfile()">
+          <div class="modal-body">
+            
+            <!-- Mensajes de error y éxito -->
+            <div *ngIf="updateError" class="alert alert-danger" role="alert">
+              {{ updateError }}
+            </div>
+            
+            <div *ngIf="updateSuccess" class="alert alert-success" role="alert">
+              {{ updateSuccess }}
+            </div>
+            
+            <!-- Campo Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="email" 
+                formControlName="email"
+                [class.is-invalid]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+              <div class="invalid-feedback" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+                <div *ngIf="editForm.get('email')?.errors?.['required']">El email es requerido</div>
+                <div *ngIf="editForm.get('email')?.errors?.['email']">Ingrese un email válido</div>
+              </div>
+            </div>
+            
+            <!-- Campo Teléfono -->
+            <div class="mb-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input 
+                type="tel" 
+                class="form-control" 
+                id="telefono" 
+                formControlName="telefono"
+                placeholder="+56987654321"
+                [class.is-invalid]="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
+              <div class="form-text">Formato: +56XXXXXXXXX</div>
+              <div class="invalid-feedback" *ngIf="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
+                <div *ngIf="editForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido. Use +56XXXXXXXXX</div>
+              </div>
+            </div>
+            
+            <!-- Campo Foto de perfil -->
+            <div class="mb-3">
+              <label for="foto_perfil" class="form-label">Foto de perfil</label>
+              <input 
+                type="file" 
+                class="form-control" 
+                id="foto_perfil" 
+                accept="image/jpeg,image/jpg,image/png"
+                (change)="onFileSelected($event)">
+              <div class="form-text">Formatos permitidos: JPEG, PNG. Tamaño máximo: 2MB</div>
+            </div>
+            
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isUpdating">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || isUpdating">
+              <span *ngIf="isUpdating" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              {{ isUpdating ? 'Actualizando...' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Backdrop del modal -->
+  <div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal" 
+       (click)="closeEditModal()"></div>
 
 </div> <!-- Cierre del container principal -->

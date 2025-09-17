@@ -1,14 +1,15 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { UserLoginData } from '../../interfaces/auth.interface';
+import { UserLoginData, UpdateProfileRequest } from '../../interfaces/auth.interface';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
@@ -16,6 +17,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: UserLoginData | null = null;
   isLoading: boolean = true;
   error: string | null = null;
+  
+  // Variables para el modal de edición
+  showEditModal: boolean = false;
+  editForm: FormGroup;
+  isUpdating: boolean = false;
+  updateError: string | null = null;
+  updateSuccess: string | null = null;
   
   private subscription: Subscription = new Subscription();
 
@@ -95,8 +103,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private formBuilder: FormBuilder
+  ) {
+    // Inicializar el formulario de edición
+    this.editForm = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      telefono: ['', [Validators.pattern(/^\+56\d{8,9}$/)]],
+      foto_perfil: ['']
+    });
+  }
 
   ngOnInit(): void {
     this.loadUserData();
@@ -135,8 +151,107 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   editarPerfil(): void {
-    // TODO: Implementar navegación a formulario de edición
-    console.log('Editar perfil para usuario:', this.currentUser?.id_usuario);
+    if (!this.currentUser) return;
+    
+    // Rellenar el formulario con los datos actuales
+    this.editForm.patchValue({
+      email: this.currentUser.email,
+      telefono: this.currentUser.vecino?.telefono || '',
+      foto_perfil: ''
+    });
+    
+    // Limpiar mensajes
+    this.updateError = null;
+    this.updateSuccess = null;
+    
+    // Mostrar modal
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.updateError = null;
+    this.updateSuccess = null;
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      this.updateError = 'Tipo de archivo no permitido. Use JPEG o PNG.';
+      return;
+    }
+
+    // Validar tamaño (máximo 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      this.updateError = 'La imagen es demasiado grande. Máximo 2MB permitido.';
+      return;
+    }
+
+    // Convertir a base64
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64String = e.target.result;
+      this.editForm.patchValue({
+        foto_perfil: base64String
+      });
+      this.updateError = null;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  updateProfile(): void {
+    if (this.editForm.invalid || this.isUpdating) return;
+
+    this.isUpdating = true;
+    this.updateError = null;
+    this.updateSuccess = null;
+
+    const formData = this.editForm.value;
+    const updateData: UpdateProfileRequest = {};
+
+    // Solo incluir campos que han cambiado
+    if (formData.email !== this.currentUser?.email) {
+      updateData.email = formData.email;
+    }
+
+    if (formData.telefono !== this.currentUser?.vecino?.telefono) {
+      updateData.telefono = formData.telefono || undefined;
+    }
+
+    if (formData.foto_perfil) {
+      updateData.foto_perfil = formData.foto_perfil;
+    }
+
+    // Si no hay cambios, cerrar modal
+    if (Object.keys(updateData).length === 0) {
+      this.updateSuccess = 'No hay cambios para actualizar';
+      setTimeout(() => this.closeEditModal(), 1500);
+      this.isUpdating = false;
+      return;
+    }
+
+    this.subscription.add(
+      this.authService.updateProfile(updateData).subscribe({
+        next: (response) => {
+          this.updateSuccess = response.mensaje || 'Perfil actualizado correctamente';
+          this.isUpdating = false;
+          
+          // Cerrar modal después de un momento
+          setTimeout(() => {
+            this.closeEditModal();
+          }, 1500);
+        },
+        error: (error) => {
+          this.updateError = error.message || 'Error al actualizar el perfil';
+          this.isUpdating = false;
+        }
+      })
+    );
   }
 
   logout(): void {

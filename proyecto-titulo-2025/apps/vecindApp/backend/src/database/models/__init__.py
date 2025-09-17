@@ -22,7 +22,7 @@ from .detalle_transaccion import DetalleTransaccion
 
 __all__ = [
     "Region",
-    "Comuna", 
+    "Comuna",
     "Junta",
     "Rol",
     "Usuario",

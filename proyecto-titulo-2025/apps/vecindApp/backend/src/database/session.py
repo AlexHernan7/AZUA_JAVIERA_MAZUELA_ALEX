@@ -23,7 +23,7 @@ engine = create_async_engine(
     # Ajustes para evitar problemas con greenlets
     pool_pre_ping=True,
     pool_recycle=3600,  # Reciclar conexiones cada hora
-    future=True
+    future=True,
 )
 
 # Crear session factory simple (sin scoped_session)
@@ -32,7 +32,7 @@ async_session_factory = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
     autocommit=False,
-    autoflush=False
+    autoflush=False,
 )
 
 
@@ -51,9 +51,11 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         asyncio.get_running_loop()
         logger.debug("Creando nueva sesión de base de datos para FastAPI")
     except RuntimeError:
-        logger.critical("Intentando obtener sesión de base de datos fuera de un contexto asyncio")
+        logger.critical(
+            "Intentando obtener sesión de base de datos fuera de un contexto asyncio"
+        )
         raise RuntimeError("get_db_session debe ser llamado desde un contexto asyncio")
-    
+
     # Crear sesión directamente sin contextvars
     session = async_session_factory()
     try:
@@ -78,7 +80,7 @@ async def get_transaction_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Gestor de contexto que proporciona una sesión de base de datos dentro de un bloque
     y maneja automáticamente commit/rollback.
-    
+
     Ejemplo:
         async with get_transaction_session() as session:
             # hacer operaciones con la sesión

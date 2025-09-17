@@ -19,7 +19,7 @@ __all__ = [
     "Base",
     "DatabaseSetup",
     "Region",
-    "Comuna", 
+    "Comuna",
     "Junta",
     "Rol",
     "Usuario",

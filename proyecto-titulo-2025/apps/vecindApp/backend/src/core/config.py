@@ -21,6 +21,7 @@ class DotEnvLoader(EnvironmentLoader):
 
 class APISettings(BaseModel):
     """Configuración de API."""
+
     v1_str: str = "/api"
     project_name: str = "vecindapp"
     secret_key: str
@@ -31,14 +32,25 @@ class APISettings(BaseModel):
 
 class GoogleOAuthSettings(BaseModel):
     """Configuración OAuth."""
+
     client_id: str
     client_secret: str
     redirect_uri: str
     scope: str = "openid email profile"
 
 
+class NewsAPISettings(BaseModel):
+    """Configuración de la API de noticias APITube."""
+
+    api_key: str
+    base_url: str = Field(default="https://api.apitube.io/v1")
+    timeout: int = Field(default=30)
+    max_articles: int = Field(default=100)
+
+
 class FileSettings(BaseModel):
     """Configuración de archivos."""
+
     upload_directory: str = Field(default="uploads")
     base_url: str = Field(default="/files")
     max_file_size: int = Field(default=10 * 1024 * 1024)
@@ -47,6 +59,7 @@ class FileSettings(BaseModel):
 
 class DatabaseSettings(BaseModel):
     """Configuración de base de datos."""
+
     user: str
     password: str
     host: str
@@ -67,6 +80,7 @@ class DatabaseSettings(BaseModel):
 
 class MigrationSettings(BaseModel):
     """Configuración de migraciones."""
+
     base_dir: str = Field(default="alembic")
     development_versions_dir: str = Field(default="versions/development")
     production_versions_dir: str = Field(default="versions/production")
@@ -80,12 +94,14 @@ class MigrationSettings(BaseModel):
 
 class Settings(BaseSettings):
     """Configuración principal de la aplicación."""
+
     debug: bool = False
     environment: Literal["DEVELOPMENT", "STAGING", "PRODUCTION"]
     database: DatabaseSettings
     migrations: MigrationSettings = MigrationSettings()
     api: APISettings
     google_oauth: GoogleOAuthSettings
+    news_api: NewsAPISettings
     files: FileSettings = Field(default_factory=FileSettings)
 
     @classmethod
@@ -115,10 +131,7 @@ class Settings(BaseSettings):
             }
 
     model_config = SettingsConfigDict(
-        case_sensitive=True,
-        env_file=".env",
-        validate_default=True,
-        extra='ignore'
+        case_sensitive=True, env_file=".env", validate_default=True, extra="ignore"
     )
 
 
@@ -139,7 +152,10 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             client_id=getenv("GOOGLE_OAUTH_CLIENT_ID", "ADMIN"),
             client_secret=getenv("GOOGLE_OAUTH_CLIENT_SECRET", "ADMIN"),
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
-        )
+        ),
+        news_api=NewsAPISettings(
+            api_key=getenv("NEWS_API_KEY", "demo_key"),  # Usar una key de demo por defecto
+        ),
     )
 
 

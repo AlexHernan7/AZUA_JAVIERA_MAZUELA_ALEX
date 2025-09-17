@@ -1,0 +1,99 @@
+<div class="news-container">
+  <!-- Header -->
+  <div class="news-header">
+    <h1>Noticias de Chile</h1>
+    <div class="news-controls">
+      <select class="limit-selector" (change)="onLimitChange($event)" [value]="limit">
+        <option value="5">5 noticias</option>
+        <option value="10">10 noticias</option>
+        <option value="20">20 noticias</option>
+        <option value="30">30 noticias</option>
+        <option value="50">50 noticias</option>
+      </select>
+      <button class="refresh-btn" (click)="refreshNews()" [disabled]="loading">
+        <span [class.spinning]="loading">⟲</span>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Cargando noticias...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <div class="error-icon">⚠</div>
+    <h3>Error al cargar noticias</h3>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshNews()">Reintentar</button>
+  </div>
+
+  <!-- News Grid -->
+  <div *ngIf="!loading && !error && articles.length > 0" class="news-grid">
+    <div class="news-stats">
+      <p>Mostrando {{ articles.length }} de {{ totalResults }} noticias disponibles</p>
+    </div>
+    
+    <div class="articles-grid">
+      <article 
+        *ngFor="let article of articles; trackBy: trackByUrl" 
+        class="news-card"
+        (click)="openArticle(article.url)"
+      >
+        <div class="card-image" *ngIf="article.image_url">
+          <img 
+            [src]="article.image_url" 
+            [alt]="article.title"
+            [attr.data-original-src]="article.image_url"
+            (error)="onImageError($event)"
+            (load)="onImageLoad($event)"
+            loading="lazy"
+          >
+          <div class="image-loading" *ngIf="imageLoadingStates[article.image_url]">
+            <div class="loading-spinner-small"></div>
+          </div>
+        </div>
+        <div class="card-image-placeholder" *ngIf="!article.image_url">
+          <span class="placeholder-icon">📰</span>
+        </div>
+        
+        <div class="card-content">
+          <h3 class="card-title">{{ article.title }}</h3>
+          
+          <p class="card-description" *ngIf="article.description">
+            {{ article.description }}
+          </p>
+          
+          <div class="card-meta">
+            <span class="source" *ngIf="article.source_name">
+              <strong>Fuente:</strong> {{ article.source_name }}
+            </span>
+            <span class="author" *ngIf="article.author">
+              <strong>Autor:</strong> {{ article.author }}
+            </span>
+            <span class="date">
+              <strong>Fecha:</strong> {{ formatDate(article.published_at) }}
+            </span>
+          </div>
+          
+          <div class="card-actions">
+            <button class="read-more-btn" (click)="onReadMore($event, article.url)">
+              Leer más →
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && articles.length === 0" class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>No hay noticias disponibles</h3>
+    <p>No se encontraron noticias en este momento. Intenta nuevamente más tarde.</p>
+    <button class="retry-btn" (click)="refreshNews()">Reintentar</button>
+  </div>
+</div>

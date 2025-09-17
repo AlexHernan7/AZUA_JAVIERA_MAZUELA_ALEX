@@ -26,11 +26,11 @@
   <!-- Perfil breve -->
   <div class="me-brief">
     <div class="avatar">
-      <img src="images/avatar-placeholder2.svg" alt="avatar" />
+      <img src="{{ auth.getCurrentUser()?.vecino?.foto_perfil }}" alt="avatar" />
     </div>
     <div class="who">
       <div class="hi">Hola,</div>
-      <div class="name">{{ auth.getCurrentUser()?.nombres || 'Vecino' }}</div>
+      <div class="name">{{ auth.getCurrentUser()?.nombres || 'Vecino' }} {{ auth.getCurrentUser()?.apellido_paterno || '' }}</div>
     </div>
   </div>
 
@@ -39,7 +39,7 @@
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
       <i class="bi bi-house-door"></i> Inicio
     </a>
-    <a routerLink="/vecinos" routerLinkActive="active"><i class="bi bi-people"></i> Usuarios vecinos</a>
+    <a routerLink="/profile" routerLinkActive="active"><i class="bi bi-people"></i>Perfil</a>
     <a routerLink="/directiva" routerLinkActive="active"><i class="bi bi-person-badge"></i> Directiva</a>
     <a routerLink="/certificados" routerLinkActive="active"><i class="bi bi-file-earmark-text"></i> Certificados</a>
     <a routerLink="/config" routerLinkActive="active"><i class="bi bi-gear"></i> Configuración</a>

@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.auth_routes import router as auth_router
 from src.api.routes.user_routes import router as user_router
+from src.api.routes.news_routes import router as news_router
 
 # Crear una instancia de FastAPI con prefijo /api
 app = FastAPI(
@@ -10,7 +11,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
 )
 
 # Configurar CORS para permitir requests desde el frontend
@@ -25,6 +26,7 @@ app.add_middleware(
 # Crear un router para las rutas de la API
 api_router = APIRouter(prefix="/api")
 
+
 # Endpoint de salud de la API
 @api_router.get("/health")
 async def health_check():
@@ -32,6 +34,7 @@ async def health_check():
     Endpoint para verificar el estado de la API
     """
     return {"estado": "OK", "mensaje": "API funcionando correctamente"}
+
 
 # Endpoint básico que retorna información de la API
 @api_router.get("/")
@@ -43,16 +46,19 @@ async def api_info():
         "mensaje": "Bienvenido a VecindApp API",
         "version": "1.0.0",
         "descripcion": "Sistema de gestión de juntas de vecinos",
-        "documentacion": "/api/docs"
+        "documentacion": "/api/docs",
     }
 
-# Incluir las rutas de autenticación y usuarios
+
+# Incluir las rutas de autenticación, usuarios y noticias
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
+api_router.include_router(news_router)
 
 # Incluir el router en la aplicación
 app.include_router(api_router)
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

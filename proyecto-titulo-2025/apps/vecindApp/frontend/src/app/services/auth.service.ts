@@ -5,7 +5,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse } from '../interfaces/auth.interface';
+import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse } from '../interfaces/auth.interface';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -138,6 +138,47 @@ export class AuthService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Actualiza el perfil del usuario
+   */
+  updateProfile(profileData: UpdateProfileRequest): Observable<UpdateProfileResponse> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      return throwError(() => new Error('Usuario no encontrado'));
+    }
+
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('Token no encontrado'));
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    return this.http.patch<UpdateProfileResponse>(
+      `${this.API_URL}/users/profile`, 
+      profileData,
+      { headers }
+    ).pipe(
+      tap(response => {
+        // Actualizar los datos del usuario en el storage y en los subjects
+        if (currentUser && currentUser.vecino) {
+          currentUser.email = response.email;
+          currentUser.vecino.telefono = response.telefono;
+          if (response.foto_perfil) {
+            currentUser.vecino.foto_perfil = response.foto_perfil;
+          }
+          
+          this.setUser(currentUser);
+          this.currentUserSubject.next(currentUser);
+        }
+      }),
+      catchError(this.handleError)
+    );
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {
