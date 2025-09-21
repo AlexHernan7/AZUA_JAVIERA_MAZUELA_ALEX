@@ -183,6 +183,10 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 .side-overlay{  position: fixed;  inset: 0;  z-index: 1035; /* debajo del sidebar (1030) + barra (1040) */  background: rgba(0,0,0,.35);}
 
 
+.avatar-boxx { min-height: 220px; background: #f8fafc; }
+.avatar-imgg { width: 104px; height: 104px; object-fit: cover; }
+.invalid { color: #dc2626; font-size: .85rem; margin-top: .25rem; }
+
 
 
 @media (max-width: 992px)
@@ -198,9 +202,9 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
   .app-side.open { transform: translateX(0);  }
   .has-auth-menu .app-main { margin-left: 0;   }
   .auth-shell{    padding-top: var(--mobilebar-h);}
-  }
+}
 
 @media (max-width: 576px) 
 {  .label { width: 120px; min-width: 120px; }  
-.avatar-wrap { margin-top: -48px; }
+   .avatar-wrap { margin-top: -48px; }
 }
