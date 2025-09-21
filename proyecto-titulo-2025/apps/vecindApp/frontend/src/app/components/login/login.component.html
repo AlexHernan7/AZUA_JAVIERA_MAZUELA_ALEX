@@ -8,6 +8,11 @@
 
     <!-- Formulario -->
     <form class="d-grid gap-3" (ngSubmit)="onLogin()">
+      <!-- Mostrar mensajes de éxito -->
+      <div *ngIf="successMessage" class="alert alert-success py-2 small">
+        {{ successMessage }}
+      </div>
+      
       <!-- Mostrar errores -->
       <div *ngIf="errorMessage" class="alert alert-danger py-2 small">
         {{ errorMessage }}

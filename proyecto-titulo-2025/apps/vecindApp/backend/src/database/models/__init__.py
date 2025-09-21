@@ -12,6 +12,7 @@ from .rol import Rol
 from .usuario import Usuario
 from .usuario_rol import UsuarioRol
 from .vecino import Vecino
+from .directiva import Directiva
 from .espacio import Espacio
 from .reserva import Reserva
 from .certificado import Certificado
@@ -28,6 +29,7 @@ __all__ = [
     "Usuario",
     "UsuarioRol",
     "Vecino",
+    "Directiva",
     "Espacio",
     "Reserva",
     "Certificado",

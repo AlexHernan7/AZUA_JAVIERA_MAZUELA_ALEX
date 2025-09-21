@@ -18,6 +18,10 @@ export interface VecinoLoginData {
   comuna?: string;
   region?: string;
   junta?: string;
+  // Campos adicionales para directivos (cuando se usan datos de directiva)
+  cargo?: string;
+  fecha_inicio_cargo?: string;
+  fecha_termino_cargo?: string;
 }
 
 export interface UserLoginData {
@@ -27,6 +31,7 @@ export interface UserLoginData {
   apellido_paterno: string;
   apellido_materno: string;
   activo: boolean;
+  roles?: string[]; // Roles del usuario
   vecino?: VecinoLoginData;
 }
 

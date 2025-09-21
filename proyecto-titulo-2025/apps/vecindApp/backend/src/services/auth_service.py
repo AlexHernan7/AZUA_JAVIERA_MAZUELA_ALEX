@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 
 from src.database.models.usuario import Usuario
 from src.database.models.vecino import Vecino
+from src.database.models.directiva import Directiva
 from src.database.models.junta import Junta
 from src.database.models.comuna import Comuna
 from src.database.models.region import Region
@@ -186,7 +187,7 @@ class AuthService:
         result = await self.db.execute(select(Comuna))
         return list(result.scalars().all())
 
-    async def login_user(self, email: str, password: str) -> tuple[Usuario, Vecino]:
+    async def login_user(self, email: str, password: str) -> tuple[Usuario, Optional[Vecino], Optional[Directiva], list[str]]:
         """
         Autentica un usuario con email y contraseña.
 
@@ -195,7 +196,7 @@ class AuthService:
             password: Contraseña en texto plano
 
         Returns:
-            Tupla (Usuario, Vecino) si la autenticación es exitosa
+            Tupla (Usuario, Vecino|None, Directiva|None, roles) si la autenticación es exitosa
 
         Raises:
             ValueError: Si las credenciales son inválidas o el usuario está inactivo
@@ -215,18 +216,40 @@ class AuthService:
         if not usuario.activo:
             raise ValueError("Usuario inactivo")
 
-        # 4. Obtener datos del vecino asociado con todas las relaciones necesarias
+        # 4. Obtener roles del usuario
         result = await self.db.execute(
-            select(Vecino)
-            .options(
-                selectinload(Vecino.junta),
-                selectinload(Vecino.comuna).selectinload(Comuna.region),
-            )
-            .where(Vecino.id_usuario == usuario.id_usuario)
+            select(Rol.codigo)
+            .join(UsuarioRol, Rol.id_rol == UsuarioRol.id_rol)
+            .where(UsuarioRol.id_usuario == usuario.id_usuario)
         )
-        vecino = result.scalar_one_or_none()
+        roles = [row[0] for row in result.fetchall()]
 
-        if not vecino:
-            raise ValueError("No se encontró perfil de vecino asociado")
+        if not roles:
+            raise ValueError("Usuario sin roles asignados")
 
-        return usuario, vecino
+        # 5. Buscar datos específicos según los roles
+        vecino = None
+        directiva = None
+
+        # Si tiene rol de vecino, buscar datos de vecino
+        if "vecino" in roles:
+            result = await self.db.execute(
+                select(Vecino)
+                .options(
+                    selectinload(Vecino.junta),
+                    selectinload(Vecino.comuna).selectinload(Comuna.region),
+                )
+                .where(Vecino.id_usuario == usuario.id_usuario)
+            )
+            vecino = result.scalar_one_or_none()
+
+        # Si tiene rol de directiva, buscar datos de directiva
+        if "directiva" in roles:
+            result = await self.db.execute(
+                select(Directiva)
+                .options(selectinload(Directiva.junta))
+                .where(Directiva.id_usuario == usuario.id_usuario)
+            )
+            directiva = result.scalar_one_or_none()
+
+        return usuario, vecino, directiva, roles
