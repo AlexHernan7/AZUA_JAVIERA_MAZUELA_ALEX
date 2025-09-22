@@ -25,4 +25,5 @@ export class MenuAuthComponent {
   this.menuOpen = !this.menuOpen;
 }
 
+goToNews() { this.router.navigate(['/news']); }
 }
