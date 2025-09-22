@@ -48,6 +48,7 @@ class Usuario(Base):
         "UsuarioRol", back_populates="usuario", cascade="all, delete-orphan"
     )
     vecino = relationship("Vecino", back_populates="usuario", uselist=False)
+    directiva = relationship("Directiva", back_populates="usuario", uselist=False)
     reservas_creadas = relationship(
         "Reserva",
         back_populates="creado_por_usuario",

@@ -220,44 +220,69 @@ async def login_user(
 
         # 2. Autenticar usuario
         logger.info(f"🔄 Autenticando usuario: {credentials.email}")
-        usuario, vecino = await auth_service.login_user(
+        usuario, vecino, directiva, roles = await auth_service.login_user(
             credentials.email, credentials.password
         )
+        logger.info(f"✅ Usuario autenticado con roles: {roles}")
 
-        # 3. Crear JWT token
+        # 3. Determinar datos personales (vecino o directiva)
+        if vecino:
+            nombres = vecino.nombres
+            apellido_paterno = vecino.apellido_paterno
+            apellido_materno = vecino.apellido_materno
+        elif directiva:
+            nombres = directiva.nombres
+            apellido_paterno = directiva.apellido_paterno
+            apellido_materno = directiva.apellido_materno
+        else:
+            # Usuario administrativo sin perfil
+            nombres = ""
+            apellido_paterno = ""
+            apellido_materno = ""
+
+        # 4. Crear JWT token
         token_data = {
             "sub": str(usuario.id_usuario),  # subject = user id
             "email": usuario.email,
-            "nombres": vecino.nombres if vecino else "",
-            "apellido_paterno": vecino.apellido_paterno if vecino else "",
-            "apellido_materno": vecino.apellido_materno if vecino else "",
+            "nombres": nombres,
+            "apellido_paterno": apellido_paterno,
+            "apellido_materno": apellido_materno,
+            "roles": roles,  # Incluir roles en el token
         }
 
         access_token = create_access_token(token_data)
         logger.info(f"✅ Token JWT creado para usuario ID: {usuario.id_usuario}")
 
-        # Convertir foto de perfil binaria a base64 para respuesta
+        # 5. Convertir foto de perfil binaria a base64 para respuesta
         foto_perfil_base64 = None
+        foto_perfil_source = None
+        
         if vecino and vecino.foto_perfil:
+            foto_perfil_source = vecino.foto_perfil
+        elif directiva and directiva.foto_perfil:
+            foto_perfil_source = directiva.foto_perfil
+            
+        if foto_perfil_source:
             # Detectar si es SVG o imagen rasterizada
             if (
-                vecino.foto_perfil.startswith(b"<svg")
-                or b"<svg" in vecino.foto_perfil[:100]
+                foto_perfil_source.startswith(b"<svg")
+                or b"<svg" in foto_perfil_source[:100]
             ):
                 foto_perfil_base64 = binary_to_base64(
-                    vecino.foto_perfil, "image/svg+xml"
+                    foto_perfil_source, "image/svg+xml"
                 )
             else:
-                foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/jpeg")
+                foto_perfil_base64 = binary_to_base64(foto_perfil_source, "image/jpeg")
 
-        # 4. Preparar respuesta
+        # 6. Preparar respuesta
         user_data = UserLoginData(
             id_usuario=usuario.id_usuario,
             email=usuario.email,
-            nombres=vecino.nombres if vecino else "",
-            apellido_paterno=vecino.apellido_paterno if vecino else "",
-            apellido_materno=vecino.apellido_materno if vecino else "",
+            nombres=nombres,
+            apellido_paterno=apellido_paterno,
+            apellido_materno=apellido_materno,
             activo=usuario.activo,
+            roles=roles,  # Incluir roles en la respuesta
             vecino=(
                 VecinoLoginData(
                     nombres=vecino.nombres,
@@ -277,7 +302,27 @@ async def login_user(
                     junta=vecino.junta.nombre if vecino.junta else None,
                 )
                 if vecino
-                else None
+                else (
+                    # Para directivos, crear un VecinoLoginData con datos de directiva
+                    VecinoLoginData(
+                        nombres=directiva.nombres,
+                        apellido_paterno=directiva.apellido_paterno,
+                        apellido_materno=directiva.apellido_materno,
+                        rut=directiva.rut,
+                        fecha_nacimiento=None,  # Los directivos no tienen fecha de nacimiento
+                        telefono=directiva.telefono,
+                        direccion=None,  # Los directivos no tienen dirección personal
+                        foto_perfil=foto_perfil_base64,
+                        comuna=None,  # Los directivos no tienen comuna personal
+                        region=None,
+                        junta=directiva.junta.nombre if directiva.junta else None,
+                        cargo=directiva.cargo,  # Agregar el cargo del directivo
+                        fecha_inicio_cargo=directiva.fecha_inicio_cargo.isoformat() if directiva.fecha_inicio_cargo else None,
+                        fecha_termino_cargo=directiva.fecha_termino_cargo.isoformat() if directiva.fecha_termino_cargo else None,
+                    )
+                    if directiva
+                    else None
+                )
             ),
         )
 

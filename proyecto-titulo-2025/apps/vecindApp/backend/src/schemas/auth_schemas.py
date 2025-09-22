@@ -451,6 +451,7 @@ class UserLoginData(BaseModel):
     apellido_paterno: str
     apellido_materno: Optional[str]
     activo: bool
+    roles: Optional[list[str]] = None  # Roles del usuario
     vecino: Optional["VecinoLoginData"] = None
 
     class Config:
@@ -460,6 +461,7 @@ class UserLoginData(BaseModel):
 class VecinoLoginData(BaseModel):
     """
     Schema con datos del vecino para la respuesta de login.
+    También se usa para directivos con campos adicionales.
     """
 
     nombres: str
@@ -473,6 +475,10 @@ class VecinoLoginData(BaseModel):
     comuna: Optional[str] = None
     region: Optional[str] = None
     junta: Optional[str] = None
+    # Campos adicionales para directivos
+    cargo: Optional[str] = None
+    fecha_inicio_cargo: Optional[str] = None  # ISO string
+    fecha_termino_cargo: Optional[str] = None  # ISO string
 
     class Config:
         from_attributes = True

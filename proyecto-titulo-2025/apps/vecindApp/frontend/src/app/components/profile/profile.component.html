@@ -81,10 +81,19 @@
             </div>
           </div>
 
-          <div class="col-12 col-md-6">
+          <!-- Solo mostrar fecha de nacimiento para vecinos, no para directivos -->
+          <div class="col-12 col-md-6" *ngIf="!isDirectivo">
             <div class="d-flex">
               <div class="label">Fecha de nacimiento</div>
               <div class="value">{{ fechaNacimientoFormateada }}</div>
+            </div>
+          </div>
+
+          <!-- Mostrar cargo solo para directivos -->
+          <div class="col-12 col-md-6" *ngIf="isDirectivo">
+            <div class="d-flex">
+              <div class="label">Cargo</div>
+              <div class="value">{{ cargo }}</div>
             </div>
           </div>
 
@@ -95,24 +104,41 @@
             </div>
           </div>
 
-          <div class="col-12" *ngIf="currentUser.vecino">
+          <!-- Solo mostrar dirección para vecinos, no para directivos -->
+          <div class="col-12" *ngIf="currentUser.vecino && !isDirectivo">
             <div class="d-flex">
               <div class="label">Dirección</div>
               <div class="value">{{ direccion }}</div>
             </div>
           </div>
 
-          <div class="col-12 col-md-6">
+          <!-- Solo mostrar comuna y región para vecinos, no para directivos -->
+          <div class="col-12 col-md-6" *ngIf="!isDirectivo">
             <div class="d-flex">
               <div class="label">Comuna</div>
               <div class="value">{{ comuna }}</div>
             </div>
           </div>
 
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-6" *ngIf="!isDirectivo">
             <div class="d-flex">
               <div class="label">Región</div>
               <div class="value">{{ region }}</div>
+            </div>
+          </div>
+
+          <!-- Mostrar fechas de cargo solo para directivos -->
+          <div class="col-12 col-md-6" *ngIf="isDirectivo">
+            <div class="d-flex">
+              <div class="label">Inicio de cargo</div>
+              <div class="value">{{ fechaInicioCargo }}</div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6" *ngIf="isDirectivo">
+            <div class="d-flex">
+              <div class="label">Término de cargo</div>
+              <div class="value">{{ fechaTerminoCargo }}</div>
             </div>
           </div>
 

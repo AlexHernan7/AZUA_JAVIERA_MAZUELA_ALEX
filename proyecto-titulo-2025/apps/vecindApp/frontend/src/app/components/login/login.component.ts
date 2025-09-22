@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../interfaces/auth.interface';
 
@@ -12,7 +12,7 @@ import { LoginRequest } from '../../interfaces/auth.interface';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   // Modelo para el formulario
   loginData: LoginRequest = {
     email: '',
@@ -22,11 +22,26 @@ export class LoginComponent {
   // Estados del componente
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    // Verificar si hay un mensaje en los query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['message']) {
+        this.successMessage = params['message'];
+        // Limpiar el mensaje después de 5 segundos
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+      }
+    });
+  }
 
   /**
    * Maneja el envío del formulario de login

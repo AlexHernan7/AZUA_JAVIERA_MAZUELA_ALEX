@@ -33,6 +33,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
     return `${this.currentUser.nombres} ${this.currentUser.apellido_paterno} ${this.currentUser.apellido_materno || ''}`.trim();
   }
 
+  get isDirectivo(): boolean {
+    return this.currentUser?.roles?.includes('directiva') || false;
+  }
+
+  get isVecino(): boolean {
+    return this.currentUser?.roles?.includes('vecino') || false;
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.roles?.includes('admin') || false;
+  }
+
   get avatarUrl(): string {
     const foto = this.currentUser?.vecino?.foto_perfil;
     if (foto && foto.trim() !== '') {
@@ -99,6 +111,42 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   get junta(): string {
     return this.currentUser?.vecino?.junta || 'No especificada';
+  }
+
+  get cargo(): string {
+    return this.currentUser?.vecino?.cargo || 'No especificado';
+  }
+
+  get fechaInicioCargo(): string {
+    const fecha = this.currentUser?.vecino?.fecha_inicio_cargo;
+    if (!fecha) return 'No especificada';
+    
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return fecha;
+    }
+  }
+
+  get fechaTerminoCargo(): string {
+    const fecha = this.currentUser?.vecino?.fecha_termino_cargo;
+    if (!fecha) return 'Cargo activo';
+    
+    try {
+      const date = new Date(fecha);
+      return date.toLocaleDateString('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return fecha;
+    }
   }
 
   constructor(

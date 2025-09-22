@@ -32,6 +32,9 @@ class Junta(Base):
     vecinos = relationship(
         "Vecino", back_populates="junta", cascade="all, delete-orphan"
     )
+    directiva = relationship(
+        "Directiva", back_populates="junta", cascade="all, delete-orphan"
+    )
     espacios = relationship(
         "Espacio", back_populates="junta", cascade="all, delete-orphan"
     )
