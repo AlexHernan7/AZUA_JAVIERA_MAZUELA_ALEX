@@ -66,7 +66,6 @@ export class DirectivaRegisterComponent implements OnInit {
 
   // Datos para juntas
   juntas: any[] = [];
-  juntaSeleccionada: number | null = null;
 
   form!: FormGroup;
 
@@ -88,6 +87,7 @@ export class DirectivaRegisterComponent implements OnInit {
       telefono: ['', [Validators.required, phoneClValidator]],
       fecha_inicio: [''],
       fecha_termino: [''],
+      juntaSeleccionada: ['', Validators.required], // Agregar control para junta
       passwords: this.fb.group(
         {
           password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(12)]],
@@ -107,19 +107,70 @@ export class DirectivaRegisterComponent implements OnInit {
     return this.form.get(path) as AbstractControl;
   }
 
+  // Helper para establecer la junta seleccionada
+  setJuntaSeleccionada(idJunta: number) {
+    this.form.patchValue({ juntaSeleccionada: idJunta });
+  }
+
   /**
    * Carga las juntas disponibles desde el backend
    */
   private loadJuntas(): void {
-    // Solo mostramos la junta única que estará en la base de datos
-    this.juntas = [
-      { id_junta: 1, nombre: 'Junta de Vecinos Barrio Oeste' }
-    ];
-    
-    // Seleccionar la única junta disponible por defecto
-    if (this.juntas.length > 0) {
-      this.juntaSeleccionada = this.juntas[0].id_junta;
-    }
+    // Cargar todas las comunas y sus juntas
+    this.authService.getComunas().subscribe({
+      next: (response: any) => {
+        // Para cada comuna, cargar sus juntas
+        if (response.comunas && response.comunas.length > 0) {
+          // Por ahora, cargamos las juntas de la primera comuna
+          // En un futuro podríamos agregar un selector de comuna también
+          const primeraComuna = response.comunas[0];
+          this.loadJuntasByComuna(primeraComuna.id_comuna);
+        } else {
+          // Fallback: usar la junta por defecto
+          this.juntas = [
+            { id_junta: 1, nombre: 'Junta de Vecinos Barrio Oeste' }
+          ];
+          if (this.juntas.length > 0) {
+            this.setJuntaSeleccionada(this.juntas[0].id_junta);
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error al cargar comunas:', error);
+        // Fallback: usar la junta por defecto
+        this.juntas = [
+          { id_junta: 1, nombre: 'Junta de Vecinos Barrio Oeste' }
+        ];
+        if (this.juntas.length > 0) {
+          this.setJuntaSeleccionada(this.juntas[0].id_junta);
+        }
+      }
+    });
+  }
+
+  /**
+   * Carga las juntas de una comuna específica
+   */
+  private loadJuntasByComuna(comunaId: number): void {
+    this.authService.getJuntasByComuna(comunaId).subscribe({
+      next: (response: any) => {
+        this.juntas = response.juntas || [];
+        // Si solo hay una junta, seleccionarla automáticamente
+        if (this.juntas.length === 1) {
+          this.setJuntaSeleccionada(this.juntas[0].id_junta);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error al cargar juntas:', error);
+        // Fallback: usar la junta por defecto
+        this.juntas = [
+          { id_junta: 1, nombre: 'Junta de Vecinos Barrio Oeste' }
+        ];
+        if (this.juntas.length > 0) {
+          this.setJuntaSeleccionada(this.juntas[0].id_junta);
+        }
+      }
+    });
   }
 
   onFileChange(evt: Event): void {
@@ -155,15 +206,11 @@ export class DirectivaRegisterComponent implements OnInit {
       return;
     }
 
-    // Validar que se haya seleccionado una junta
-    if (!this.juntaSeleccionada) {
-      this.errorMessage = 'Debe seleccionar una junta de vecinos.';
-      return;
-    }
-
     this.isLoading = true;
 
     const f = this.form.value as any;
+    const juntaSeleccionada = f.juntaSeleccionada;
+    
     const payload: DirectivoForm = {
       foto_perfil: f.foto_perfil || undefined,
       apellido_paterno: f.apellido_paterno.trim(),
@@ -179,7 +226,7 @@ export class DirectivaRegisterComponent implements OnInit {
     };
 
     // Llamar al servicio para registrar el directivo
-    this.directivaService.registerDirectivo(payload, this.juntaSeleccionada).subscribe({
+    this.directivaService.registerDirectivo(payload, juntaSeleccionada).subscribe({
       next: (response) => {
         this.isLoading = false;
         this.successMessage = '¡Directivo registrado exitosamente!';
@@ -191,7 +238,7 @@ export class DirectivaRegisterComponent implements OnInit {
           this.successMessage = '';
           // Reseleccionar la primera junta por defecto
           if (this.juntas.length > 0) {
-            this.juntaSeleccionada = this.juntas[0].id_junta;
+            this.setJuntaSeleccionada(this.juntas[0].id_junta);
           }
         }, 2000);
       },

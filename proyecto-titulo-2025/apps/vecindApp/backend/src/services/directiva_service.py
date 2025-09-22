@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 
 from src.database.models.usuario import Usuario
 from src.database.models.directiva import Directiva
+from src.database.models.vecino import Vecino
 from src.database.models.junta import Junta
 from src.database.models.rol import Rol
 from src.database.models.usuario_rol import UsuarioRol
@@ -224,3 +225,48 @@ class DirectivaService:
             .order_by(Directiva.fecha_inicio_cargo.desc())
         )
         return list(result.scalars().all())
+
+    async def get_vecino_by_user_id(self, user_id: int) -> Optional[Vecino]:
+        """
+        Obtiene el vecino asociado a un usuario.
+
+        Args:
+            user_id: ID del usuario
+
+        Returns:
+            Vecino asociado al usuario o None si no existe
+        """
+        result = await self.db.execute(
+            select(Vecino)
+            .options(selectinload(Vecino.junta))
+            .where(Vecino.id_usuario == user_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_directivos_by_user_junta(self, user_id: int, activos_only: bool = False) -> list[Directiva]:
+        """
+        Obtiene los directivos de la junta del vecino logueado.
+
+        Args:
+            user_id: ID del usuario logueado
+            activos_only: Si True, solo devuelve directivos activos
+
+        Returns:
+            Lista de directivos de la junta del vecino
+
+        Raises:
+            ValueError: Si el usuario no tiene un perfil de vecino o no pertenece a una junta
+        """
+        # Obtener el vecino asociado al usuario
+        vecino = await self.get_vecino_by_user_id(user_id)
+        if not vecino:
+            raise ValueError("Usuario no tiene perfil de vecino")
+
+        if not vecino.id_junta:
+            raise ValueError("Vecino no pertenece a ninguna junta")
+
+        # Obtener los directivos de la junta del vecino
+        if activos_only:
+            return await self.get_directivos_activos_by_junta(vecino.id_junta)
+        else:
+            return await self.get_directivos_by_junta(vecino.id_junta)

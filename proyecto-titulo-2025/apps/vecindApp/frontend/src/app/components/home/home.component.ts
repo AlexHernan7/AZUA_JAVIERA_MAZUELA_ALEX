@@ -11,9 +11,20 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-constructor(private router: Router, public authService: AuthService) {}
-
+  constructor(
+    private router: Router, 
+    public authService: AuthService
+  ) {}
 
   goToRegister() {
-    this.router.navigate(['/register']);}
+    this.router.navigate(['/register']);
+  }
+
+  /**
+   * Navega al perfil de la junta del usuario
+   */
+  goToMyJunta() {
+    // Por ahora usamos ID fijo 1, en el futuro se podría obtener del usuario
+    this.router.navigate(['/juntas', 1]);
+  }
 }

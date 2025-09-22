@@ -54,9 +54,11 @@ async def create_tables_and_initial_data():
             
             # 4. Crear junta de ejemplo
             await conn.execute(text("""
-                INSERT INTO vecindapp.junta (id_comuna, nombre, direccion, telefono, email, descripcion) VALUES
-                (1, 'Junta de Vecinos Administración', 'Dirección Admin', '+56912345678', 'admin@junta.cl', 'Junta administrativa del sistema')
-                ON CONFLICT DO NOTHING
+                INSERT INTO vecindapp.junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
+                SELECT 1, 'Junta de Vecinos Barrio Oeste', 'Av. Siempre Viva 1234', '+56987654321', 'contacto@juntabarrioeste.cl', 'Junta de vecinos del Barrio Oeste'
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM vecindapp.junta WHERE nombre = 'Junta de Vecinos Barrio Oeste'
+                )
             """))
             print("✅ Datos geográficos y junta admin creados")
             
@@ -99,14 +101,27 @@ async def create_tables_and_initial_data():
             """))
             print("✅ Regiones y comunas adicionales creadas")
             
-            # 8. Crear algunas juntas de ejemplo
-            await conn.execute(text("""
-                INSERT INTO vecindapp.junta (id_comuna, nombre, direccion, telefono, email) VALUES
+            # 8. Crear algunas juntas de ejemplo adicionales
+            juntas_adicionales = [
                 (2, 'Junta de Vecinos Las Condes Centro', 'Av. Apoquindo 1234', '+56987654321', 'contacto@jvlascondes.cl'),
                 (3, 'Junta de Vecinos Providencia Norte', 'Av. Providencia 5678', '+56976543210', 'info@jvprovidencia.cl'),
                 (4, 'Junta de Vecinos Ñuñoa Sur', 'Av. Irarrázaval 9012', '+56965432109', 'contacto@jvnunoa.cl')
-                ON CONFLICT DO NOTHING
-            """))
+            ]
+            
+            for id_comuna, nombre, direccion, telefono, email in juntas_adicionales:
+                await conn.execute(text("""
+                    INSERT INTO vecindapp.junta (id_comuna, nombre, direccion, telefono, email) 
+                    SELECT :id_comuna, :nombre, :direccion, :telefono, :email
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM vecindapp.junta WHERE nombre = :nombre
+                    )
+                """), {
+                    "id_comuna": id_comuna,
+                    "nombre": nombre, 
+                    "direccion": direccion,
+                    "telefono": telefono,
+                    "email": email
+                })
             print("✅ Juntas de ejemplo creadas")
             
         print("\n🎉 ¡Base de datos inicializada correctamente!")

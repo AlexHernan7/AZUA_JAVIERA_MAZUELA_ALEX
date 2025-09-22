@@ -32,7 +32,7 @@ class Usuario(Base):
     id_junta = Column(
         BigInteger,
         ForeignKey("vecindapp.junta.id_junta", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,  # Permitir NULL para usuarios admin globales
     )
     email = Column(Text, nullable=False)
     pass_hash = Column(Text, nullable=False)

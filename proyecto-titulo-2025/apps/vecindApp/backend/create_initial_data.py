@@ -59,7 +59,7 @@ async def create_initial_data():
             
             # 3. Crear juntas de ejemplo
             juntas = [
-                ("Junta de Vecinos Villa Los Aromos", "Los Aromos 100, Maipú", "+56228901234", "contacto@villalosaromos.cl", "Junta de vecinos del sector Villa Los Aromos"),
+                ("Junta de Vecinos Barrio Oeste", "Av. Siempre Viva 1234, Maipú", "+56987654321", "contacto@juntabarrioeste.cl", "Junta de vecinos del Barrio Oeste"),
                 ("Junta de Vecinos Las Américas", "Las Américas 200, Maipú", "+56228905678", "info@lasamericas.cl", "Junta de vecinos del sector Las Américas"),
                 ("Junta de Vecinos Central Maipú", "Av. Pajaritos 300, Maipú", "+56228909012", "central@maipu.cl", "Junta de vecinos del centro de Maipú")
             ]
@@ -116,6 +116,52 @@ async def create_initial_data():
                 else:
                     print(f"ℹ️  Rol ya existe: {nombre} (código: {codigo})")
             
+            # 6. Crear usuario administrador
+            from src.core.security import hash_password
+            
+            admin_password_hash = hash_password("admin")
+            
+            # Verificar si ya existe el usuario admin
+            result = await session.execute(text("""
+                SELECT id_usuario FROM "vecindapp".usuario 
+                WHERE email = 'admin@admin.cl'
+            """))
+            existing_admin = result.scalar()
+            
+            if not existing_admin:
+                # Crear usuario admin (sin junta específica, es administrador global)
+                await session.execute(text("""
+                    INSERT INTO "vecindapp".usuario (email, pass_hash, activo) 
+                    VALUES ('admin@admin.cl', :password_hash, true)
+                """), {"password_hash": admin_password_hash})
+                
+                # Obtener el ID del usuario recién creado
+                result = await session.execute(text("""
+                    SELECT id_usuario FROM "vecindapp".usuario 
+                    WHERE email = 'admin@admin.cl'
+                """))
+                admin_user_id = result.scalar()
+                
+                # Obtener el ID del rol admin
+                result = await session.execute(text("""
+                    SELECT id_rol FROM "vecindapp".rol 
+                    WHERE codigo = 'admin'
+                """))
+                admin_role_id = result.scalar()
+                
+                # Asignar rol admin al usuario
+                await session.execute(text("""
+                    INSERT INTO "vecindapp".usuario_rol (id_usuario, id_rol) 
+                    VALUES (:id_usuario, :id_rol)
+                """), {
+                    "id_usuario": admin_user_id,
+                    "id_rol": admin_role_id
+                })
+                
+                print(f"✅ Usuario administrador creado: admin@admin.cl")
+            else:
+                print(f"ℹ️  Usuario administrador ya existe: admin@admin.cl")
+            
             # Confirmar todos los cambios
             await session.commit()
             print("\n🎉 ¡Datos iniciales creados exitosamente!")
@@ -129,9 +175,12 @@ async def create_initial_data():
             print(f"- 1 Comuna: Maipú (ID: {id_comuna})")
             print(f"- {total_juntas} Juntas de vecinos en Maipú")
             print(f"- 3 Roles: vecino, directiva, admin")
+            print(f"- 1 Usuario administrador: admin@admin.cl")
             
-            print("\n🚀 Ya puedes probar el endpoint de registro!")
-            print("Usa estos datos de prueba:")
+            print("\n🚀 Ya puedes probar el sistema!")
+            print("📧 Usuario admin: admin@admin.cl")
+            print("🔑 Contraseña: admin")
+            print("\nDatos de prueba para registro:")
             print(f"- id_comuna: {id_comuna}")
             print("- id_junta: 1, 2 o 3 (cualquiera de las juntas creadas)")
             

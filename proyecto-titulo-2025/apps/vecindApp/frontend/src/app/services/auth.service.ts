@@ -5,7 +5,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse } from '../interfaces/auth.interface';
+import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse, ComunasList, JuntasList } from '../interfaces/auth.interface';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -100,6 +100,13 @@ export class AuthService {
     return this.hasValidToken();
   }
 
+  /**
+   * Método sincrónico para verificar si está logueado (alias de isAuthenticated)
+   */
+  isLoggedIn(): boolean {
+    return this.isAuthenticated();
+  }
+
   // Métodos privados
   private setToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
@@ -179,6 +186,26 @@ export class AuthService {
       }),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Obtiene la lista de comunas disponibles
+   */
+  getComunas(): Observable<ComunasList> {
+    return this.http.get<ComunasList>(`${this.API_URL}/auth/comunas`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Obtiene las juntas de una comuna específica
+   */
+  getJuntasByComuna(comunaId: number): Observable<JuntasList> {
+    return this.http.get<JuntasList>(`${this.API_URL}/auth/juntas/${comunaId}`)
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {

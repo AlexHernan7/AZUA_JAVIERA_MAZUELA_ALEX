@@ -17,7 +17,7 @@ from src.schemas.directiva_schemas import (
     ErrorResponse,
 )
 from src.utils import binary_to_base64
-from src.api.routes.user_routes import verify_admin_user
+from src.api.routes.user_routes import verify_admin_user, verify_user_token
 
 # Crear router para rutas de directivos
 router = APIRouter(prefix="/directiva", tags=["Directivos"])
@@ -195,6 +195,104 @@ async def get_directivos_by_junta(
         return directivos_response
 
     except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error al obtener directivos", "detalle": str(e)},
+        )
+
+
+@router.get(
+    "/mi-junta",
+    response_model=list[DirectivaResponse],
+    summary="Listar directivos de mi junta",
+    description="Obtiene la lista de directivos de la junta del vecino autenticado",
+    responses={
+        200: {"description": "Lista de directivos de la junta del usuario"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"description": "Usuario no tiene perfil de vecino"},
+        404: {"description": "Usuario no pertenece a ninguna junta"},
+    },
+)
+async def get_my_junta_directivos(
+    activos_only: bool = False,
+    current_user_id: int = Depends(verify_user_token),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Obtiene los directivos de la junta del vecino autenticado.
+    
+    Args:
+        activos_only: Si True, solo devuelve directivos activos
+        current_user_id: ID del usuario autenticado (obtenido del token)
+        db: Sesión de base de datos
+    
+    Returns:
+        Lista de directivos de la junta del usuario autenticado
+    """
+    try:
+        logger.info(f"🔄 Obteniendo directivos de la junta para usuario ID: {current_user_id}")
+        
+        directiva_service = DirectivaService(db)
+        
+        # Obtener directivos de la junta del usuario
+        directivos = await directiva_service.get_directivos_by_user_junta(
+            current_user_id, activos_only
+        )
+        
+        logger.info(f"✅ Encontrados {len(directivos)} directivos")
+
+        # Convertir a response format
+        directivos_response = []
+        for directiva in directivos:
+            foto_perfil_base64 = None
+            if directiva.foto_perfil:
+                if (
+                    directiva.foto_perfil.startswith(b"<svg")
+                    or b"<svg" in directiva.foto_perfil[:100]
+                ):
+                    foto_perfil_base64 = binary_to_base64(
+                        directiva.foto_perfil, "image/svg+xml"
+                    )
+                else:
+                    foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
+
+            directivos_response.append(DirectivaResponse(
+                id_directiva=directiva.id_directiva,
+                rut=directiva.rut,
+                nombres=directiva.nombres,
+                apellido_paterno=directiva.apellido_paterno,
+                apellido_materno=directiva.apellido_materno,
+                telefono=directiva.telefono,
+                email=directiva.email,
+                cargo=directiva.cargo,
+                fecha_inicio_cargo=directiva.fecha_inicio_cargo,
+                fecha_termino_cargo=directiva.fecha_termino_cargo,
+                foto_perfil=foto_perfil_base64,
+            ))
+
+        return directivos_response
+
+    except ValueError as e:
+        # Errores de validación (usuario sin vecino, vecino sin junta, etc.)
+        logger.warning(f"❌ Error de validación para usuario {current_user_id}: {str(e)}")
+        if "perfil de vecino" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": "Acceso denegado", "detalle": str(e)},
+            )
+        elif "no pertenece a ninguna junta" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": "Junta no encontrada", "detalle": str(e)},
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "Error de validación", "detalle": str(e)},
+            )
+    
+    except Exception as e:
+        logger.error(f"❌ Error interno al obtener directivos para usuario {current_user_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener directivos", "detalle": str(e)},

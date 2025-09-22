@@ -57,6 +57,15 @@
             </div>
 
             <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Junta de vecinos *</label>
+              <select class="form-select" formControlName="juntaSeleccionada">
+                <option value="" disabled>Selecciona una junta</option>
+                <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
+              </select>
+              <div class="invalid" *ngIf="g('juntaSeleccionada').touched && g('juntaSeleccionada').invalid">Selecciona una junta</div>
+            </div>
+
+            <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Nombres *</label>
               <input class="form-control" formControlName="nombres" placeholder="Nombres">
               <div class="invalid" *ngIf="g('nombres').touched && g('nombres').invalid">Obligatorio (mín. 2)</div>

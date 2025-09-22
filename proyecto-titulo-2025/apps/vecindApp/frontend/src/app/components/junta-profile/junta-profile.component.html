@@ -6,8 +6,17 @@
     <p class="mt-2 text-muted">Cargando…</p>
   </div>
 
-  <div *ngIf="!isLoading && error" class="alert alert-danger">
-    {{ error }}
+  <div *ngIf="!isLoading && error" class="alert alert-danger d-flex align-items-center">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <div>
+      <strong>Error:</strong> {{ error }}
+      <div class="mt-2">
+        <button class="btn btn-outline-danger btn-sm" (click)="loadJuntaProfile()">
+          <i class="bi bi-arrow-clockwise me-1"></i>
+          Reintentar
+        </button>
+      </div>
+    </div>
   </div>
 
   <ng-container *ngIf="!isLoading && !error && junta">
@@ -61,7 +70,13 @@
     <!-- Directiva -->
     <div class="d-flex align-items-center justify-content-between mb-2">
       <h5 class="fw-bold mb-0">Directiva</h5>
-      <span class="badge bg-teal-soft text-teal-700">{{ directiva.length || 0 }} integrantes</span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-teal-soft text-teal-700">{{ directiva.length || 0 }} integrantes</span>
+        <span *ngIf="directiva.length > 0" class="badge bg-success-soft text-success-700">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Activos
+        </span>
+      </div>
     </div>
 
     <div class="row g-3 g-md-4" *ngIf="tieneDirectiva; else sinDirectiva">

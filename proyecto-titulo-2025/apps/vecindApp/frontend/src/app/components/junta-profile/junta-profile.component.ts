@@ -2,6 +2,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { DirectivaService } from '../../services/directiva.service';
+import { AuthService } from '../../services/auth.service';
+import { DirectivaResponse } from '../../interfaces/directiva.interface';
 
 export interface Junta {
   id_junta: number;
@@ -17,6 +20,7 @@ export interface Junta {
   logo_url?: string;
 }
 
+// Usamos DirectivaResponse del servicio, pero mantenemos esta interfaz para compatibilidad
 export interface Directivo {
   id_usuario?: number;
   nombres: string;
@@ -44,45 +48,86 @@ export class JuntaProfileComponent implements OnInit {
   junta: Junta | null = null;
   directiva: Directivo[] = [];
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private directivaService: DirectivaService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    // lee el :id de la ruta (si luego conectas backend, úsalo para pedir datos)
-    const id = Number(this.route.snapshot.paramMap.get('id') ?? 0);
-
-    // MOCK de demostración (reemplaza por llamada a servicio)
-    // Simulamos espera corta
-    setTimeout(() => {
-      if (!id) {
-        this.error = 'Junta no encontrada.';
-        this.isLoading = false;
-        return;
-      }
-
-      this.junta = {
-        id_junta: id,
-        id_comuna: 13112,
-        nombre: 'Junta de Vecinos Barrio Oeste',
-        direccion: 'Av. Siempre Viva 1234',
-        telefono: '+56 9 9876 5432',
-        email: 'junta.losaromos@mail.com',
-        descripcion:
-          'Somos una organización vecinal que busca mejorar la calidad de vida de nuestros vecinos.',
-        created_at: new Date().toISOString(),
-        comuna_nombre: 'Maipú',
-        region_nombre: 'Región Metropolitana',
-        logo_url: '' // si tienes un logo, pon la URL
-      };
-
-      this.directiva = [
-        { nombres: 'Juan',  apellido_paterno: 'Pérez',   cargo: 'Presidente',     email: 'juan@mail.com',  telefono: '+56 9 1111 1111', foto_perfil: '' },
-        { nombres: 'María', apellido_paterno: 'González', cargo: 'Vicepresidente', email: 'maria@mail.com', telefono: '+56 9 2222 2222', foto_perfil: '' },
-        { nombres: 'Carlos', apellido_paterno: 'López',   cargo: 'Secretario',     email: 'carlos@mail.com',telefono: '+56 9 3333 3333', foto_perfil: '' },
-        { nombres: 'Ana',   apellido_paterno: 'Torres',  cargo: 'Tesorero',       email: 'ana@mail.com',   telefono: '+56 9 4444 4444', foto_perfil: '' },
-      ];
-
+    // Verificar si el usuario está autenticado
+    if (!this.authService.isLoggedIn()) {
+      this.error = 'Debes estar logueado para ver esta información.';
       this.isLoading = false;
-    }, 400);
+      return;
+    }
+
+    // Cargar datos de la junta y directivos
+    this.loadJuntaProfile();
+  }
+
+  /**
+   * Carga el perfil de la junta del usuario autenticado
+   */
+  loadJuntaProfile(): void {
+    this.isLoading = true;
+    this.error = null;
+
+    // Obtener datos del usuario logueado para mostrar info básica de la junta
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && currentUser.vecino) {
+      // Crear objeto junta básico con datos del usuario
+      this.junta = {
+        id_junta: 1,
+        id_comuna: 1,
+        nombre: currentUser.vecino.junta || 'Junta de Vecinos Barrio Oeste',
+        direccion: 'Información disponible próximamente',
+        telefono: 'Información disponible próximamente',
+        email: 'Información disponible próximamente',
+        descripcion: 'Información de la junta de vecinos. Los datos detallados se mostrarán cuando estén disponibles.',
+        comuna_nombre: currentUser.vecino.comuna || 'Comuna',
+        region_nombre: currentUser.vecino.region || 'Región',
+        logo_url: ''
+      };
+    }
+
+    // Cargar directivos reales de la junta del usuario
+    this.loadDirectivos();
+  }
+
+  /**
+   * Carga los directivos de la junta del usuario autenticado
+   */
+  private loadDirectivos(): void {
+    this.directivaService.getMyJuntaDirectivos(false).subscribe({
+      next: (directivos: DirectivaResponse[]) => {
+        // Convertir DirectivaResponse a Directivo para compatibilidad con el template
+        this.directiva = directivos.map(d => ({
+          nombres: d.nombres,
+          apellido_paterno: d.apellido_paterno,
+          apellido_materno: d.apellido_materno,
+          cargo: this.formatCargo(d.cargo),
+          email: d.email,
+          telefono: d.telefono,
+          foto_perfil: d.foto_perfil
+        }));
+
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        console.error('Error al cargar directivos:', error);
+        this.error = error.message || 'Error al cargar los directivos de la junta.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Formatea el cargo para mostrar con la primera letra en mayúscula
+   */
+  private formatCargo(cargo: string): string {
+    if (!cargo) return '';
+    return cargo.charAt(0).toUpperCase() + cargo.slice(1).toLowerCase();
   }
 
   get tieneDirectiva(): boolean {

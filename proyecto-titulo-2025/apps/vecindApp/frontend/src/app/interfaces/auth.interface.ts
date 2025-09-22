@@ -100,3 +100,27 @@ export interface UpdateProfileResponse {
   foto_perfil?: string;
   mensaje: string;
 }
+
+// Interfaces para comunas y juntas
+export interface ComunaData {
+  id_comuna: number;
+  nombre: string;
+}
+
+export interface ComunasList {
+  comunas: ComunaData[];
+  total: number;
+}
+
+export interface JuntaData {
+  id_junta: number;
+  nombre: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+}
+
+export interface JuntasList {
+  juntas: JuntaData[];
+  total: number;
+}

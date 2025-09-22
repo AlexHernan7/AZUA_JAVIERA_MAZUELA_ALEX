@@ -66,6 +66,17 @@
         </div>
       </div>
 
+      <!-- Card 5 - Solo para usuarios autenticados -->
+      <div class="col-12 col-md-6 col-lg-3" (click)="goToMyJunta()" *ngIf="authService.isAuthenticated()">
+        <div class="feature-card">
+          <div class="feature-icon pb-1">
+            <!-- grupo de personas -->
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div class="feature-title">Mi Junta<br/>de Vecinos</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>

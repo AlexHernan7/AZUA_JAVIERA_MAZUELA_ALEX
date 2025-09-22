@@ -70,6 +70,28 @@ export class DirectivaService {
   }
 
   /**
+   * Obtiene los directivos de la junta del usuario autenticado
+   */
+  getMyJuntaDirectivos(activosOnly: boolean = false): Observable<DirectivaResponse[]> {
+    // Obtener token de autorización
+    const token = this.authService.getToken();
+    if (!token) {
+      return throwError(() => new Error('Token de autorización requerido'));
+    }
+
+    // Configurar headers con autorización
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    const params = activosOnly ? '?activos_only=true' : '';
+    return this.http.get<DirectivaResponse[]>(`${this.API_URL}/directiva/mi-junta${params}`, { headers })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Manejo de errores HTTP
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
