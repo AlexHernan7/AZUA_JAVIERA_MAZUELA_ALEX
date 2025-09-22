@@ -51,7 +51,7 @@ export interface CertificadoApiError {
 }
 
 // Estados del certificado
-export type CertificadoEstado = 'iniciado' | 'pagado' | 'emitido' | 'rechazado';
+export type CertificadoEstado = 'iniciado' | 'emitido' | 'rechazado';
 
 // Catálogo de motivos para el frontend
 export interface MotivoGrupo {

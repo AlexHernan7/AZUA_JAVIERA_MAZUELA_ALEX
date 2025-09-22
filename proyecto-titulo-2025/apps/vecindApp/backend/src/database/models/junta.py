@@ -47,9 +47,6 @@ class Junta(Base):
     certificados = relationship(
         "Certificado", back_populates="junta", cascade="all, delete-orphan"
     )
-    transacciones = relationship(
-        "Transaccion", back_populates="junta", cascade="all, delete-orphan"
-    )
 
     def __repr__(self) -> str:
         return f"<Junta(id_junta={self.id_junta}, nombre='{self.nombre}', id_comuna={self.id_comuna})>"

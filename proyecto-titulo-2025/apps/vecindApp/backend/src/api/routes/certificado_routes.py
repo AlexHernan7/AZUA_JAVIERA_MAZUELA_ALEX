@@ -116,12 +116,12 @@ async def solicitar_certificado(
     response_model=CertificadoResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Generar certificado de residencia",
-    description="Genera el certificado PDF después de confirmar los datos",
+    description="Crea la solicitud y genera el certificado PDF en un solo paso",
     responses={
         201: {"description": "Certificado generado exitosamente"},
-        400: {"model": ErrorResponse, "description": "No hay solicitud pendiente o datos inválidos"},
+        400: {"model": ErrorResponse, "description": "Datos inválidos"},
         401: {"model": ErrorResponse, "description": "Token inválido o expirado"},
-        409: {"model": ErrorResponse, "description": "Certificado ya existe"},
+        404: {"model": ErrorResponse, "description": "Vecino no encontrado"},
     }
 )
 async def generar_certificado(
@@ -130,13 +130,22 @@ async def generar_certificado(
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Genera el certificado de residencia en PDF después de confirmar los datos.
+    Crea la solicitud y genera el certificado de residencia en un solo paso.
     """
     try:
         if not request.confirmar_datos:
             raise ValueError("Debe confirmar los datos para generar el certificado")
         
         service = CertificadoService(db)
+        
+        # Paso 1: Crear solicitud (si no existe una reciente)
+        try:
+            await service.crear_pedido_certificado(user_id, request.motivo_solicitud)
+        except ValueError as e:
+            # Si ya existe una solicitud, continuamos con la generación
+            logger.info(f"ℹ️ Usando solicitud existente: {str(e)}")
+        
+        # Paso 2: Generar certificado
         certificado = await service.generar_certificado(
             user_id, 
             request.motivo_solicitud,
@@ -148,9 +157,8 @@ async def generar_certificado(
         
     except ValueError as e:
         logger.warning(f"❌ Error generando certificado: {str(e)}")
-        status_code = status.HTTP_409_CONFLICT if "ya existe" in str(e).lower() else status.HTTP_400_BAD_REQUEST
         raise HTTPException(
-            status_code=status_code,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "Error generando certificado", "detalle": str(e)}
         )
     except Exception as e:

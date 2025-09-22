@@ -85,21 +85,9 @@ class CertificadoService:
             CertificadoPedidoResponse con los datos del pedido creado
             
         Raises:
-            ValueError: Si ya existe un pedido pendiente o faltan datos
+            ValueError: Si faltan datos del vecino o junta
         """
-        # Verificar que no exista un pedido pendiente
-        result = await self.db.execute(
-            select(CertificadoPedido)
-            .join(Vecino)
-            .where(
-                Vecino.id_usuario == user_id,
-                CertificadoPedido.estado.in_(["iniciado", "pagado"])
-            )
-        )
-        pedido_existente = result.scalar_one_or_none()
-        
-        if pedido_existente:
-            raise ValueError(f"Ya existe una solicitud de certificado en estado: {pedido_existente.estado}")
+        # Se permite crear múltiples solicitudes de certificado
         
         # Obtener datos del vecino
         result = await self.db.execute(
@@ -164,9 +152,9 @@ class CertificadoService:
             CertificadoResponse con los datos del certificado generado
             
         Raises:
-            ValueError: Si no existe pedido válido o ya existe certificado
+            ValueError: Si no existe solicitud de certificado
         """
-        # Buscar pedido pendiente
+        # Buscar el pedido más reciente del usuario
         result = await self.db.execute(
             select(CertificadoPedido)
             .options(
@@ -176,24 +164,13 @@ class CertificadoService:
                 selectinload(CertificadoPedido.junta)
             )
             .join(Vecino)
-            .where(
-                Vecino.id_usuario == user_id,
-                CertificadoPedido.estado == "iniciado"  # Por ahora omitimos "pagado"
-            )
+            .where(Vecino.id_usuario == user_id)
+            .order_by(CertificadoPedido.created_at.desc())
         )
-        pedido = result.scalar_one_or_none()
+        pedido = result.scalars().first()
         
         if not pedido:
-            raise ValueError("No se encontró solicitud de certificado pendiente")
-        
-        # Verificar que no exista ya un certificado para este pedido
-        result = await self.db.execute(
-            select(Certificado).where(Certificado.id_pedido == pedido.id_pedido)
-        )
-        certificado_existente = result.scalar_one_or_none()
-        
-        if certificado_existente:
-            raise ValueError("Ya existe un certificado generado para esta solicitud")
+            raise ValueError("No se encontró solicitud de certificado")
         
         # Generar número de certificado único
         numero_certificado = await self._generar_numero_certificado(pedido.id_junta)

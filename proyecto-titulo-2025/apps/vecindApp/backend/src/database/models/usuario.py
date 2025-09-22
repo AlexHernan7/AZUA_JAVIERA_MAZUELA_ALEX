@@ -59,7 +59,6 @@ class Usuario(Base):
         back_populates="creado_por_usuario",
         foreign_keys="[CertificadoPedido.creado_por]",
     )
-    transacciones = relationship("Transaccion", back_populates="usuario")
 
     def __repr__(self) -> str:
         return f"<Usuario(id_usuario={self.id_usuario}, email='{self.email}', id_junta={self.id_junta})>"

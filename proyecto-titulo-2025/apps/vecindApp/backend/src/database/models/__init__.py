@@ -17,9 +17,7 @@ from .espacio import Espacio
 from .reserva import Reserva
 from .certificado import Certificado
 from .certificado_pedido import CertificadoPedido
-from .transaccion import Transaccion
-from .pago_externo import PagoExterno
-from .detalle_transaccion import DetalleTransaccion
+# Modelos de transacciones eliminados - no se usan para certificados
 
 __all__ = [
     "Region",
@@ -34,7 +32,4 @@ __all__ = [
     "Reserva",
     "Certificado",
     "CertificadoPedido",
-    "Transaccion",
-    "PagoExterno",
-    "DetalleTransaccion",
 ]

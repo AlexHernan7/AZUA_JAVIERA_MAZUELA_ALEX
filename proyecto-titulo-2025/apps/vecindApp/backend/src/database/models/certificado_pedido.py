@@ -20,7 +20,7 @@ class CertificadoPedido(Base):
     __tablename__ = "certificado_pedido"
     __table_args__ = (
         CheckConstraint(
-            "estado IN ('iniciado','pagado','emitido','rechazado')",
+            "estado IN ('iniciado','emitido','rechazado')",
             name="ck_cert_pedido_estado",
         ),
         Index("ix_cert_pedido_estado", "id_junta", "estado"),

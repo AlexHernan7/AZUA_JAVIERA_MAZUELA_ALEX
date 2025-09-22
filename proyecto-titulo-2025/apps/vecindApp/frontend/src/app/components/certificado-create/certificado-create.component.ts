@@ -136,9 +136,9 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el click del botón "Ir a pagar" (omitimos pago por ahora)
+   * Maneja el click del botón "Generar Certificado" - flujo simplificado en un paso
    */
-  onPagarClick(): void {
+  onGenerarClick(): void {
     if (!this.puedeGenerar) return;
     
     this.clearMessages();
@@ -146,35 +146,11 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     
     const motivo = this.form.get('motivo')?.value;
     
-    // Paso 1: Crear solicitud
-    this.sub.add(
-      this.certificadoService.solicitarCertificado({ motivo_solicitud: motivo })
-        .subscribe({
-          next: (solicitud) => {
-            console.log('✅ Solicitud creada:', solicitud);
-            this.solicitudCreada = solicitud;
-            
-            // Paso 2: Generar certificado inmediatamente (omitimos pago)
-            this.generarCertificado(motivo);
-          },
-          error: (error) => {
-            console.error('❌ Error creando solicitud:', error);
-            this.errorMessage = error.message || 'Error al crear la solicitud';
-            this.isLoading = false;
-            this.checkFormState();
-          }
-        })
-    );
-  }
-
-  /**
-   * Genera el certificado PDF
-   */
-  private generarCertificado(motivo: string): void {
+    // Generar certificado directamente (el backend maneja la solicitud internamente)
     const request = {
       confirmar_datos: true,
       motivo_solicitud: motivo,
-      direccion_actualizada: undefined // Por ahora no permitimos cambiar dirección
+      direccion_actualizada: undefined
     };
     
     this.sub.add(
@@ -196,6 +172,7 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
         })
     );
   }
+
 
   /**
    * Maneja el click del botón "Descargar PDF"

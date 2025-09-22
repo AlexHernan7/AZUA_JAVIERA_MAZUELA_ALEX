@@ -84,14 +84,14 @@
 
       <!-- Acciones -->
       <div class="d-flex flex-column flex-md-row gap-3">
-        <!-- Botón para ir a pagar -->
+        <!-- Botón para generar certificado -->
         <button type="button"
                 class="btn btn-teal-menu flex-fill"
                 [disabled]="!puedeGenerar"
-                (click)="onPagarClick()">
+                (click)="onGenerarClick()">
           <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-          <i *ngIf="!isLoading" class="bi bi-credit-card me-1"></i>
-          {{ isLoading ? 'Procesando...' : 'Ir a pagar' }}
+          <i *ngIf="!isLoading" class="bi bi-file-earmark-text me-1"></i>
+          {{ isLoading ? 'Generando...' : 'Generar Certificado' }}
         </button>
 
         <!-- Botón para descargar PDF -->
@@ -138,10 +138,10 @@
         </div>
       </div>
       
-      <!-- Info pie (omitimos info de pago por ahora) -->
+      <!-- Información -->
       <div class="small text-muted border rounded-3 p-2 mt-3">
         <i class="bi bi-info-circle me-1"></i>
-        El certificado se genera inmediatamente sin costo para fines de prueba.
+        El certificado de residencia se genera de forma gratuita e inmediata.
       </div>
     </div>
   </div>
