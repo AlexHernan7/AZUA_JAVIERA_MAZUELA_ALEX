@@ -1,29 +1,18 @@
-<<<<<<< HEAD
-import { Component, EventEmitter, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-=======
 import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
->>>>>>> certificado
 import {
   FormBuilder,
   Validators,
   ReactiveFormsModule,
-<<<<<<< HEAD
-=======
   FormsModule,
->>>>>>> certificado
   AbstractControl,
   ValidationErrors,
   FormGroup,
 } from '@angular/forms';
-<<<<<<< HEAD
-=======
 import { DirectivaService } from '../../services/directiva.service';
 import { AuthService } from '../../services/auth.service';
->>>>>>> certificado
 
 /* --- Validadores UI --- */
 function rutBasicoValidator(ctrl: AbstractControl): ValidationErrors | null {
@@ -60,19 +49,11 @@ export type DirectivoForm = {
 @Component({
   selector: 'app-directiva-register',
   standalone: true,
-<<<<<<< HEAD
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './directiva-register.component.html',
-  styleUrls: ['./directiva-register.component.css'],
-})
-export class DirectivaRegisterComponent {
-=======
   imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   templateUrl: './directiva-register.component.html',
   styleUrls: ['./directiva-register.component.css'],
 })
 export class DirectivaRegisterComponent implements OnInit {
->>>>>>> certificado
   @Output() save = new EventEmitter<DirectivoForm>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -83,11 +64,6 @@ export class DirectivaRegisterComponent implements OnInit {
 
   cargos = ['Presidente', 'Vicepresidente', 'Secretario', 'Tesorero', 'Vocal'];
 
-<<<<<<< HEAD
-  form!: FormGroup;
-
-  constructor(private fb: FormBuilder) {
-=======
   // Datos para juntas
   juntas: any[] = [];
   juntaSeleccionada: number | null = null;
@@ -101,7 +77,6 @@ export class DirectivaRegisterComponent implements OnInit {
     private router: Router,
     private http: HttpClient
   ) {
->>>>>>> certificado
     this.form = this.fb.group({
       foto_perfil: [''],
       apellido_paterno: ['', [Validators.required, Validators.minLength(2)]],
@@ -123,8 +98,6 @@ export class DirectivaRegisterComponent implements OnInit {
     });
   }
 
-<<<<<<< HEAD
-=======
   ngOnInit(): void {
     // Cargar juntas disponibles
     this.loadJuntas();
@@ -134,8 +107,6 @@ export class DirectivaRegisterComponent implements OnInit {
     return this.form.get(path) as AbstractControl;
   }
 
-<<<<<<< HEAD
-=======
   /**
    * Carga las juntas disponibles desde el backend
    */
@@ -179,19 +150,14 @@ export class DirectivaRegisterComponent implements OnInit {
 
   submitUI(): void {
     this.errorMessage = '';
-<<<<<<< HEAD
-=======
     this.successMessage = '';
 
     // Validar formulario
->>>>>>> certificado
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.errorMessage = 'Revisa los campos marcados.';
       return;
     }
-<<<<<<< HEAD
-=======
 
     // Validar que se haya seleccionado una junta
     if (!this.juntaSeleccionada) {
@@ -216,11 +182,6 @@ export class DirectivaRegisterComponent implements OnInit {
       password: f.passwords.password,
     };
 
-<<<<<<< HEAD
-    // Solo UI: emite los datos listos. El contenedor hará el POST real.
-    this.save.emit(payload);
-    this.successMessage = 'Formulario válido listo para enviar.';
-=======
     // Llamar al servicio para registrar el directivo
     this.directivaService.registerDirectivo(payload, this.juntaSeleccionada).subscribe({
       next: (response) => {
@@ -244,7 +205,6 @@ export class DirectivaRegisterComponent implements OnInit {
         this.errorMessage = error.message || 'Error al registrar directivo. Verifica los datos e intenta nuevamente.';
       }
     });
->>>>>>> certificado
   }
 
   cancelUI(): void {

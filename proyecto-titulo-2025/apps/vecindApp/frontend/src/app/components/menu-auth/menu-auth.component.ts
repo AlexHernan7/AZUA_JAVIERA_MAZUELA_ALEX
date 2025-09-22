@@ -25,9 +25,8 @@ export class MenuAuthComponent {
     this.menuOpen = !this.menuOpen;
   }
 
-<<<<<<< HEAD
-goToNews() { this.router.navigate(['/news']); }
-=======
+  goToNews() { this.router.navigate(['/news']); }
+
   // Métodos para verificar roles
   get isAdmin(): boolean {
     return this.auth.getCurrentUser()?.roles?.includes('admin') || false;
@@ -40,5 +39,4 @@ goToNews() { this.router.navigate(['/news']); }
   get isVecino(): boolean {
     return this.auth.getCurrentUser()?.roles?.includes('vecino') || false;
   }
->>>>>>> certificado
 }
