@@ -56,7 +56,7 @@ export class JuntaCreateComponent {
   constructor(private fb: FormBuilder, private http: HttpClient) {
     this.form = this.fb.group({
       logo: [''],
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
+      nombre: ['Junta de Vecinos Barrio Oeste', [Validators.required, Validators.minLength(3)]],
       rut_personeria: ['', rutBasicoValidator], // opcional
       email_contacto: ['', [Validators.required, Validators.email]],
       telefono_contacto: ['', [Validators.required, phoneClValidator]],

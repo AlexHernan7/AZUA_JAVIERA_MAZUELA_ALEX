@@ -74,7 +74,7 @@ class CertificadoService:
             junta=vecino.junta.nombre if vecino.junta else None
         )
     
-    async def crear_pedido_certificado(self, user_id: int) -> CertificadoPedidoResponse:
+    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str) -> CertificadoPedidoResponse:
         """
         Crea una nueva solicitud de certificado.
         
@@ -123,7 +123,8 @@ class CertificadoService:
             id_junta=vecino.junta.id_junta,
             id_vecino=vecino.id_vecino,
             creado_por=user_id,
-            estado="iniciado"
+            estado="iniciado",
+            motivo_solicitud=motivo_solicitud
         )
         
         self.db.add(nuevo_pedido)
@@ -142,12 +143,14 @@ class CertificadoService:
             vecino_direccion=vecino.direccion,
             comuna=vecino.comuna.nombre if vecino.comuna else None,
             region=vecino.comuna.region.nombre if vecino.comuna and vecino.comuna.region else None,
-            junta=vecino.junta.nombre if vecino.junta else None
+            junta=vecino.junta.nombre if vecino.junta else None,
+            motivo_solicitud=nuevo_pedido.motivo_solicitud
         )
     
     async def generar_certificado(
         self, 
         user_id: int, 
+        motivo_solicitud: str,
         direccion_actualizada: Optional[str] = None
     ) -> CertificadoResponse:
         """
@@ -213,7 +216,8 @@ class CertificadoService:
                 if pedido.vecino.comuna and pedido.vecino.comuna.region 
                 else None
             ),
-            'junta': pedido.junta.nombre if pedido.junta else None
+            'junta': pedido.junta.nombre if pedido.junta else None,
+            'motivo_solicitud': motivo_solicitud
         }
         
         # Generar PDF y guardarlo como base64 (por ahora)

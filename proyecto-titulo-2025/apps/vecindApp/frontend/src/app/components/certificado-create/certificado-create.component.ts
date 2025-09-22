@@ -3,7 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { CertificadoService } from '../../services/certificado.service';
 import { UserLoginData } from '../../interfaces/auth.interface';
+import { 
+  CertificadoPedidoResponse, 
+  CertificadoResponse, 
+  MotivoGrupo 
+} from '../../interfaces/certificado.interface';
 
 @Component({
   selector: 'app-certificado-create',
@@ -16,6 +22,19 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   currentUser: UserLoginData | null = null;
   sub = new Subscription();
+  
+  // Estados del componente
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
+  
+  // Estados del proceso
+  solicitudCreada: CertificadoPedidoResponse | null = null;
+  certificadoGenerado: CertificadoResponse | null = null;
+  
+  // Estados de los botones
+  puedeGenerar = false;
+  puedeDescargar = false;
 
   // Fecha de emisión (hoy)
   today = new Date();
@@ -23,8 +42,8 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     day: '2-digit', month: '2-digit', year: 'numeric'
   });
 
-  // Catálogo de motivos (grupos y opciones)
-  motivosCatalog = [
+  // Catálogo de motivos (grupos y opciones) - mantengo los que ya tienes
+  motivosCatalog: MotivoGrupo[] = [
   {
     grupo: 'Trámites ante instituciones públicas',
     items: [
@@ -64,16 +83,27 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
   },
 ];
 
-  constructor(private fb: FormBuilder, private auth: AuthService) {}
+  constructor(
+    private fb: FormBuilder, 
+    private auth: AuthService,
+    private certificadoService: CertificadoService
+  ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
-  motivo: ['', Validators.required],
-  confirmo: [false],
-}); 
+      motivo: ['', Validators.required],
+      confirmo: [false],
+    }); 
 
-
-    this.sub.add(this.auth.currentUser$.subscribe(u => this.currentUser = u));
+    this.sub.add(this.auth.currentUser$.subscribe(u => {
+      this.currentUser = u;
+      this.checkFormState();
+    }));
+    
+    // Escuchar cambios en el formulario para actualizar estados
+    this.sub.add(this.form.valueChanges.subscribe(() => {
+      this.checkFormState();
+    }));
   }
 
   ngOnDestroy(): void { this.sub.unsubscribe(); }
@@ -94,18 +124,125 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
 
 
 
-  // Por ahora los botones no hacen nada real:
-  onPagarClick() {
-  const motivoCtrl = this.form.get('motivo');
-  const confirmo = this.form.value.confirmo;
+  /**
+   * Verifica el estado del formulario y actualiza los botones
+   */
+  private checkFormState(): void {
+    const motivoValido = this.form.get('motivo')?.valid;
+    const confirmado = this.form.get('confirmo')?.value;
+    
+    this.puedeGenerar = !!(motivoValido && confirmado && !this.isLoading);
+    this.puedeDescargar = !!(this.certificadoGenerado && !this.isLoading);
+  }
 
-  motivoCtrl?.markAsTouched();
+  /**
+   * Maneja el click del botón "Ir a pagar" (omitimos pago por ahora)
+   */
+  onPagarClick(): void {
+    if (!this.puedeGenerar) return;
+    
+    this.clearMessages();
+    this.isLoading = true;
+    
+    const motivo = this.form.get('motivo')?.value;
+    
+    // Paso 1: Crear solicitud
+    this.sub.add(
+      this.certificadoService.solicitarCertificado({ motivo_solicitud: motivo })
+        .subscribe({
+          next: (solicitud) => {
+            console.log('✅ Solicitud creada:', solicitud);
+            this.solicitudCreada = solicitud;
+            
+            // Paso 2: Generar certificado inmediatamente (omitimos pago)
+            this.generarCertificado(motivo);
+          },
+          error: (error) => {
+            console.error('❌ Error creando solicitud:', error);
+            this.errorMessage = error.message || 'Error al crear la solicitud';
+            this.isLoading = false;
+            this.checkFormState();
+          }
+        })
+    );
+  }
 
-  if (!motivoCtrl?.value) return;  // exige motivo
-  if (!confirmo) return;           // exige confirmación
+  /**
+   * Genera el certificado PDF
+   */
+  private generarCertificado(motivo: string): void {
+    const request = {
+      confirmar_datos: true,
+      motivo_solicitud: motivo,
+      direccion_actualizada: undefined // Por ahora no permitimos cambiar dirección
+    };
+    
+    this.sub.add(
+      this.certificadoService.generarCertificado(request)
+        .subscribe({
+          next: (certificado) => {
+            console.log('✅ Certificado generado:', certificado);
+            this.certificadoGenerado = certificado;
+            this.successMessage = `¡Certificado ${certificado.numero} generado exitosamente!`;
+            this.isLoading = false;
+            this.checkFormState();
+          },
+          error: (error) => {
+            console.error('❌ Error generando certificado:', error);
+            this.errorMessage = error.message || 'Error al generar el certificado';
+            this.isLoading = false;
+            this.checkFormState();
+          }
+        })
+    );
+  }
 
-  console.log('Pagar (placeholder). Motivo:', motivoCtrl.value);
-}
+  /**
+   * Maneja el click del botón "Descargar PDF"
+   */
+  onDescargarClick(): void {
+    if (!this.certificadoGenerado || !this.puedeDescargar) return;
+    
+    this.clearMessages();
+    this.isLoading = true;
+    
+    this.sub.add(
+      this.certificadoService.descargarCertificadoPDF(this.certificadoGenerado.id_certificado)
+        .subscribe({
+          next: (blob) => {
+            console.log('✅ PDF descargado');
+            const filename = `certificado_residencia_${this.certificadoGenerado!.numero}.pdf`;
+            this.certificadoService.downloadBlob(blob, filename);
+            this.successMessage = 'PDF descargado exitosamente';
+            this.isLoading = false;
+            this.checkFormState();
+          },
+          error: (error) => {
+            console.error('❌ Error descargando PDF:', error);
+            this.errorMessage = error.message || 'Error al descargar el PDF';
+            this.isLoading = false;
+            this.checkFormState();
+          }
+        })
+    );
+  }
 
-  onDescargarClick(){ console.log('Descargar PDF (bloqueado hasta pago)'); }
+  /**
+   * Limpia los mensajes de error y éxito
+   */
+  clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  /**
+   * Resetea el formulario para una nueva solicitud
+   */
+  onNuevaSolicitud(): void {
+    this.form.reset();
+    this.solicitudCreada = null;
+    this.certificadoGenerado = null;
+    this.clearMessages();
+    this.checkFormState();
+  }
 }

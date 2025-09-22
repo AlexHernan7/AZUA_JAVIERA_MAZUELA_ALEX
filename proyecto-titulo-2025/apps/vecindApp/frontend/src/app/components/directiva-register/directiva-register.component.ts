@@ -111,16 +111,12 @@ export class DirectivaRegisterComponent implements OnInit {
    * Carga las juntas disponibles desde el backend
    */
   private loadJuntas(): void {
-    // Por ahora usaremos datos hardcodeados hasta que implementemos el endpoint de juntas
-    // TODO: Implementar endpoint para obtener juntas
+    // Solo mostramos la junta única que estará en la base de datos
     this.juntas = [
-      { id_junta: 1, nombre: 'Junta de Vecinos Administración' },
-      { id_junta: 2, nombre: 'Junta de Vecinos Las Condes Centro' },
-      { id_junta: 3, nombre: 'Junta de Vecinos Providencia Norte' },
-      { id_junta: 4, nombre: 'Junta de Vecinos Ñuñoa Sur' }
+      { id_junta: 1, nombre: 'Junta de Vecinos Barrio Oeste' }
     ];
     
-    // Seleccionar la primera junta por defecto
+    // Seleccionar la única junta disponible por defecto
     if (this.juntas.length > 0) {
       this.juntaSeleccionada = this.juntas[0].id_junta;
     }

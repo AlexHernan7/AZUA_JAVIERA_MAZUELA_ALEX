@@ -62,7 +62,7 @@ export class JuntaProfileComponent implements OnInit {
       this.junta = {
         id_junta: id,
         id_comuna: 13112,
-        nombre: 'Junta de Vecinos Villa Los Aromos',
+        nombre: 'Junta de Vecinos Barrio Oeste',
         direccion: 'Av. Siempre Viva 1234',
         telefono: '+56 9 9876 5432',
         email: 'junta.losaromos@mail.com',

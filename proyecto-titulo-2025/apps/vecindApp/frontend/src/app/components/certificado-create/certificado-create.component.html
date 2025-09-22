@@ -1,6 +1,19 @@
 <div class="container-xxl py-3">
   <h1 class="display-6 fw-bold text-ink-900 mb-2">Certificado de Residencia</h1>
-  <p class="text-muted mb-3">Verifica tus datos y continúa con el pago.</p>
+  <p class="text-muted mb-3">Verifica tus datos y selecciona el motivo de tu solicitud.</p>
+  
+  <!-- Mensajes de estado -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="clearMessages()"></button>
+  </div>
+  
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="clearMessages()"></button>
+  </div>
 
   <div class="card border-0 shadow-soft rounded-4">
     <div class="card-body p-3 p-md-4">
@@ -71,26 +84,64 @@
 
       <!-- Acciones -->
       <div class="d-flex flex-column flex-md-row gap-3">
+        <!-- Botón para ir a pagar -->
         <button type="button"
-        class="btn btn-teal-menu flex-fill"
-        [disabled]="!form.value.confirmo || !form.get('motivo')?.value"
-        (click)="onPagarClick()">
-  Ir a pagar
-</button>
+                class="btn btn-teal-menu flex-fill"
+                [disabled]="!puedeGenerar"
+                (click)="onPagarClick()">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!isLoading" class="bi bi-credit-card me-1"></i>
+          {{ isLoading ? 'Procesando...' : 'Ir a pagar' }}
+        </button>
 
+        <!-- Botón para descargar PDF -->
         <button type="button"
-        class="btn btn-download flex-fill"
-        disabled
-        (click)="onDescargarClick()">
-  <i class="bi bi-lock me-1"></i>
-  Descargar PDF
-  <small class="d-block">Disponible tras el pago</small>
-</button>
+                class="btn btn-download flex-fill"
+                [disabled]="!puedeDescargar"
+                (click)="onDescargarClick()">
+          <span *ngIf="isLoading && certificadoGenerado" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!certificadoGenerado" class="bi bi-lock me-1"></i>
+          <i *ngIf="certificadoGenerado && !isLoading" class="bi bi-download me-1"></i>
+          {{ 
+            !certificadoGenerado ? 'Descargar PDF' :
+            (isLoading ? 'Descargando...' : 'Descargar PDF')
+          }}
+        </button>
       </div>
-
-      <!-- Info pie -->
+      
+      <!-- Botón para nueva solicitud (solo si ya se generó un certificado) -->
+      <div *ngIf="certificadoGenerado" class="mt-3">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                [disabled]="isLoading"
+                (click)="onNuevaSolicitud()">
+          <i class="bi bi-plus-circle me-1"></i>
+          Nueva Solicitud
+        </button>
+      </div>
+      
+      <!-- Información del certificado generado -->
+      <div *ngIf="certificadoGenerado" class="mt-3 p-3 bg-light rounded">
+        <h6 class="fw-bold text-success mb-2">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          Certificado Generado
+        </h6>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <small class="text-muted">Número:</small>
+            <div class="fw-semibold">{{ certificadoGenerado.numero }}</div>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted">Fecha de emisión:</small>
+            <div class="fw-semibold">{{ certificadoGenerado.fecha_emision | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Info pie (omitimos info de pago por ahora) -->
       <div class="small text-muted border rounded-3 p-2 mt-3">
-        Monto: <strong>$ 2000</strong> &nbsp;/&nbsp; Medio: <strong>Transbank</strong>
+        <i class="bi bi-info-circle me-1"></i>
+        El certificado se genera inmediatamente sin costo para fines de prueba.
       </div>
     </div>
   </div>

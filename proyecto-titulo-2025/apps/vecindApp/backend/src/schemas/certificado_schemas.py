@@ -10,8 +10,7 @@ from pydantic import BaseModel, Field
 class CertificadoPedidoCreate(BaseModel):
     """Schema para crear una solicitud de certificado."""
     
-    # No necesitamos campos adicionales ya que todo se obtiene del token JWT
-    pass
+    motivo_solicitud: str = Field(..., description="Motivo de la solicitud del certificado")
 
 
 class CertificadoPedidoResponse(BaseModel):
@@ -27,6 +26,7 @@ class CertificadoPedidoResponse(BaseModel):
     comuna: Optional[str] = None
     region: Optional[str] = None
     junta: Optional[str] = None
+    motivo_solicitud: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -64,6 +64,7 @@ class CertificadoGenerateRequest(BaseModel):
     """Schema para confirmar generación de certificado."""
     
     confirmar_datos: bool = Field(..., description="Debe ser True para confirmar")
+    motivo_solicitud: str = Field(..., description="Motivo de la solicitud del certificado")
     # Permitir actualizar dirección si es necesaria
     direccion_actualizada: Optional[str] = None
 

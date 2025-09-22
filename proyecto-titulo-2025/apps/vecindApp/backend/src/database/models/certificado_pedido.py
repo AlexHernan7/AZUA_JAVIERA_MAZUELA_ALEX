@@ -44,6 +44,7 @@ class CertificadoPedido(Base):
         nullable=False,
     )
     estado = Column(Text, nullable=False, default="iniciado")
+    motivo_solicitud = Column(Text, nullable=True)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

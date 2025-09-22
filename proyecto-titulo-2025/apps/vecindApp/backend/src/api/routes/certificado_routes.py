@@ -92,7 +92,7 @@ async def solicitar_certificado(
     """
     try:
         service = CertificadoService(db)
-        pedido = await service.crear_pedido_certificado(user_id)
+        pedido = await service.crear_pedido_certificado(user_id, request.motivo_solicitud)
         
         logger.info(f"📝 Solicitud de certificado creada: ID {pedido.id_pedido}")
         return pedido
@@ -139,6 +139,7 @@ async def generar_certificado(
         service = CertificadoService(db)
         certificado = await service.generar_certificado(
             user_id, 
+            request.motivo_solicitud,
             request.direccion_actualizada
         )
         
