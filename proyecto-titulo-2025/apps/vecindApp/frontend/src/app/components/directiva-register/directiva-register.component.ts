@@ -130,7 +130,6 @@ export class DirectivaRegisterComponent implements OnInit {
     this.loadJuntas();
   }
 
->>>>>>> certificado
   g(path: string) {
     return this.form.get(path) as AbstractControl;
   }
@@ -156,7 +155,6 @@ export class DirectivaRegisterComponent implements OnInit {
     }
   }
 
->>>>>>> certificado
   onFileChange(evt: Event): void {
     const input = evt.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -203,7 +201,6 @@ export class DirectivaRegisterComponent implements OnInit {
 
     this.isLoading = true;
 
->>>>>>> certificado
     const f = this.form.value as any;
     const payload: DirectivoForm = {
       foto_perfil: f.foto_perfil || undefined,
