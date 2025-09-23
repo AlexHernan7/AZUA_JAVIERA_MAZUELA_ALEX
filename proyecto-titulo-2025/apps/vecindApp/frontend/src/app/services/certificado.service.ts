@@ -10,6 +10,7 @@ import {
   CertificadoResponse,
   CertificadoApiError
 } from '../interfaces/certificado.interface';
+import { CertificadoConPagoResponse } from '../interfaces/payment.interface';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -44,6 +45,24 @@ export class CertificadoService {
   generarCertificado(request: CertificadoGenerateRequest): Observable<CertificadoResponse> {
     const headers = this.getAuthHeaders();
     return this.http.post<CertificadoResponse>(`${this.API_URL}/generar`, request, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * NUEVO: Solicita certificado con pago MercadoPago
+   */
+  solicitarCertificadoConPago(request: CertificadoPedidoCreate): Observable<CertificadoConPagoResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<CertificadoConPagoResponse>(`${this.API_URL}/solicitar-con-pago`, request, { headers })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * NUEVO: Solicita certificado con pago Webpay
+   */
+  solicitarCertificadoConWebpay(request: CertificadoPedidoCreate): Observable<CertificadoConPagoResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<CertificadoConPagoResponse>(`${this.API_URL}/webpay-payment`, request, { headers })
       .pipe(catchError(this.handleError));
   }
 

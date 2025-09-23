@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from os import getenv, path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -92,6 +92,18 @@ class MigrationSettings(BaseModel):
         return path.join(script_location, self.production_versions_dir)
 
 
+class WebpaySettings(BaseModel):
+    """Configuración de Webpay Plus."""
+    
+    commerce_code: str = Field("597055555532", description="Código de comercio (default: integración)")
+    api_key: str = Field("579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C", description="API Key (default: integración)")
+    environment: str = Field("integration", description="Entorno: integration o production")
+    
+    # URLs de retorno
+    return_url: str = Field("http://localhost:8000/api/payments/webpay/return", description="URL de retorno")
+    final_url: str = Field("http://localhost:4200/payment/success", description="URL final de éxito")
+
+
 class Settings(BaseSettings):
     """Configuración principal de la aplicación."""
 
@@ -103,6 +115,13 @@ class Settings(BaseSettings):
     google_oauth: GoogleOAuthSettings
     news_rss: NewsRSSSettings
     files: FileSettings = Field(default_factory=FileSettings)
+    webpay: WebpaySettings = Field(default_factory=lambda: WebpaySettings(
+        commerce_code=getenv("WEBPAY_COMMERCE_CODE", "597055555532"),
+        api_key=getenv("WEBPAY_API_KEY", "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C"),
+        environment=getenv("WEBPAY_ENVIRONMENT", "integration"),
+        return_url=getenv("WEBPAY_RETURN_URL", "http://localhost:8000/api/payments/webpay/return"),
+        final_url=getenv("WEBPAY_FINAL_URL", "http://localhost:4200/payment/success")
+    ))
 
     @classmethod
     def get_database_settings(cls, environment: str) -> dict[str, Any]:

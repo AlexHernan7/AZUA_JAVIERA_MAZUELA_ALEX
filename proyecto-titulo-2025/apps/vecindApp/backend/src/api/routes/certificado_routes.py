@@ -1,24 +1,19 @@
 """
-Rutas para certificados de residencia.
+Rutas para certificados de residencia - VERSIÓN LIMPIA.
 """
 
 import logging
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from src.database.session import get_db_session
 from src.services.certificado_service import CertificadoService
-from src.database.models.certificado import Certificado
-from src.database.models.certificado_pedido import CertificadoPedido
-from src.database.models.vecino import Vecino
 from src.schemas.certificado_schemas import (
     CertificadoPedidoCreate,
     CertificadoPedidoResponse,
     CertificadoConfirmacionData,
-    CertificadoGenerateRequest,
     CertificadoResponse,
     ErrorResponse
 )
@@ -70,99 +65,51 @@ async def get_datos_confirmacion(
 
 
 @router.post(
-    "/solicitar",
-    response_model=CertificadoPedidoResponse,
+    "/webpay-payment",
+    response_model=dict,
     status_code=status.HTTP_201_CREATED,
-    summary="Solicitar certificado de residencia",
-    description="Crea una nueva solicitud de certificado de residencia",
-    responses={
-        201: {"description": "Solicitud creada exitosamente"},
-        400: {"model": ErrorResponse, "description": "Ya existe solicitud pendiente"},
-        401: {"model": ErrorResponse, "description": "Token inválido o expirado"},
-        404: {"model": ErrorResponse, "description": "Vecino no encontrado"},
-    }
+    summary="Crear certificado con Webpay Plus",
+    description="Crea una solicitud de certificado con pago Webpay Plus y retorna token para redirección"
 )
-async def solicitar_certificado(
+async def crear_certificado_webpay_payment(
     request: CertificadoPedidoCreate,
     user_id: int = Depends(verify_user_token),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Crea una nueva solicitud de certificado de residencia.
+    Crea un certificado pendiente de pago con Webpay Plus.
+    
+    Returns:
+        Dict con pedido, payment_intent, payment_url y webpay_token
     """
     try:
         service = CertificadoService(db)
-        pedido = await service.crear_pedido_certificado(user_id, request.motivo_solicitud)
         
-        logger.info(f"📝 Solicitud de certificado creada: ID {pedido.id_pedido}")
-        return pedido
+        # Crear certificado con pago Webpay
+        pedido, payment_intent, webpay_url, webpay_token = await service.crear_certificado_con_webpay(
+            user_id=user_id,
+            motivo_solicitud=request.motivo_solicitud
+        )
+        
+        logger.info(f"📝💳 Certificado con Webpay creado: pedido={pedido.id_pedido}, payment={payment_intent.id_payment_intent}")
+        
+        return {
+            "pedido": pedido,
+            "payment_intent": payment_intent,
+            "message": "Solicitud creada. Complete el pago para generar el certificado.",
+            "payment_url": webpay_url,
+            "webpay_token": webpay_token,
+            "provider": "webpay"
+        }
         
     except ValueError as e:
-        logger.warning(f"❌ Error creando solicitud: {str(e)}")
+        logger.warning(f"❌ Error creando certificado con Webpay: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "Error en la solicitud", "detalle": str(e)}
         )
     except Exception as e:
-        logger.error(f"💥 Error inesperado: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": "Error interno del servidor", "detalle": str(e)}
-        )
-
-
-@router.post(
-    "/generar",
-    response_model=CertificadoResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Generar certificado de residencia",
-    description="Crea la solicitud y genera el certificado PDF en un solo paso",
-    responses={
-        201: {"description": "Certificado generado exitosamente"},
-        400: {"model": ErrorResponse, "description": "Datos inválidos"},
-        401: {"model": ErrorResponse, "description": "Token inválido o expirado"},
-        404: {"model": ErrorResponse, "description": "Vecino no encontrado"},
-    }
-)
-async def generar_certificado(
-    request: CertificadoGenerateRequest,
-    user_id: int = Depends(verify_user_token),
-    db: AsyncSession = Depends(get_db_session)
-):
-    """
-    Crea la solicitud y genera el certificado de residencia en un solo paso.
-    """
-    try:
-        if not request.confirmar_datos:
-            raise ValueError("Debe confirmar los datos para generar el certificado")
-        
-        service = CertificadoService(db)
-        
-        # Paso 1: Crear solicitud (si no existe una reciente)
-        try:
-            await service.crear_pedido_certificado(user_id, request.motivo_solicitud)
-        except ValueError as e:
-            # Si ya existe una solicitud, continuamos con la generación
-            logger.info(f"ℹ️ Usando solicitud existente: {str(e)}")
-        
-        # Paso 2: Generar certificado
-        certificado = await service.generar_certificado(
-            user_id, 
-            request.motivo_solicitud,
-            request.direccion_actualizada
-        )
-        
-        logger.info(f"📄 Certificado generado: {certificado.numero}")
-        return certificado
-        
-    except ValueError as e:
-        logger.warning(f"❌ Error generando certificado: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "Error generando certificado", "detalle": str(e)}
-        )
-    except Exception as e:
-        logger.error(f"💥 Error inesperado: {str(e)}")
+        logger.error(f"💥 Error inesperado en webpay-payment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error interno del servidor", "detalle": str(e)}
@@ -173,7 +120,7 @@ async def generar_certificado(
     "/mis-certificados",
     response_model=List[CertificadoResponse],
     summary="Obtener mis certificados",
-    description="Obtiene todos los certificados emitidos para el usuario autenticado",
+    description="Obtiene todos los certificados del usuario autenticado",
     responses={
         200: {"description": "Lista de certificados obtenida exitosamente"},
         401: {"model": ErrorResponse, "description": "Token inválido o expirado"},
@@ -184,7 +131,7 @@ async def get_mis_certificados(
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Obtiene todos los certificados emitidos para el usuario autenticado.
+    Obtiene todos los certificados del usuario autenticado.
     """
     try:
         service = CertificadoService(db)
@@ -209,73 +156,47 @@ async def get_mis_certificados(
         200: {"description": "PDF del certificado", "content": {"application/pdf": {}}},
         401: {"model": ErrorResponse, "description": "Token inválido o expirado"},
         404: {"model": ErrorResponse, "description": "Certificado no encontrado"},
-        403: {"model": ErrorResponse, "description": "No autorizado para descargar este certificado"},
+        403: {"model": ErrorResponse, "description": "Sin permisos para descargar este certificado"},
     }
 )
-async def descargar_certificado_pdf(
+async def descargar_certificado(
     certificado_id: int,
     user_id: int = Depends(verify_user_token),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
-    Descarga el certificado en formato PDF.
+    Descarga un certificado en formato PDF.
+    Solo el propietario puede descargar su certificado.
     """
     try:
-        # Verificar que el certificado existe y pertenece al usuario
-        result = await db.execute(
-            select(Certificado)
-            .join(CertificadoPedido)
-            .join(Vecino)
-            .where(
-                Certificado.id_certificado == certificado_id,
-                Vecino.id_usuario == user_id
-            )
+        service = CertificadoService(db)
+        pdf_data, filename = await service.descargar_certificado(certificado_id, user_id)
+        
+        logger.info(f"📄 Certificado {certificado_id} descargado por usuario {user_id}")
+        
+        return Response(
+            content=pdf_data,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/pdf"
+            }
         )
-        certificado = result.scalar_one_or_none()
         
-        if not certificado:
+    except ValueError as e:
+        logger.warning(f"❌ Error descargando certificado: {str(e)}")
+        if "no encontrado" in str(e).lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": "Certificado no encontrado", "detalle": "El certificado no existe o no tienes permisos para acceder a él"}
-            )
-        
-        if not certificado.pdf_url:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": "PDF no disponible", "detalle": "El PDF del certificado no está disponible"}
-            )
-        
-        # Extraer el contenido base64 del data URL
-        if certificado.pdf_url.startswith("data:application/pdf;base64,"):
-            pdf_base64 = certificado.pdf_url.replace("data:application/pdf;base64,", "")
-            
-            # Decodificar base64
-            import base64
-            pdf_bytes = base64.b64decode(pdf_base64)
-            
-            # Crear nombre del archivo
-            filename = f"certificado_residencia_{certificado.numero}.pdf"
-            
-            # Retornar PDF como respuesta
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={
-                    "Content-Disposition": f"attachment; filename={filename}",
-                    "Content-Length": str(len(pdf_bytes))
-                }
+                detail={"error": "Certificado no encontrado", "detalle": str(e)}
             )
         else:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={"error": "Formato de PDF inválido", "detalle": "El formato del PDF almacenado no es válido"}
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": "Sin permisos", "detalle": str(e)}
             )
-        
-    except HTTPException:
-        # Re-lanzar HTTPExceptions
-        raise
     except Exception as e:
-        logger.error(f"💥 Error descargando certificado PDF: {str(e)}")
+        logger.error(f"💥 Error inesperado descargando certificado: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error interno del servidor", "detalle": str(e)}

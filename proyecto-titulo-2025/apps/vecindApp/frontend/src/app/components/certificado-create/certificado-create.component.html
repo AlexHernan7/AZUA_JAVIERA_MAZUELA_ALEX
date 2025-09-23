@@ -85,13 +85,23 @@
       <!-- Acciones -->
       <div class="d-flex flex-column flex-md-row gap-3">
         <!-- Botón para generar certificado -->
+        <!-- Información de Precio -->
+        <div class="alert alert-info mb-3" *ngIf="!certificadoConPago && !certificadoGenerado">
+          <h6><i class="bi bi-credit-card"></i> Información de Pago</h6>
+          <p class="mb-0">
+            <strong>Costo del certificado:</strong> $1.000 CLP<br>
+            <small class="text-muted">Serás redirigido a <strong>Webpay Plus</strong> (Transbank) para completar el pago de forma segura.</small><br>
+            <small class="text-success">✅ Acepta tarjetas de crédito y débito Visa, Mastercard y más.</small>
+          </p>
+        </div>
+
         <button type="button"
                 class="btn btn-teal-menu flex-fill"
                 [disabled]="!puedeGenerar"
                 (click)="onGenerarClick()">
           <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-          <i *ngIf="!isLoading" class="bi bi-file-earmark-text me-1"></i>
-          {{ isLoading ? 'Generando...' : 'Generar Certificado' }}
+          <i *ngIf="!isLoading" class="bi bi-credit-card me-1"></i>
+          {{ isLoading ? 'Procesando...' : 'Pagar con Webpay ($1.000)' }}
         </button>
 
         <!-- Botón para descargar PDF -->

@@ -59,6 +59,11 @@ class Usuario(Base):
         back_populates="creado_por_usuario",
         foreign_keys="[CertificadoPedido.creado_por]",
     )
+    payment_intents = relationship(
+        "PaymentIntent",
+        back_populates="usuario",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Usuario(id_usuario={self.id_usuario}, email='{self.email}', id_junta={self.id_junta})>"

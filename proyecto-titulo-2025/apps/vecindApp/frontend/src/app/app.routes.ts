@@ -11,6 +11,9 @@ import { DirectivaRegisterComponent } from './components/directiva-register/dire
 import { JuntaCreateComponent } from './components/junta-create/junta-create.component';
 import { CertificadoCreateComponent} from './components/certificado-create/certificado-create.component';
 import { JuntaProfileComponent } from './components/junta-profile/junta-profile.component';
+import { PaymentSuccessComponent } from './components/payment-success/payment-success.component';
+import { PaymentFailureComponent } from './components/payment-failure/payment-failure.component';
+import { PaymentPendingComponent } from './components/payment-pending/payment-pending.component';
 
 
 export const appRoutes: Routes = [
@@ -23,5 +26,9 @@ export const appRoutes: Routes = [
   { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
   { path: 'news', component: NewsComponent },
+  // Rutas de pago
+  { path: 'payment/success', component: PaymentSuccessComponent },
+  { path: 'payment/failure', component: PaymentFailureComponent },
+  { path: 'payment/pending', component: PaymentPendingComponent },
   { path: '**', redirectTo: '' }, // opcional
 ];

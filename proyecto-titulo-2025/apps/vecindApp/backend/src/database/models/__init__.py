@@ -17,7 +17,10 @@ from .espacio import Espacio
 from .reserva import Reserva
 from .certificado import Certificado
 from .certificado_pedido import CertificadoPedido
-# Modelos de transacciones eliminados - no se usan para certificados
+# Modelos de pagos - nueva implementación limpia
+from .payment_intent import PaymentIntent
+from .payment_transaction import PaymentTransaction
+from .webhook_event import WebhookEvent
 
 __all__ = [
     "Region",
@@ -32,4 +35,7 @@ __all__ = [
     "Reserva",
     "Certificado",
     "CertificadoPedido",
+    "PaymentIntent",
+    "PaymentTransaction",
+    "WebhookEvent",
 ]

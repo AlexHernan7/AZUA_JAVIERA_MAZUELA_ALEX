@@ -5,6 +5,7 @@ Servicio para manejo de certificados de residencia.
 import logging
 from datetime import datetime
 from typing import Optional, Tuple
+from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
@@ -21,6 +22,8 @@ from src.schemas.certificado_schemas import (
     CertificadoResponse
 )
 from src.utils.pdf_generator import CertificadoPDFGenerator
+from src.services.payment_service import PaymentService
+from src.schemas.payment_schemas import PaymentIntentResponse
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +34,211 @@ class CertificadoService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.pdf_generator = CertificadoPDFGenerator()
+        self.payment_service = PaymentService(db)
+        
+    # Configuración de precios (en CLP)
+    PRECIO_CERTIFICADO = Decimal("1000")  # $1.000 CLP
+    
+    async def crear_certificado_con_pago(
+        self, 
+        user_id: int, 
+        motivo_solicitud: str
+    ) -> Tuple[CertificadoPedidoResponse, PaymentIntentResponse]:
+        """
+        Crea un certificado pendiente de pago y genera la intención de pago.
+        
+        Args:
+            user_id: ID del usuario solicitante
+            motivo_solicitud: Motivo de la solicitud
+            
+        Returns:
+            Tupla (CertificadoPedido, PaymentIntent)
+            
+        Raises:
+            ValueError: Si hay errores en la creación
+        """
+        try:
+            # 1. Obtener datos del vecino para la descripción
+            result = await self.db.execute(
+                select(Vecino).where(Vecino.id_usuario == user_id)
+            )
+            vecino = result.scalar_one_or_none()
+            if not vecino:
+                raise ValueError("No se encontró perfil de vecino asociado")
+            
+            # 2. Crear pedido de certificado (estado: pendiente_pago)
+            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago")
+            
+            # 3. Crear intención de pago
+            payment_intent = await self.payment_service.create_payment_intent(
+                user_id=user_id,
+                entity_type="certificado",
+                entity_id=pedido.id_pedido,
+                amount=self.PRECIO_CERTIFICADO,
+                description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
+                extra_data={
+                    "certificado_pedido_id": pedido.id_pedido,
+                    "motivo_solicitud": motivo_solicitud,
+                    "vecino_rut": vecino.rut
+                }
+            )
+            
+            logger.info(f"📄💳 Certificado con pago creado: pedido={pedido.id_pedido}, payment={payment_intent.id_payment_intent}")
+            
+            return pedido, payment_intent
+            
+        except Exception as e:
+            logger.error(f"💥 Error creando certificado con pago: {str(e)}")
+            raise ValueError(f"Error creando certificado con pago: {str(e)}")
+
+    async def crear_certificado_con_webpay(
+        self, 
+        user_id: int, 
+        motivo_solicitud: str
+    ) -> Tuple[CertificadoPedidoResponse, PaymentIntentResponse, str, str]:
+        """
+        Crea un certificado pendiente de pago y genera la intención de pago con Webpay.
+        
+        Args:
+            user_id: ID del usuario solicitante
+            motivo_solicitud: Motivo de la solicitud
+            
+        Returns:
+            Tupla (CertificadoPedido, PaymentIntent, webpay_url, webpay_token)
+            
+        Raises:
+            ValueError: Si hay errores en la creación
+        """
+        try:
+            # 1. Obtener datos del vecino para la descripción
+            result = await self.db.execute(
+                select(Vecino).where(Vecino.id_usuario == user_id)
+            )
+            vecino = result.scalar_one_or_none()
+            if not vecino:
+                raise ValueError("No se encontró perfil de vecino asociado")
+            
+            # 2. Crear pedido de certificado (estado: pendiente_pago)
+            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago")
+            
+            # 3. Crear intención de pago con Webpay
+            payment_intent, webpay_url, webpay_token = await self.payment_service.create_webpay_payment_intent(
+                user_id=user_id,
+                entity_type="certificado",
+                entity_id=pedido.id_pedido,
+                amount=self.PRECIO_CERTIFICADO,
+                description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
+                extra_data={
+                    "certificado_pedido_id": pedido.id_pedido,
+                    "motivo_solicitud": motivo_solicitud,
+                    "vecino_rut": vecino.rut
+                }
+            )
+            
+            logger.info(f"📄💳 Certificado con Webpay creado: pedido={pedido.id_pedido}, payment={payment_intent.id_payment_intent}")
+            
+            return pedido, payment_intent, webpay_url, webpay_token
+            
+        except Exception as e:
+            logger.error(f"💥 Error creando certificado con Webpay: {str(e)}")
+            raise ValueError(f"Error creando certificado con Webpay: {str(e)}")
+    
+    async def liberar_certificado_por_pago(self, certificado_pedido_id: int) -> CertificadoResponse:
+        """
+        Libera (genera el PDF) un certificado después de un pago exitoso.
+        
+        Este método es llamado por el webhook service cuando se confirma un pago.
+        
+        Args:
+            certificado_pedido_id: ID del pedido de certificado
+            
+        Returns:
+            CertificadoResponse con el certificado generado
+            
+        Raises:
+            ValueError: Si no se puede generar el certificado
+        """
+        try:
+            # 1. Obtener el pedido de certificado
+            result = await self.db.execute(
+                select(CertificadoPedido)
+                .options(
+                    selectinload(CertificadoPedido.vecino).selectinload(Vecino.comuna).selectinload(Comuna.region),
+                    selectinload(CertificadoPedido.junta)
+                )
+                .where(CertificadoPedido.id_pedido == certificado_pedido_id)
+            )
+            
+            pedido = result.scalar_one_or_none()
+            if not pedido:
+                raise ValueError(f"No se encontró pedido de certificado con ID {certificado_pedido_id}")
+            
+            # 2. Verificar que está en estado correcto
+            if pedido.estado != "pendiente_pago":
+                logger.warning(f"⚠️ Certificado {certificado_pedido_id} no está pendiente de pago (estado: {pedido.estado})")
+                # Si ya está emitido, retornar el certificado existente
+                if pedido.estado == "emitido":
+                    existing_cert = await self._get_certificado_by_pedido_id(certificado_pedido_id)
+                    if existing_cert:
+                        return await self._certificado_to_response(existing_cert)
+            
+            # 3. Generar certificado (similar al método original pero sin verificar pago)
+            numero_certificado = await self._generar_numero_certificado(pedido.id_junta)
+            
+            # 4. Preparar datos para el PDF
+            datos_pdf = {
+                'numero': numero_certificado,
+                'fecha_emision': datetime.now(),
+                'nombres': pedido.vecino.nombres,
+                'apellido_paterno': pedido.vecino.apellido_paterno,
+                'apellido_materno': pedido.vecino.apellido_materno,
+                'rut': pedido.vecino.rut,
+                'direccion': pedido.vecino.direccion,
+                'comuna': pedido.vecino.comuna.nombre if pedido.vecino.comuna else None,
+                'region': (
+                    pedido.vecino.comuna.region.nombre 
+                    if pedido.vecino.comuna and pedido.vecino.comuna.region 
+                    else None
+                ),
+                'junta': pedido.junta.nombre if pedido.junta else None,
+                'motivo_solicitud': pedido.motivo_solicitud
+            }
+            
+            # 5. Generar PDF
+            pdf_base64 = self.pdf_generator.generar_certificado_base64(datos_pdf)
+            pdf_url = f"data:application/pdf;base64,{pdf_base64}"
+            
+            # 6. Crear certificado
+            nuevo_certificado = Certificado(
+                id_junta=pedido.id_junta,
+                id_pedido=pedido.id_pedido,
+                numero=numero_certificado,
+                direccion=pedido.vecino.direccion,
+                comuna=pedido.vecino.comuna.nombre if pedido.vecino.comuna else None,
+                region=(
+                    pedido.vecino.comuna.region.nombre 
+                    if pedido.vecino.comuna and pedido.vecino.comuna.region 
+                    else None
+                ),
+                pdf_url=pdf_url
+            )
+            
+            # 7. Actualizar estado del pedido
+            pedido.estado = "emitido"
+            
+            # 8. Guardar en base de datos
+            self.db.add(nuevo_certificado)
+            await self.db.commit()
+            await self.db.refresh(nuevo_certificado)
+            
+            logger.info(f"📄✅ Certificado liberado por pago: {numero_certificado}")
+            
+            return await self._certificado_to_response(nuevo_certificado)
+            
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"💥 Error liberando certificado por pago: {str(e)}")
+            raise ValueError(f"Error liberando certificado: {str(e)}")
     
     async def get_datos_confirmacion(self, user_id: int) -> CertificadoConfirmacionData:
         """
@@ -74,7 +282,7 @@ class CertificadoService:
             junta=vecino.junta.nombre if vecino.junta else None
         )
     
-    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str) -> CertificadoPedidoResponse:
+    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str, estado_inicial: str = "iniciado") -> CertificadoPedidoResponse:
         """
         Crea una nueva solicitud de certificado.
         
@@ -111,7 +319,7 @@ class CertificadoService:
             id_junta=vecino.junta.id_junta,
             id_vecino=vecino.id_vecino,
             creado_por=user_id,
-            estado="iniciado",
+            estado=estado_inicial,
             motivo_solicitud=motivo_solicitud
         )
         
@@ -258,6 +466,25 @@ class CertificadoService:
         
         return numero
     
+    async def _get_certificado_by_pedido_id(self, pedido_id: int) -> Optional[Certificado]:
+        """Obtiene un certificado por ID de pedido."""
+        result = await self.db.execute(
+            select(Certificado).where(Certificado.id_pedido == pedido_id)
+        )
+        return result.scalar_one_or_none()
+    
+    async def _certificado_to_response(self, certificado: Certificado) -> CertificadoResponse:
+        """Convierte un modelo Certificado a CertificadoResponse."""
+        return CertificadoResponse(
+            id_certificado=certificado.id_certificado,
+            numero=certificado.numero,
+            fecha_emision=certificado.fecha_emision,
+            direccion=certificado.direccion,
+            comuna=certificado.comuna,
+            region=certificado.region,
+            pdf_url=certificado.pdf_url
+        )
+    
     async def obtener_certificados_usuario(self, user_id: int) -> list[CertificadoResponse]:
         """
         Obtiene todos los certificados emitidos para un usuario.
@@ -289,3 +516,49 @@ class CertificadoService:
             )
             for cert in certificados
         ]
+
+    async def descargar_certificado(self, certificado_id: int, user_id: int) -> Tuple[bytes, str]:
+        """
+        Descarga un certificado en formato PDF.
+        
+        Args:
+            certificado_id: ID del certificado a descargar
+            user_id: ID del usuario que solicita la descarga
+            
+        Returns:
+            Tupla (pdf_data, filename)
+            
+        Raises:
+            ValueError: Si el certificado no existe o no pertenece al usuario
+        """
+        # Verificar que el certificado existe y pertenece al usuario
+        result = await self.db.execute(
+            select(Certificado)
+            .join(CertificadoPedido)
+            .join(Vecino)
+            .where(
+                Certificado.id_certificado == certificado_id,
+                Vecino.id_usuario == user_id
+            )
+        )
+        certificado = result.scalar_one_or_none()
+        
+        if not certificado:
+            raise ValueError("Certificado no encontrado o no tienes permisos para descargarlo")
+        
+        # Leer el archivo PDF
+        try:
+            with open(certificado.pdf_url, 'rb') as f:
+                pdf_data = f.read()
+            
+            filename = f"certificado_{certificado.numero}.pdf"
+            logger.info(f"📄 Certificado {certificado_id} descargado por usuario {user_id}")
+            
+            return pdf_data, filename
+            
+        except FileNotFoundError:
+            logger.error(f"❌ Archivo PDF no encontrado: {certificado.pdf_url}")
+            raise ValueError("El archivo PDF del certificado no se encuentra disponible")
+        except Exception as e:
+            logger.error(f"💥 Error leyendo archivo PDF: {str(e)}")
+            raise ValueError(f"Error al acceder al certificado: {str(e)}")

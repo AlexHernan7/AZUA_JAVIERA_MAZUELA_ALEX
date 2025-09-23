@@ -10,6 +10,7 @@ import {
   CertificadoResponse, 
   MotivoGrupo 
 } from '../../interfaces/certificado.interface';
+import { CertificadoConPagoResponse } from '../../interfaces/payment.interface';
 
 @Component({
   selector: 'app-certificado-create',
@@ -31,6 +32,7 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
   // Estados del proceso
   solicitudCreada: CertificadoPedidoResponse | null = null;
   certificadoGenerado: CertificadoResponse | null = null;
+  certificadoConPago: CertificadoConPagoResponse | null = null;
   
   // Estados de los botones
   puedeGenerar = false;
@@ -136,7 +138,7 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el click del botón "Generar Certificado" - flujo simplificado en un paso
+   * Maneja el click del botón "Generar Certificado" - NUEVO: con Webpay
    */
   onGenerarClick(): void {
     if (!this.puedeGenerar) return;
@@ -146,26 +148,36 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     
     const motivo = this.form.get('motivo')?.value;
     
-    // Generar certificado directamente (el backend maneja la solicitud internamente)
+    // NUEVO: Solicitar certificado con Webpay
     const request = {
-      confirmar_datos: true,
-      motivo_solicitud: motivo,
-      direccion_actualizada: undefined
+      motivo_solicitud: motivo
     };
     
     this.sub.add(
-      this.certificadoService.generarCertificado(request)
+      this.certificadoService.solicitarCertificadoConWebpay(request)
         .subscribe({
-          next: (certificado) => {
-            console.log('✅ Certificado generado:', certificado);
-            this.certificadoGenerado = certificado;
-            this.successMessage = `¡Certificado ${certificado.numero} generado exitosamente!`;
+          next: (response) => {
+            console.log('✅ Certificado con Webpay creado:', response);
+            this.certificadoConPago = response;
+            this.successMessage = `Solicitud creada. Redirigiendo al pago con Webpay de $${response.payment_intent.amount} CLP...`;
             this.isLoading = false;
             this.checkFormState();
+            
+            // Redirigir a Webpay después de 2 segundos
+            setTimeout(() => {
+              if (response.webpay_token) {
+                this.redirectToWebpay(response.payment_url, response.webpay_token);
+              } else {
+                console.error('❌ Token de Webpay no encontrado en la respuesta');
+                this.errorMessage = 'Error: No se pudo obtener el token de pago';
+                this.isLoading = false;
+                this.checkFormState();
+              }
+            }, 2000);
           },
           error: (error) => {
-            console.error('❌ Error generando certificado:', error);
-            this.errorMessage = error.message || 'Error al generar el certificado';
+            console.error('❌ Error creando certificado con Webpay:', error);
+            this.errorMessage = error.message || 'Error al crear la solicitud de certificado';
             this.isLoading = false;
             this.checkFormState();
           }
@@ -173,6 +185,31 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     );
   }
 
+
+  /**
+   * Redirige a Webpay con el token usando POST
+   */
+  private redirectToWebpay(webpayUrl: string, token: string): void {
+    // Crear un formulario dinámico para enviar el token como POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = webpayUrl;
+    form.style.display = 'none';
+
+    // Crear input para el token
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'token_ws';
+    tokenInput.value = token;
+
+    form.appendChild(tokenInput);
+    document.body.appendChild(form);
+
+    console.log('🔄 Enviando token a Webpay:', token.substring(0, 20) + '...');
+    
+    // Enviar el formulario
+    form.submit();
+  }
 
   /**
    * Maneja el click del botón "Descargar PDF"

@@ -17,7 +17,7 @@ Model = TypeVar("Model", bound=Base)
 
 engine = create_async_engine(
     settings.database.async_url,
-    echo=settings.debug,
+    echo=False,  # Desactivar logs SQL
     pool_size=settings.database.pool_size,
     max_overflow=settings.database.max_overflow,
     # Ajustes para evitar problemas con greenlets
