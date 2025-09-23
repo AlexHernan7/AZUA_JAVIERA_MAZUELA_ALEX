@@ -1,6 +1,6 @@
 """Modelo Junta - Juntas de vecinos."""
 
-from sqlalchemy import Column, BigInteger, Text, ForeignKey, DateTime, func
+from sqlalchemy import Column, BigInteger, Text, ForeignKey, DateTime, Date, Boolean, LargeBinary, func
 from sqlalchemy.orm import relationship
 from src.database import Base
 
@@ -16,10 +16,14 @@ class Junta(Base):
         BigInteger, ForeignKey("vecindapp.comuna.id_comuna", ondelete="SET NULL")
     )
     nombre = Column(Text, nullable=False)
+    rut = Column(Text, unique=True, nullable=False)  # RUT personalidad jurídica
     direccion = Column(Text)
     telefono = Column(Text)
     email = Column(Text)
     descripcion = Column(Text)
+    fecha_constitucion = Column(Date, nullable=True)  # Fecha de constitución
+    activa = Column(Boolean, nullable=False, default=True)  # Si está activa
+    logo = Column(LargeBinary, nullable=True)  # Logo en binario
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -49,4 +53,4 @@ class Junta(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Junta(id_junta={self.id_junta}, nombre='{self.nombre}', id_comuna={self.id_comuna})>"
+        return f"<Junta(id_junta={self.id_junta}, nombre='{self.nombre}', rut='{self.rut}', id_comuna={self.id_comuna}, activa={self.activa})>"

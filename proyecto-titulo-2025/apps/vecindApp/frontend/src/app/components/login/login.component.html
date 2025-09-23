@@ -31,6 +31,7 @@
           [(ngModel)]="loginData.email"
           name="email"
           required
+          autocomplete="email"
           [disabled]="isLoading">
       </div>
 
@@ -47,6 +48,7 @@
           [(ngModel)]="loginData.password"
           name="password"
           required
+          autocomplete="current-password"
           [disabled]="isLoading">
       </div>
 

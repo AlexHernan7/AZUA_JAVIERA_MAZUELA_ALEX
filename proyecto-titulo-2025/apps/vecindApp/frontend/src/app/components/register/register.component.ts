@@ -16,12 +16,13 @@ import { RegisterRequest } from '../../interfaces/auth.interface';
 })
 export class RegisterComponent implements OnInit {
 
-  // Datos para regiones y comunas (JSON)
-  regiones: string[] = [];
-  comunas: string[] = [];
-  regionesComunas: Record<string, string[]> = {};
+  // Datos para regiones, comunas y juntas (desde BD)
+  regiones: any[] = [];
+  comunas: any[] = [];
+  juntas: any[] = [];
   regionSeleccionada = '';
   comunaSeleccionada = '';
+  juntaSeleccionada = '';
 
   // Modelo para el formulario de registro
   registerData: RegisterRequest = {
@@ -53,13 +54,24 @@ export class RegisterComponent implements OnInit {
   ) {}
 
    ngOnInit(): void {
-    // Carga el JSON con regiones y comunas
-    this.http
-      .get<Record<string, string[]>>('/data/regiones-comunas.json')
-      .subscribe((data) => {
-        this.regionesComunas = data;
-        this.regiones = Object.keys(data).sort(); // opcional: orden alfabético
-      });}
+    // Cargar regiones desde la BD
+    this.loadRegiones();
+  }
+
+  /**
+   * Carga las regiones desde el backend
+   */
+  private loadRegiones(): void {
+    this.authService.getRegiones().subscribe({
+      next: (response) => {
+        this.regiones = response.regiones;
+      },
+      error: (error) => {
+        console.error('Error cargando regiones:', error);
+        this.errorMessage = 'Error cargando regiones';
+      }
+    });
+  }
 
 /**
    * Maneja el cambio de archivo de foto de perfil
@@ -90,14 +102,86 @@ export class RegisterComponent implements OnInit {
   }
 
   /**
-   * Maneja el cambio de región (para el JSON)
+   * Maneja el cambio de región
    */
   onRegionChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const region = target.value;
-    this.regionSeleccionada = region;
-    this.comunas = this.regionesComunas[region] ?? [];
+    const regionId = parseInt(target.value);
+    this.regionSeleccionada = target.value;
+    
+    // Limpiar selecciones dependientes
     this.comunaSeleccionada = '';
+    this.juntaSeleccionada = '';
+    this.comunas = [];
+    this.juntas = [];
+    
+    if (regionId) {
+      this.loadComunasByRegion(regionId);
+    }
+  }
+
+  /**
+   * Maneja el cambio de comuna
+   */
+  onComunaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const comunaId = parseInt(target.value);
+    this.comunaSeleccionada = target.value;
+    
+    // Limpiar selección de junta
+    this.juntaSeleccionada = '';
+    this.juntas = [];
+    
+    if (comunaId) {
+      this.loadJuntasByComuna(comunaId);
+    }
+  }
+
+  /**
+   * Maneja el cambio de junta
+   */
+  onJuntaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.juntaSeleccionada = target.value;
+    
+    // Actualizar los IDs en registerData
+    const regionId = parseInt(this.regionSeleccionada);
+    const comunaId = parseInt(this.comunaSeleccionada);
+    const juntaId = parseInt(this.juntaSeleccionada);
+    
+    this.registerData.id_region = regionId;
+    this.registerData.id_comuna = comunaId;
+    this.registerData.id_junta = juntaId;
+  }
+
+  /**
+   * Carga las comunas de una región específica
+   */
+  private loadComunasByRegion(regionId: number): void {
+    this.authService.getComunasByRegion(regionId).subscribe({
+      next: (response) => {
+        this.comunas = response.comunas;
+      },
+      error: (error) => {
+        console.error('Error cargando comunas:', error);
+        this.errorMessage = 'Error cargando comunas';
+      }
+    });
+  }
+
+  /**
+   * Carga las juntas de una comuna específica
+   */
+  private loadJuntasByComuna(comunaId: number): void {
+    this.authService.getJuntasByComuna(comunaId).subscribe({
+      next: (response) => {
+        this.juntas = response.juntas;
+      },
+      error: (error) => {
+        console.error('Error cargando juntas:', error);
+        this.errorMessage = 'Error cargando juntas';
+      }
+    });
   }
 
   /**

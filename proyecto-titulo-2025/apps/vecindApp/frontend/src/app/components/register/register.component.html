@@ -48,6 +48,7 @@
           [(ngModel)]="registerData.nombres"
           name="nombres"
           required
+          autocomplete="given-name"
           [disabled]="isLoading">
       </div>
       <div class="col-12 col-md-3">
@@ -59,6 +60,7 @@
           [(ngModel)]="registerData.apellido_paterno"
           name="apellido_paterno"
           required
+          autocomplete="family-name"
           [disabled]="isLoading">
       </div>
       <div class="col-12 col-md-3">
@@ -70,6 +72,7 @@
           [(ngModel)]="registerData.apellido_materno"
           name="apellido_materno"
           required
+          autocomplete="additional-name"
           [disabled]="isLoading">
       </div>
 
@@ -83,6 +86,7 @@
           [(ngModel)]="registerData.rut"
           name="rut"
           required
+          autocomplete="off"
           [disabled]="isLoading">
       </div>
       <div class="col-12 col-md-4">
@@ -93,6 +97,7 @@
           [(ngModel)]="registerData.fecha_nacimiento"
           name="fecha_nacimiento"
           required
+          autocomplete="bday"
           [disabled]="isLoading">
       </div>
 
@@ -106,6 +111,7 @@
           [(ngModel)]="registerData.telefono"
           name="telefono"
           required
+          autocomplete="tel"
           [disabled]="isLoading">
       </div>
 
@@ -119,34 +125,44 @@
           [(ngModel)]="registerData.direccion"
           name="direccion"
           required
+          autocomplete="street-address"
           [disabled]="isLoading">
       </div>
 
-      <!-- Región / Comuna -->
-      <div class="col-12 col-md-6">
-  <label class="form-label fw-semibold">Región</label>
-  <select class="form-select"
-          (change)="onRegionChange($event)"
-          [(ngModel)]="regionSeleccionada"
-          name="region">
-    <option value="" disabled selected>Selecciona una región</option>
-    <option *ngFor="let region of regiones" [value]="region">{{ region }}</option>
-  </select>
-</div>
-      <div class="col-12 col-md-6">
-  <label class="form-label fw-semibold">Comuna</label>
-  <select class="form-select"
-          [(ngModel)]="comunaSeleccionada"
-          name="comuna">
-    <option value="" disabled selected>Selecciona una comuna</option>
-    <option *ngFor="let comuna of comunas" [value]="comuna">{{ comuna }}</option>
-  </select>
-</div>
+      <!-- Región / Comuna / Junta -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Región *</label>
+        <select class="form-select"
+                (change)="onRegionChange($event)"
+                [(ngModel)]="regionSeleccionada"
+                name="region"
+                required>
+          <option value="" disabled>Selecciona una región</option>
+          <option *ngFor="let region of regiones" [value]="region.id_region">{{ region.nombre }}</option>
+        </select>
+      </div>
 
-      <div class="col-12 col-md-12">
-        <label class="form-label fw-semibold">Junta de Vecinos</label>
-        <select class="form-select">
-          <option value="Junta de Vecinos Barrio Oeste" selected>Junta de Vecinos Barrio Oeste</option>
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Comuna *</label>
+        <select class="form-select"
+                (change)="onComunaChange($event)"
+                [(ngModel)]="comunaSeleccionada"
+                name="comuna"
+                required>
+          <option value="" disabled>Selecciona una comuna</option>
+          <option *ngFor="let comuna of comunas" [value]="comuna.id_comuna">{{ comuna.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Junta de Vecinos *</label>
+        <select class="form-select"
+                (change)="onJuntaChange($event)"
+                [(ngModel)]="juntaSeleccionada"
+                name="junta"
+                required>
+          <option value="" disabled>Selecciona una junta</option>
+          <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
         </select>
       </div>
       
@@ -161,6 +177,7 @@
           [(ngModel)]="registerData.email"
           name="email"
           required
+          autocomplete="email"
           [disabled]="isLoading">
       </div>
       <div class="col-12 col-md-6">
@@ -174,6 +191,7 @@
           required
           minlength="8"
           maxlength="12"
+          autocomplete="new-password"
           [disabled]="isLoading">
       </div>
 

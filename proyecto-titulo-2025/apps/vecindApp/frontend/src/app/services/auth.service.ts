@@ -189,10 +189,30 @@ export class AuthService {
   }
 
   /**
+   * Obtiene la lista de regiones disponibles
+   */
+  getRegiones(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/auth/regiones`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Obtiene la lista de comunas disponibles
    */
   getComunas(): Observable<ComunasList> {
     return this.http.get<ComunasList>(`${this.API_URL}/auth/comunas`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Obtiene las comunas de una región específica
+   */
+  getComunasByRegion(regionId: number): Observable<ComunasList> {
+    return this.http.get<ComunasList>(`${this.API_URL}/auth/comunas/region/${regionId}`)
       .pipe(
         catchError(this.handleError)
       );

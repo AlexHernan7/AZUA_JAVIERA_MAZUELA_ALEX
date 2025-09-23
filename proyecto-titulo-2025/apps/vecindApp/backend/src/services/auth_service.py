@@ -164,17 +164,29 @@ class AuthService:
 
     async def get_juntas_by_comuna(self, comuna_id: int) -> list[Junta]:
         """
-        Obtiene todas las juntas de una comuna.
+        Obtiene todas las juntas activas de una comuna.
 
         Args:
             comuna_id: ID de la comuna
 
         Returns:
-            Lista de juntas en la comuna
+            Lista de juntas activas en la comuna
         """
         result = await self.db.execute(
-            select(Junta).where(Junta.id_comuna == comuna_id)
+            select(Junta)
+            .where(Junta.id_comuna == comuna_id, Junta.activa == True)
+            .order_by(Junta.nombre)
         )
+        return list(result.scalars().all())
+
+    async def get_all_regiones(self) -> list[Region]:
+        """
+        Obtiene todas las regiones disponibles.
+
+        Returns:
+            Lista de todas las regiones
+        """
+        result = await self.db.execute(select(Region).order_by(Region.nombre))
         return list(result.scalars().all())
 
     async def get_all_comunas(self) -> list[Comuna]:
@@ -184,7 +196,24 @@ class AuthService:
         Returns:
             Lista de todas las comunas
         """
-        result = await self.db.execute(select(Comuna))
+        result = await self.db.execute(select(Comuna).order_by(Comuna.nombre))
+        return list(result.scalars().all())
+
+    async def get_comunas_by_region(self, region_id: int) -> list[Comuna]:
+        """
+        Obtiene todas las comunas de una región específica.
+
+        Args:
+            region_id: ID de la región
+
+        Returns:
+            Lista de comunas en la región
+        """
+        result = await self.db.execute(
+            select(Comuna)
+            .where(Comuna.id_region == region_id)
+            .order_by(Comuna.nombre)
+        )
         return list(result.scalars().all())
 
     async def login_user(self, email: str, password: str) -> tuple[Usuario, Optional[Vecino], Optional[Directiva], list[str]]:

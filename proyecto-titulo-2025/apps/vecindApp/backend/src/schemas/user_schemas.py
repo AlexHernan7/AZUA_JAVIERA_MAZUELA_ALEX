@@ -44,6 +44,7 @@ class ComunaResponse(BaseModel):
 
     id_comuna: int
     nombre: str
+    id_region: int
 
     class Config:
         from_attributes = True

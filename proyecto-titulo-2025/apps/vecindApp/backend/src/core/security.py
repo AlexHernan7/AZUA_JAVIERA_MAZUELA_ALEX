@@ -4,15 +4,26 @@ Módulo de seguridad para VecindApp.
 Contiene funciones para el manejo seguro de contraseñas y autenticación JWT.
 """
 
+import warnings
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from src.core.config import settings
 
+# Suprimir warnings específicos de bcrypt/passlib
+warnings.filterwarnings("ignore", message=".*trapped.*error reading bcrypt version.*")
+
 # Configuración para hash de contraseñas
 # bcrypt es muy seguro y recomendado para contraseñas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configuramos bcrypt para evitar warnings de versión
+pwd_context = CryptContext(
+    schemes=["bcrypt"], 
+    deprecated="auto",
+    bcrypt__default_rounds=12,
+    bcrypt__min_rounds=4,
+    bcrypt__max_rounds=31
+)
 
 
 def hash_password(password: str) -> str:

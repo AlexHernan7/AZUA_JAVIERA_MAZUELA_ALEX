@@ -28,31 +28,31 @@
 
             <div class="col-12">
               <label class="form-label fw-semibold">Nombre *</label>
-              <input class="form-control" formControlName="nombre" placeholder="Junta de Vecinos Barrio Oeste">
+              <input class="form-control" formControlName="nombre" placeholder="Junta de Vecinos Barrio Oeste" autocomplete="organization">
               <div class="invalid" *ngIf="g('nombre').touched && g('nombre').invalid">Obligatorio (mín. 3)</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">RUT (personalidad jurídica)</label>
-              <input class="form-control" formControlName="rut_personeria" placeholder="12.345.678-9">
+              <input class="form-control" formControlName="rut_personeria" placeholder="12.345.678-9" autocomplete="off">
               <div class="invalid" *ngIf="g('rut_personeria').touched && g('rut_personeria').invalid">RUT inválido</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Correo de contacto *</label>
-              <input type="email" class="form-control" formControlName="email_contacto" placeholder="contacto@junta.cl">
+              <input type="email" class="form-control" formControlName="email_contacto" placeholder="contacto@junta.cl" autocomplete="email">
               <div class="invalid" *ngIf="g('email_contacto').touched && g('email_contacto').invalid">Email inválido</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Teléfono de contacto *</label>
-              <input class="form-control" formControlName="telefono_contacto" placeholder="+569XXXXXXXX">
+              <input class="form-control" formControlName="telefono_contacto" placeholder="+569XXXXXXXX" autocomplete="tel">
               <div class="invalid" *ngIf="g('telefono_contacto').touched && g('telefono_contacto').invalid">Formato +56XXXXXXXXX</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Dirección de la sede *</label>
-              <input class="form-control" formControlName="direccion_sede" placeholder="Calle, número, depto">
+              <input class="form-control" formControlName="direccion_sede" placeholder="Calle, número, depto" autocomplete="street-address">
               <div class="invalid" *ngIf="g('direccion_sede').touched && g('direccion_sede').invalid">Obligatorio</div>
             </div>
 
@@ -61,7 +61,7 @@
               <label class="form-label fw-semibold">Región *</label>
               <select class="form-select" formControlName="region">
                 <option value="" disabled>Selecciona una región</option>
-                <option *ngFor="let r of regiones" [value]="r">{{ r }}</option>
+                <option *ngFor="let region of regiones" [value]="region.id_region">{{ region.nombre }}</option>
               </select>
               <div class="invalid" *ngIf="g('region').touched && g('region').invalid">Selecciona una región</div>
             </div>
@@ -69,7 +69,7 @@
               <label class="form-label fw-semibold">Comuna *</label>
               <select class="form-select" formControlName="comuna">
                 <option value="" disabled>Selecciona una comuna</option>
-                <option *ngFor="let c of comunas" [value]="c">{{ c }}</option>
+                <option *ngFor="let comuna of comunas" [value]="comuna.id_comuna">{{ comuna.nombre }}</option>
               </select>
               <div class="invalid" *ngIf="g('comuna').touched && g('comuna').invalid">Selecciona una comuna</div>
             </div>

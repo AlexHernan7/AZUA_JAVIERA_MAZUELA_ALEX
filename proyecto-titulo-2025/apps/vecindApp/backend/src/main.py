@@ -6,6 +6,7 @@ from src.api.routes.news_routes import router as news_router
 from src.api.routes.certificado_routes import router as certificado_router
 from src.api.routes.directiva_routes import router as directiva_router
 from src.api.routes.webpay_routes import router as webpay_router
+from src.api.routes.junta_routes import router as junta_router
 
 # Crear una instancia de FastAPI con prefijo /api
 app = FastAPI(
@@ -53,12 +54,13 @@ async def api_info():
     }
 
 
-# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos y pagos
+# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos, juntas y pagos
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
 api_router.include_router(news_router)
 api_router.include_router(certificado_router)
 api_router.include_router(directiva_router)
+api_router.include_router(junta_router)
 api_router.include_router(webpay_router)
 
 # Incluir el router en la aplicación

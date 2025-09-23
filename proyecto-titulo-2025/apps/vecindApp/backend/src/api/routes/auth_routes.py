@@ -135,6 +135,31 @@ async def register_user(
 
 
 @router.get(
+    "/regiones",
+    summary="Listar regiones",
+    description="Obtiene la lista de todas las regiones disponibles",
+)
+async def get_regiones(db: AsyncSession = Depends(get_db_session)):
+    """
+    Obtiene la lista de todas las regiones disponibles.
+    """
+    try:
+        auth_service = AuthService(db)
+        regiones = await auth_service.get_all_regiones()
+
+        return {
+            "regiones": [{"id_region": r.id_region, "nombre": r.nombre, "codigo": r.codigo} for r in regiones],
+            "total": len(regiones)
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error al obtener regiones", "detalle": str(e)},
+        )
+
+
+@router.get(
     "/comunas",
     response_model=ComunasList,
     summary="Listar comunas",
@@ -149,7 +174,7 @@ async def get_comunas(db: AsyncSession = Depends(get_db_session)):
         comunas = await auth_service.get_all_comunas()
 
         return ComunasList(
-            comunas=[{"id_comuna": c.id_comuna, "nombre": c.nombre} for c in comunas],
+            comunas=[{"id_comuna": c.id_comuna, "nombre": c.nombre, "id_region": c.id_region} for c in comunas],
             total=len(comunas),
         )
 
@@ -157,6 +182,32 @@ async def get_comunas(db: AsyncSession = Depends(get_db_session)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener comunas", "detalle": str(e)},
+        )
+
+
+@router.get(
+    "/comunas/region/{region_id}",
+    response_model=ComunasList,
+    summary="Listar comunas por región",
+    description="Obtiene la lista de comunas de una región específica",
+)
+async def get_comunas_by_region(region_id: int, db: AsyncSession = Depends(get_db_session)):
+    """
+    Obtiene las comunas de una región específica.
+    """
+    try:
+        auth_service = AuthService(db)
+        comunas = await auth_service.get_comunas_by_region(region_id)
+
+        return ComunasList(
+            comunas=[{"id_comuna": c.id_comuna, "nombre": c.nombre, "id_region": c.id_region} for c in comunas],
+            total=len(comunas),
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error al obtener comunas por región", "detalle": str(e)},
         )
 
 
