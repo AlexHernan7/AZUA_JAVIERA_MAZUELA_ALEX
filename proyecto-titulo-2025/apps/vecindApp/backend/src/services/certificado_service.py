@@ -37,7 +37,7 @@ class CertificadoService:
         self.payment_service = PaymentService(db)
         
     # Configuración de precios (en CLP)
-    PRECIO_CERTIFICADO = Decimal("1000")  # $1.000 CLP
+    PRECIO_CERTIFICADO = Decimal("2000")  # $2.000 CLP
     
     async def crear_certificado_con_pago(
         self, 
@@ -546,19 +546,25 @@ class CertificadoService:
         if not certificado:
             raise ValueError("Certificado no encontrado o no tienes permisos para descargarlo")
         
-        # Leer el archivo PDF
+        # Decodificar el PDF desde base64 (Data URL)
         try:
-            with open(certificado.pdf_url, 'rb') as f:
-                pdf_data = f.read()
+            import base64
+            
+            # Verificar que es un Data URL
+            if not certificado.pdf_url.startswith('data:application/pdf;base64,'):
+                raise ValueError("Formato de PDF no válido")
+            
+            # Extraer el base64 del Data URL
+            base64_data = certificado.pdf_url.split(',')[1]
+            
+            # Decodificar base64 a bytes
+            pdf_data = base64.b64decode(base64_data)
             
             filename = f"certificado_{certificado.numero}.pdf"
             logger.info(f"📄 Certificado {certificado_id} descargado por usuario {user_id}")
             
             return pdf_data, filename
             
-        except FileNotFoundError:
-            logger.error(f"❌ Archivo PDF no encontrado: {certificado.pdf_url}")
-            raise ValueError("El archivo PDF del certificado no se encuentra disponible")
         except Exception as e:
-            logger.error(f"💥 Error leyendo archivo PDF: {str(e)}")
-            raise ValueError(f"Error al acceder al certificado: {str(e)}")
+            logger.error(f"💥 Error decodificando PDF: {str(e)}")
+            raise ValueError(f"Error al procesar el certificado: {str(e)}")
