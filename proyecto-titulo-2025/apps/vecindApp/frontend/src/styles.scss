@@ -2,6 +2,10 @@
 @use "bootstrap/scss/bootstrap";
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
+
+/* src/styles.css */
+
+
 //principal 
 html, body { height: 100%; }
 :root{
@@ -42,6 +46,12 @@ html, body { height: 100%; }
 .btn-teal-menu:hover {  background-color: #0d9488; }
 .btn-outline-teal-menu {  border: 1px solid #0f766e;  color: #0f766e;}
 .btn-outline-teal-menu:hover {  background-color: #0f766e;  color: #fff;}
+
+//boton pagar 
+.btn-teal-menuu {  background-color: #0f766e;   color: #fff;  border: none;}
+.btn-teal-menuu:hover {  background-color: #0d9488; }
+.btn-outline-teal-menuu {  border: 1px solid #0f766e;  color: #0f766e;}
+.btn-outline-teal-menuu:hover {  background-color: #0f766e;  color: #fff;}
 
 // BOTON HOME
 .btn-cta{ --bs-btn-padding-y: .9rem; --bs-btn-padding-x: 1.5rem; --bs-btn-font-weight: 700; --bs-btn-font-size: clamp(1rem, 1.3vw, 1.2rem); background: var(--cta-500);
@@ -204,6 +214,10 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 .btn-teal-menu:hover:not(:disabled) { background-color: #007c8c;}
 .btn-teal-menu:disabled { opacity: 0.65;}
 
+.btn-teal-menuu {background-color: #0097a7;border: none; color: #fff; font-weight: 600;}
+.btn-teal-menuu:hover:not(:disabled) { background-color: #007c8c;}
+.btn-teal-menuu:disabled { opacity: 0.65;}
+
 /* Inputs deshabilitados (grisados) */
 .form-control:disabled { background-color: #f8f9fa; color: #6c757d; opacity: 1;}
 /* Botón principal (Ir a pagar) */
@@ -222,6 +236,7 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 /* Opcional: efecto al enfocarlo con tab */
 .form-check-input:focus { box-shadow: 0 0 0 0.2rem rgba(255, 123, 0, 0.25); /* sombra naranjo */}
 .invalid { color: #dc3545; font-size: .9rem; }
+
 
  //                                           S T Y L E S  P E R F I L  D E  L A  J U N T A
 /* Enlaces con color teal de la app */
@@ -245,6 +260,7 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 .junta-title { color: var(--ink-900); font-weight: 800; }
 /* Listado de datos (línea) en encabezado */
 .junta-meta { color: var(--ink-700); }
+
 
 
 @media (max-width: 992px)

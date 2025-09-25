@@ -1,4 +1,5 @@
 <!-- app.component.html -->
+<div class="bg-app-gradient min-vh-100">
 <ng-container *ngIf="auth.isAuthenticated(); else publicShell">
   <!-- Menú lateral autenticado -->
   <app-menu-auth></app-menu-auth>
@@ -18,3 +19,4 @@
     <router-outlet></router-outlet>
   </div>
 </ng-template>
+</div>

@@ -1,3 +1,4 @@
+
 <div class="container-xxl py-3">
   <h1 class="display-6 fw-bold text-ink-900 mb-2">Certificado de Residencia</h1>
   <p class="text-muted mb-3">Verifica tus datos y selecciona el motivo de tu solicitud.</p>
@@ -82,42 +83,52 @@
         </div>
       </form>
 
-      <!-- Acciones -->
-      <div class="d-flex flex-column flex-md-row gap-3">
-        <!-- Botón para generar certificado -->
-        <!-- Información de Precio -->
-        <div class="alert alert-info mb-3" *ngIf="!certificadoConPago && !certificadoGenerado">
-          <h6><i class="bi bi-credit-card"></i> Información de Pago</h6>
-          <p class="mb-0">
-            <strong>Costo del certificado:</strong> $1.000 CLP<br>
-            <small class="text-muted">Serás redirigido a <strong>Webpay Plus</strong> (Transbank) para completar el pago de forma segura.</small><br>
-            <small class="text-success">✅ Acepta tarjetas de crédito y débito Visa, Mastercard y más.</small>
-          </p>
-        </div>
+<div class="row gap-5 mt-2 justify-content-center">
+  <!-- Información de Pago -->
+  <div class="col-12 col-md-6 ">
+    <div class="alert alert-info h-100 mb-0" *ngIf="!certificadoConPago && !certificadoGenerado">
+      <h6 class="mb-2"><i class="bi bi-credit-card"></i> Información de Pago</h6>
+      <p class="mb-0">
+        <strong>Costo del certificado:</strong> $2.000 CLP<br>
+        <small class="text-muted">
+          Serás redirigido a <strong>Webpay Plus</strong> (Transbank) para completar el pago de forma segura.
+        </small><br>
+        <small class="text-success">
+          ✅ Acepta tarjetas de crédito y débito Visa, Mastercard y más.
+        </small>
+      </p>
+    </div>
+  </div>
 
-        <button type="button"
-                class="btn btn-teal-menu flex-fill"
-                [disabled]="!puedeGenerar"
-                (click)="onGenerarClick()">
-          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-          <i *ngIf="!isLoading" class="bi bi-credit-card me-1"></i>
-          {{ isLoading ? 'Procesando...' : 'Pagar con Webpay ($1.000)' }}
-        </button>
+  <!-- Botones (alineados al centro vertical) -->
+  <div class="col-12 col-md-5 d-flex align-items-center">
+    <div class="d-flex flex-column gap-3 w-75">
+      <!-- Pagar -->
+      <button type="button"
+              class="btn btn-teal-menu btn-responsive"
+              [disabled]="!puedeGenerar"
+              (click)="onGenerarClick()">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!isLoading" class="bi bi-credit-card me-1"></i>
+        {{ isLoading ? 'Procesando...' : 'Ir a pagar' }}
+      </button>
 
-        <!-- Botón para descargar PDF -->
-        <button type="button"
-                class="btn btn-download flex-fill"
-                [disabled]="!puedeDescargar"
-                (click)="onDescargarClick()">
-          <span *ngIf="isLoading && certificadoGenerado" class="spinner-border spinner-border-sm me-2"></span>
-          <i *ngIf="!certificadoGenerado" class="bi bi-lock me-1"></i>
-          <i *ngIf="certificadoGenerado && !isLoading" class="bi bi-download me-1"></i>
-          {{ 
-            !certificadoGenerado ? 'Descargar PDF' :
-            (isLoading ? 'Descargando...' : 'Descargar PDF')
-          }}
-        </button>
-      </div>
+      <!-- Descargar -->
+      <button type="button"
+              class="btn btn-download btn-responsive"
+              [disabled]="!puedeDescargar"
+              (click)="onDescargarClick()">
+        <span *ngIf="isLoading && certificadoGenerado" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!certificadoGenerado" class="bi bi-lock me-1"></i>
+        <i *ngIf="certificadoGenerado && !isLoading" class="bi bi-download me-1"></i>
+        {{ !certificadoGenerado ? 'Descargar PDF' : (isLoading ? 'Descargando...' : 'Descargar PDF') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
       
       <!-- Botón para nueva solicitud (solo si ya se generó un certificado) -->
       <div *ngIf="certificadoGenerado" class="mt-3">
@@ -151,7 +162,7 @@
       <!-- Información -->
       <div class="small text-muted border rounded-3 p-2 mt-3">
         <i class="bi bi-info-circle me-1"></i>
-        El certificado de residencia se genera de forma gratuita e inmediata.
+        El certificado de residencia se generará luego de finalizar el pago.
       </div>
     </div>
   </div>
