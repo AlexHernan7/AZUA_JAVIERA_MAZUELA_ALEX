@@ -59,12 +59,12 @@ async def create_initial_data():
             
             # 3. Crear juntas de ejemplo
             juntas = [
-                ("Junta de Vecinos Barrio Oeste", "Av. Siempre Viva 1234, Maipú", "+56987654321", "contacto@juntabarrioeste.cl", "Junta de vecinos del Barrio Oeste"),
-                ("Junta de Vecinos Las Américas", "Las Américas 200, Maipú", "+56228905678", "info@lasamericas.cl", "Junta de vecinos del sector Las Américas"),
-                ("Junta de Vecinos Central Maipú", "Av. Pajaritos 300, Maipú", "+56228909012", "central@maipu.cl", "Junta de vecinos del centro de Maipú")
+                ("Junta de Vecinos Barrio Oeste", "65123456-7", "Av. Siempre Viva 1234, Maipú", "+56987654321", "contacto@juntabarrioeste.cl", "Junta de vecinos del Barrio Oeste"),
+                ("Junta de Vecinos Las Américas", "65234567-8", "Las Américas 200, Maipú", "+56228905678", "info@lasamericas.cl", "Junta de vecinos del sector Las Américas"),
+                ("Junta de Vecinos Central Maipú", "65345678-9", "Av. Pajaritos 300, Maipú", "+56228909012", "central@maipu.cl", "Junta de vecinos del centro de Maipú")
             ]
             
-            for nombre, direccion, telefono, email, descripcion in juntas:
+            for nombre, rut, direccion, telefono, email, descripcion in juntas:
                 # Verificar si ya existe
                 result = await session.execute(text("""
                     SELECT id_junta FROM "vecindapp".junta 
@@ -74,17 +74,18 @@ async def create_initial_data():
                 
                 if not existing_junta:
                     await session.execute(text("""
-                        INSERT INTO "vecindapp".junta (id_comuna, nombre, direccion, telefono, email, descripcion) 
-                        VALUES (:id_comuna, :nombre, :direccion, :telefono, :email, :descripcion)
+                        INSERT INTO "vecindapp".junta (id_comuna, nombre, rut, direccion, telefono, email, descripcion) 
+                        VALUES (:id_comuna, :nombre, :rut, :direccion, :telefono, :email, :descripcion)
                     """), {
                         "id_comuna": id_comuna,
                         "nombre": nombre,
+                        "rut": rut,
                         "direccion": direccion,
                         "telefono": telefono,
                         "email": email,
                         "descripcion": descripcion
                     })
-                    print(f"✅ Junta creada: {nombre}")
+                    print(f"✅ Junta creada: {nombre} (RUT: {rut})")
                 else:
                     print(f"ℹ️  Junta ya existe: {nombre}")
             
