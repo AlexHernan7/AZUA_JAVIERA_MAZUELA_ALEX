@@ -14,6 +14,7 @@ import { JuntaProfileComponent } from './components/junta-profile/junta-profile.
 import { PaymentSuccessComponent } from './components/payment-success/payment-success.component';
 import { PaymentFailureComponent } from './components/payment-failure/payment-failure.component';
 import { PaymentPendingComponent } from './components/payment-pending/payment-pending.component';
+import { ReservasComponent } from './components/reservas/reservas.component';
 
 
 export const appRoutes: Routes = [
@@ -26,6 +27,9 @@ export const appRoutes: Routes = [
   { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
   { path: 'news', component: NewsComponent },
+  { path: 'reservas', component: ReservasComponent },
+
+
   // Rutas de pago
   { path: 'payment/success', component: PaymentSuccessComponent },
   { path: 'payment/failure', component: PaymentFailureComponent },

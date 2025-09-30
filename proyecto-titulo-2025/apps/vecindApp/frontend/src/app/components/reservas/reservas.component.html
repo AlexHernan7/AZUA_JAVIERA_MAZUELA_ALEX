@@ -1,0 +1,149 @@
+<!-- HERO (se adapta al layout con menú lateral) -->
+<section
+  class="rounded-3 mb-4 position-relative overflow-hidden"
+  style="
+    background-image: url('assets/reservas/hero.jpg');
+    background-size: cover; background-position: center; min-height: 180px;
+  "
+>
+  <div class="p-4 p-lg-5" style="background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.68)); max-width: 720px;">
+    <h1 class="display-5 fw-bold text-dark-emphasis mb-1">Reserva tu espacio comunitario</h1>
+    <p class="lead text-dark-emphasis mb-0">Agéndalo fácil y rápido para tus actividades</p>
+  </div>
+</section>
+
+<!-- TARJETAS DE ESPACIOS -->
+<div class="row g-4 mb-4 mx-2">
+  <div class="col-md-4" *ngFor="let e of espacios">
+    <div class="card shadow-sm h-100">
+      <div class="ratio ratio-16x9">
+        <img [src]="e.foto" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
+      </div>
+      <div class="card-body d-flex flex-column gap-2">
+        <h5 class="mb-1">{{ e.nombre }}</h5>
+        <div class="d-flex align-items-center justify-content-between small text-secondary">
+          <span>Capacidad: <strong class="text-body">{{ e.capacidad }}</strong> personas</span>
+          <span>Valor: <strong class="text-body">{{ formatoMoneda(e.valor) }}</strong> / hora</span>
+        </div>
+        <div class="mt-auto">
+          <button type="button" class="btn btn-teal w-100" (click)="reservar(e)">Reservar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL DE RESERVA (aparece al seleccionar un espacio) -->
+<div class="card shadow-sm mb-5" *ngIf="panelAbierto()">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <img [src]="seleccionado()!.foto" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
+      <div>
+        <div class="fw-semibold">{{ seleccionado()!.nombre }}</div>
+        <div class="small text-secondary">
+          Capacidad: {{ seleccionado()!.capacidad }} &nbsp;•&nbsp;
+          Valor: {{ formatoMoneda(seleccionado()!.valor) }}/hora
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" (click)="cerrarPanel()">Cerrar</button>
+  </div>
+
+  <div class="card-body">
+    <div class="row g-4">
+      <!-- Formulario (fecha / horas / motivo / asistentes / reglamento) -->
+      <div class="col-lg-8">
+        <form [formGroup]="form" (ngSubmit)="comprobarDisponibilidad()" novalidate>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Fecha</label>
+              <input type="date" class="form-control" formControlName="fecha">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Hora inicio</label>
+              <select class="form-select" formControlName="horaInicio">
+                <option *ngFor="let h of horas" [value]="h">{{ h }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Hora término</label>
+              <select class="form-select" formControlName="horaTermino">
+                <option *ngFor="let h of horas" [value]="h">{{ h }}</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Motivo de la reserva</label>
+              <input type="text" class="form-control" formControlName="motivo" placeholder="cumpleaños, reunión, taller...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">N° de asistentes (opcional)</label>
+              <input type="number" class="form-control" formControlName="asistentes" min="1" placeholder="Ej: 20">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="reglamento" formControlName="aceptaReglamento">
+                <label class="form-check-label" for="reglamento">
+                  Acepto el reglamento de uso
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <button type="submit" class="btn btn-outline-secondary">Comprobar disponibilidad</button>
+            <div class="small"
+                 [class.text-success]="disponibilidad === 'ok'"
+                 [class.text-danger]="disponibilidad === 'no'">
+              <ng-container [ngSwitch]="disponibilidad">
+                <span *ngSwitchCase="'ok'">El horario seleccionado está disponible</span>
+                <span *ngSwitchCase="'no'">El horario seleccionado NO está disponible</span>
+                <span *ngSwitchDefault>&nbsp;</span>
+              </ng-container>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Información del espacio -->
+      <div class="col-lg-4">
+        <div class="border rounded-3 p-3">
+          <div class="fw-semibold mb-2">Información del espacio</div>
+
+          <div class="mb-2">
+            <div class="small text-secondary">Permitido</div>
+            <ul class="mb-2 ps-3">
+              <li *ngFor="let p of seleccionado()!.permitido">{{ p }}</li>
+            </ul>
+          </div>
+
+          <div class="mb-2">
+            <div class="small text-secondary">No permitido</div>
+            <ul class="mb-2 ps-3">
+              <li *ngFor="let p of seleccionado()!.noPermitido">{{ p }}</li>
+            </ul>
+          </div>
+
+          <div class="small text-secondary">
+            Tiempo máximo por reserva:
+            <strong class="text-body">{{ seleccionado()!.maxHoras }} h</strong>
+          </div>
+        </div>
+
+        <button class="btn btn-teal btn-lg w-100 mt-3"
+                [disabled]="form.invalid || disponibilidad !== 'ok'"
+                (click)="irAPagar()">
+          Ir a pagar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- estilos mínimos en línea para btn teal y helpers -->
+<style>
+  .btn-teal{background:#0f766e;border-color:#0f766e;color:#fff}
+  .btn-teal:hover{background:#0b5f59;border-color:#0b5f59;color:#fff}
+  .object-fit-cover{object-fit:cover}
+</style>

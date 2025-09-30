@@ -1,22 +1,30 @@
-<!-- app.component.html -->
 <div class="bg-app-gradient min-vh-100">
-<ng-container *ngIf="auth.isAuthenticated(); else publicShell">
-  <!-- Menú lateral autenticado -->
-  <app-menu-auth></app-menu-auth>
 
-  <!-- Contenido cuando HAY sidebar -->
-  <div class="auth-shell">
+  <!-- Cuando NO es /login, usa tus menús habituales -->
+  <ng-container *ngIf="!isLoginPage(); else soloContenido">
+    <ng-container *ngIf="auth.isAuthenticated(); else publicShell">
+      <!-- Menú lateral autenticado -->
+      <app-menu-auth></app-menu-auth>
+
+      <!-- Contenido cuando HAY sidebar -->
+      <div class="auth-shell">
+        <router-outlet></router-outlet>
+      </div>
+    </ng-container>
+
+    <ng-template #publicShell>
+      <!-- Navbar pública -->
+      <app-menu></app-menu>
+
+      <!-- Contenido cuando NO hay sidebar -->
+      <div class="public-shell">
+        <router-outlet></router-outlet>
+      </div>
+    </ng-template>
+  </ng-container>
+
+  <!-- En /login: NO mostrar ningún menú -->
+  <ng-template #soloContenido>
     <router-outlet></router-outlet>
-  </div>
-</ng-container>
-
-<ng-template #publicShell>
-  <!-- Navbar pública (fixed-top) -->
-  <app-menu></app-menu>
-
-  <!-- Contenido cuando NO hay sidebar -->
-  <div class="public-shell">
-    <router-outlet></router-outlet>
-  </div>
-</ng-template>
+  </ng-template>
 </div>
