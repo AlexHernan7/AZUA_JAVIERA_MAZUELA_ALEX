@@ -10,9 +10,10 @@
           Conéctate, participa y gestiona tus trámites
         </p>
         <button class="btn btn-cta"
-                *ngIf="!authService.isAuthenticated()">
-          Realizar inscripción
-        </button>
+        *ngIf="!authService.isAuthenticated()"
+        (click)="goToRegister()">
+  Realizar inscripción
+</button>
       </div>
     </div>
   </div>
@@ -24,7 +25,7 @@
     <div class="row g-3 g-md-4 ">
 
       <!-- Card 1 -->
-      <div class="col-12 col-md-6 col-lg-3" (click)="goToRegister()" *ngIf="!authService.isAuthenticated()">
+      <div class="col-12 col-md-6 col-lg-3" (click)="goToRegister()" *ngIf="!authService.isAuthenticated()" style="cursor: pointer;">
         <div class="feature-card ">
           <div class="feature-icon pb-1">
             <!-- usuario -->
@@ -35,19 +36,18 @@
       </div>
 
       <!-- Card 2 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="feature-card ">
-          <div class="feature-icon pb-1 ">
-            <!-- POF (documento) -->
-            <i class="bi bi-file-earmark-text-fill"></i>
-          </div>
-          <div class="feature-title">Solicitar Certificado <br/> de Residencia</div>
-        </div>
-      </div>
+<div class="col-12 col-md-6 col-lg-3">
+  <div class="feature-card" (click)="goToCertificado()" style="cursor: pointer;">
+    <div class="feature-icon pb-1">
+      <i class="bi bi-file-earmark-text-fill"></i>
+    </div>
+    <div class="feature-title">Solicitar Certificado <br/> de Residencia</div>
+  </div>
+</div>
 
       <!-- Card 3 -->
       <div class="col-12 col-md-6 col-lg-3">
-        <div class="feature-card ">
+        <div class="feature-card " (click)="goToReserva()" style="cursor: pointer;">
           <div class="feature-icon pb-1">
             <!-- calendario -->
             <i class="bi bi-calendar-week"></i>
@@ -57,18 +57,18 @@
       </div>
 
       <!-- Card 4 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="feature-card " >
-          <div class="feature-icon pb-1">
-            <!-- megáfono -->
-            <i class="bi bi-megaphone-fill"></i>
-          </div>
-          <div class="feature-title">Noticias<br/>y Avisos</div>
-        </div>
-      </div>
+     <div class="col-12 col-md-6 col-lg-3">
+  <div class="feature-card" [routerLink]="'/news'" style="cursor: pointer;">
+    <div class="feature-icon pb-1">
+      <i class="bi bi-megaphone-fill"></i>
+    </div>
+    <div class="feature-title">Noticias<br/>y Avisos</div>
+  </div>
+</div>
+
 
       <!-- Card 5 - Solo para usuarios autenticados -->
-      <div class="col-12 col-md-6 col-lg-3" (click)="goToMyJunta()" *ngIf="authService.isAuthenticated()">
+      <div class="col-12 col-md-6 col-lg-3" (click)="goToMyJunta()" *ngIf="authService.isAuthenticated()" style="cursor: pointer;">
         <div class="feature-card">
           <div class="feature-icon pb-1">
             <!-- grupo de personas -->
