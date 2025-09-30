@@ -41,7 +41,7 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
                   </div>
                   <div class="payment-details">
                     <span class="payment-label">Monto pagado</span>
-                    <span class="payment-amount">\${{ paymentAmount | number:'1.0-0' }} <small>CLP</small></span>
+                    <span class="payment-amount">\${{ paymentAmount | number:'2.0-0' }} <small>CLP</small></span>
                   </div>
                   <div class="payment-status">
                     <span class="status-badge">Confirmado</span>
