@@ -9,7 +9,15 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from typing import TYPE_CHECKING
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 from src.core.config import settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from src.database.models import Usuario, Vecino
 
 # Suprimir warnings específicos de bcrypt/passlib
 warnings.filterwarnings("ignore", message=".*trapped.*error reading bcrypt version.*")
@@ -169,3 +177,133 @@ def get_user_id_from_token(token: str) -> Optional[int]:
     if payload:
         return payload.get("sub")
     return None
+
+
+# === FASTAPI DEPENDENCIES ===
+
+# Configurar esquema de autenticación Bearer
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: "AsyncSession" = Depends(None)  # Se debe pasar la dependencia de DB
+) -> "Usuario":
+    """
+    Dependency para obtener el usuario actual desde el JWT token.
+    
+    Args:
+        credentials: Credenciales HTTP Bearer
+        db: Sesión de base de datos
+        
+    Returns:
+        Usuario autenticado
+        
+    Raises:
+        HTTPException: Si el token es inválido o el usuario no existe
+    """
+    # Importar aquí para evitar importaciones circulares
+    from src.database.models import Usuario
+    from src.database.session import get_db_session
+    from sqlalchemy import select
+    
+    # Si no se pasó la dependencia de DB, obtenerla
+    if db is None:
+        async for session in get_db_session():
+            db = session
+            break
+    
+    # Verificar token
+    payload = verify_token(credentials.credentials)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Extraer user_id del payload
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido: falta user_id",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Buscar usuario en la base de datos
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido: user_id debe ser un número",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    query = select(Usuario).where(Usuario.id_usuario == user_id)
+    result = await db.execute(query)
+    usuario = result.scalar_one_or_none()
+    
+    if usuario is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Verificar que el usuario esté activo
+    if not usuario.activo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario inactivo",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return usuario
+
+
+async def get_current_vecino(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: "AsyncSession" = Depends(None)
+) -> "Vecino":
+    """
+    Dependency para obtener el vecino actual directamente desde el token.
+    
+    Args:
+        credentials: Credenciales HTTP Bearer
+        db: Sesión de base de datos
+        
+    Returns:
+        Vecino asociado al usuario
+        
+    Raises:
+        HTTPException: Si el usuario no tiene perfil de vecino
+    """
+    # Importar aquí para evitar importaciones circulares
+    from src.database.models import Usuario, Vecino
+    from src.database.session import get_db_session
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+    
+    # Si no se pasó la dependencia de DB, obtenerla
+    if db is None:
+        async for session in get_db_session():
+            db = session
+            break
+    
+    # Primero obtener el usuario
+    current_user = await get_current_user(credentials, db)
+    
+    # Buscar vecino asociado al usuario
+    query = select(Vecino).where(Vecino.id_usuario == current_user.id_usuario)
+    result = await db.execute(query)
+    vecino = result.scalar_one_or_none()
+    
+    if vecino is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El usuario no tiene perfil de vecino"
+        )
+    
+    return vecino
