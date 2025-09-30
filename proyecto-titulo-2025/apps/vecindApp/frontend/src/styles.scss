@@ -78,6 +78,16 @@ html, body { height: 100%; }
 .login-bg::after {content: ""; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.08); z-index: 0;}
 /* La tarjeta debe ir por encima del blur */
 .login-card {position: relative; z-index: 1; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);border-radius: 1rem;} 
+.back-arrow {font-size: 1.4rem; color: #6c757d;  text-decoration: none; transition: color 0.2s ease;
+  &:hover { color: #495057; }}
+
+//                                           S T Y L E S    Q U I E N E S - S O M O S
+
+  .object-fit-cover{object-fit:cover}
+  .btn-teal{background:#0f766e;border-color:#0f766e;color:#fff}
+  .btn-teal:hover{background:#0b5f59;border-color:#0b5f59;color:#fff}
+  .text-teal-700{color:#0f766e}
+  .qsomos-sidebar { position: relative; z-index: 2; margin-top: -200px; }
 
 //                                           S T Y L E S    H O M E
 
@@ -281,4 +291,16 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 @media (max-width: 576px) 
 {  .label { width: 120px; min-width: 120px; }  
    .avatar-wrap { margin-top: -48px; }
+}
+
+@media (min-width: 1400px) {
+  .qsomos-sidebar {
+    margin-top: -180px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .qsomos-sidebar {
+    margin-top: 0;
+  }
 }

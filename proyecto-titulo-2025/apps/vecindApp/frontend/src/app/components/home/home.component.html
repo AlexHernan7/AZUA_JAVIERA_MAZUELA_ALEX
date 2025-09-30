@@ -9,7 +9,8 @@
         <p class="home-subtitle">
           Conéctate, participa y gestiona tus trámites
         </p>
-        <button class="btn btn-cta">
+        <button class="btn btn-cta"
+                *ngIf="!authService.isAuthenticated()">
           Realizar inscripción
         </button>
       </div>

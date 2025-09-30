@@ -15,6 +15,8 @@ import { PaymentSuccessComponent } from './components/payment-success/payment-su
 import { PaymentFailureComponent } from './components/payment-failure/payment-failure.component';
 import { PaymentPendingComponent } from './components/payment-pending/payment-pending.component';
 import { ReservasComponent } from './components/reservas/reservas.component';
+import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.component';
+
 
 
 export const appRoutes: Routes = [
@@ -28,6 +30,7 @@ export const appRoutes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
   { path: 'news', component: NewsComponent },
   { path: 'reservas', component: ReservasComponent },
+  { path: 'quienes-somos', component: QuienesSomosComponent },
 
 
   // Rutas de pago
