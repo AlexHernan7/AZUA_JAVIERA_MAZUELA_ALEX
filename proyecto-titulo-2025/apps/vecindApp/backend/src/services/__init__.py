@@ -6,5 +6,6 @@ Los servicios contienen la lógica de negocio de la aplicación.
 
 from .auth_service import AuthService
 from .user_service import UserService
+from .espacio_service import EspacioService
 
-__all__ = ["AuthService", "UserService"]
+__all__ = ["AuthService", "UserService", "EspacioService"]

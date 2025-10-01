@@ -16,6 +16,7 @@ import { PaymentFailureComponent } from './components/payment-failure/payment-fa
 import { PaymentPendingComponent } from './components/payment-pending/payment-pending.component';
 import { ReservasComponent } from './components/reservas/reservas.component';
 import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.component';
+import { CreateEspaciosComponent } from './components/create-espacios/create-espacios.component';
 
 
 
@@ -30,6 +31,7 @@ export const appRoutes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
   { path: 'news', component: NewsComponent },
   { path: 'reservas', component: ReservasComponent },
+  { path: 'espacios/crear', component: CreateEspaciosComponent, canActivate: [authGuard] },
   { path: 'quienes-somos', component: QuienesSomosComponent },
 
 

@@ -6,6 +6,7 @@ Los schemas definen la estructura de datos que acepta y devuelve la API.
 
 from .auth_schemas import *
 from .user_schemas import *
+from .espacio_schemas import *
 
 __all__ = [
     "UsuarioRegistroRequest",
@@ -13,4 +14,8 @@ __all__ = [
     "VecinoCreate",
     "VecinoResponse",
     "ErrorResponse",
+    "EspacioCreateRequest",
+    "EspacioUpdateRequest",
+    "EspacioResponse",
+    "EspacioListResponse",
 ]

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from src.api.routes.auth_routes import router as auth_router
 from src.api.routes.user_routes import router as user_router
 from src.api.routes.news_routes import router as news_router
@@ -7,6 +8,7 @@ from src.api.routes.certificado_routes import router as certificado_router
 from src.api.routes.directiva_routes import router as directiva_router
 from src.api.routes.webpay_routes import router as webpay_router
 from src.api.routes.junta_routes import router as junta_router
+from src.api.routes.espacio_routes import router as espacio_router
 
 # Crear una instancia de FastAPI con prefijo /api
 app = FastAPI(
@@ -54,17 +56,21 @@ async def api_info():
     }
 
 
-# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos, juntas y pagos
+# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos, juntas, espacios y pagos
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
 api_router.include_router(news_router)
 api_router.include_router(certificado_router)
 api_router.include_router(directiva_router)
 api_router.include_router(junta_router)
+api_router.include_router(espacio_router)
 api_router.include_router(webpay_router)
 
 # Incluir el router en la aplicación
 app.include_router(api_router)
+
+# Montar archivos estáticos para servir imágenes subidas
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 if __name__ == "__main__":
     import uvicorn

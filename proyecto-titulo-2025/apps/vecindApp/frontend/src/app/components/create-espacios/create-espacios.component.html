@@ -1,0 +1,244 @@
+<!-- HERO SECTION -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="hero-content">
+          <h1 class="hero-title">Crear Nuevo Espacio Comunitario</h1>
+          <p class="hero-subtitle">Agrega un nuevo espacio disponible para reservas en tu junta de vecinos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM SECTION -->
+<section class="form-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="form-card">
+          <div class="form-header">
+            <h2>Información del Espacio</h2>
+            <p>Completa los datos del nuevo espacio comunitario</p>
+          </div>
+
+          <!-- Success Message -->
+          <div *ngIf="success" class="alert alert-success" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            ¡Espacio creado exitosamente! Redirigiendo a reservas...
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ error }}
+          </div>
+
+          <form [formGroup]="espacioForm" (ngSubmit)="onSubmit()" novalidate>
+            <div class="row">
+              <!-- Nombre del Espacio -->
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre del Espacio *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nombre"
+                  formControlName="nombre"
+                  [class.is-invalid]="isFieldInvalid('nombre')"
+                  placeholder="Ej: Cancha de Fútbol, Sala Multiuso"
+                >
+                <div *ngIf="getFieldError('nombre')" class="invalid-feedback">
+                  {{ getFieldError('nombre') }}
+                </div>
+              </div>
+
+              <!-- Tipo de Espacio -->
+              <div class="col-md-6 mb-3">
+                <label for="tipo" class="form-label">Tipo de Espacio *</label>
+                <select 
+                  class="form-select" 
+                  id="tipo"
+                  formControlName="tipo"
+                  [class.is-invalid]="isFieldInvalid('tipo')"
+                >
+                  <option value="">Selecciona un tipo</option>
+                  <option *ngFor="let tipo of tiposEspacio" [value]="tipo.value">
+                    {{ tipo.label }}
+                  </option>
+                </select>
+                <div *ngIf="getFieldError('tipo')" class="invalid-feedback">
+                  {{ getFieldError('tipo') }}
+                </div>
+              </div>
+
+              <!-- Capacidad -->
+              <div class="col-md-6 mb-3">
+                <label for="capacidad" class="form-label">Capacidad (personas) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="capacidad"
+                  formControlName="capacidad"
+                  [class.is-invalid]="isFieldInvalid('capacidad')"
+                  placeholder="Ej: 20"
+                  min="1"
+                >
+                <div *ngIf="getFieldError('capacidad')" class="invalid-feedback">
+                  {{ getFieldError('capacidad') }}
+                </div>
+              </div>
+
+              <!-- Valor por Hora -->
+              <div class="col-md-6 mb-3">
+                <label for="valor" class="form-label">Valor por Hora (CLP) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="valor"
+                  formControlName="valor"
+                  [class.is-invalid]="isFieldInvalid('valor')"
+                  placeholder="Ej: 5000"
+                  min="0"
+                >
+                <div *ngIf="getFieldError('valor')" class="invalid-feedback">
+                  {{ getFieldError('valor') }}
+                </div>
+              </div>
+
+              <!-- Máximo de Horas -->
+              <div class="col-md-6 mb-3">
+                <label for="max_horas" class="form-label">Máximo de Horas por Reserva *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="max_horas"
+                  formControlName="max_horas"
+                  [class.is-invalid]="isFieldInvalid('max_horas')"
+                  placeholder="Ej: 4"
+                  min="1"
+                  max="24"
+                >
+                <div *ngIf="getFieldError('max_horas')" class="invalid-feedback">
+                  {{ getFieldError('max_horas') }}
+                </div>
+              </div>
+
+              <!-- Junta de Vecinos -->
+              <div class="col-md-6 mb-3">
+                <label for="id_junta" class="form-label">Junta de Vecinos *</label>
+                <select 
+                  class="form-select" 
+                  id="id_junta"
+                  formControlName="id_junta"
+                  [class.is-invalid]="isFieldInvalid('id_junta')"
+                >
+                  <option value="">Selecciona una junta</option>
+                  <option *ngFor="let junta of juntas" [value]="junta.id_junta">
+                    {{ junta.nombre }}
+                  </option>
+                </select>
+                <div *ngIf="getFieldError('id_junta')" class="invalid-feedback">
+                  {{ getFieldError('id_junta') }}
+                </div>
+                <div class="form-text">Selecciona la junta de vecinos a la que pertenece este espacio</div>
+              </div>
+
+              <!-- Subida de Foto -->
+              <div class="col-12 mb-3">
+                <label for="foto" class="form-label">Foto del Espacio</label>
+                <div class="file-upload-container">
+                  <input 
+                    type="file" 
+                    class="form-control" 
+                    id="foto"
+                    accept="image/*"
+                    (change)="onFileSelected($event)"
+                    style="display: none;"
+                  >
+                  <div class="file-upload-area" (click)="triggerFileInput()">
+                    <div *ngIf="!filePreview" class="file-upload-placeholder">
+                      <i class="bi bi-cloud-upload"></i>
+                      <p>Haz clic para seleccionar una imagen</p>
+                      <small>Formatos: JPEG, PNG, GIF, WebP (máx. 5MB)</small>
+                    </div>
+                    <div *ngIf="filePreview" class="file-preview">
+                      <img [src]="filePreview" alt="Preview" class="preview-image">
+                      <button type="button" class="btn btn-sm btn-danger remove-file-btn" (click)="removeFile()">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-text">Imagen del espacio (opcional)</div>
+              </div>
+
+              <!-- Actividades Permitidas -->
+              <div class="col-md-6 mb-3">
+                <label for="permitido" class="form-label">Actividades Permitidas</label>
+                <textarea 
+                  class="form-control" 
+                  id="permitido"
+                  formControlName="permitido"
+                  rows="3"
+                  placeholder="Ej: Fútbol 5, Básquetbol, Actividades recreativas"
+                ></textarea>
+                <div class="form-text">Separa las actividades con comas</div>
+              </div>
+
+              <!-- Actividades No Permitidas -->
+              <div class="col-md-6 mb-3">
+                <label for="no_permitido" class="form-label">Actividades No Permitidas</label>
+                <textarea 
+                  class="form-control" 
+                  id="no_permitido"
+                  formControlName="no_permitido"
+                  rows="3"
+                  placeholder="Ej: Eventos con alcohol, Música a alto volumen"
+                ></textarea>
+                <div class="form-text">Separa las actividades con comas</div>
+              </div>
+
+              <!-- Estado Activo -->
+              <div class="col-12 mb-3">
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="activo"
+                    formControlName="activo"
+                  >
+                  <label class="form-check-label" for="activo">
+                    Espacio activo (disponible para reservas)
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <button 
+                type="button" 
+                class="btn btn-secondary me-2" 
+                (click)="goBack()"
+                [disabled]="loading"
+              >
+                <i class="bi bi-arrow-left me-1"></i>
+                Volver
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="loading || espacioForm.invalid"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <i *ngIf="!loading" class="bi bi-plus-circle me-1"></i>
+                {{ loading ? 'Creando...' : 'Crear Espacio' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
