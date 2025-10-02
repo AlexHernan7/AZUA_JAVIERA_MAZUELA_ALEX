@@ -336,6 +336,7 @@ async def login_user(
             roles=roles,  # Incluir roles en la respuesta
             vecino=(
                 VecinoLoginData(
+                    id_vecino=vecino.id_vecino,
                     nombres=vecino.nombres,
                     apellido_paterno=vecino.apellido_paterno,
                     apellido_materno=vecino.apellido_materno,
@@ -356,6 +357,7 @@ async def login_user(
                 else (
                     # Para directivos, crear un VecinoLoginData con datos de directiva
                     VecinoLoginData(
+                        id_vecino=directiva.id_directiva,  # Usar ID de directiva como identificador
                         nombres=directiva.nombres,
                         apellido_paterno=directiva.apellido_paterno,
                         apellido_materno=directiva.apellido_materno,

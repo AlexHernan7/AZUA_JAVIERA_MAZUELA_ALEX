@@ -464,6 +464,7 @@ class VecinoLoginData(BaseModel):
     También se usa para directivos con campos adicionales.
     """
 
+    id_vecino: int = Field(..., description="ID único del vecino")
     nombres: str
     apellido_paterno: str
     apellido_materno: Optional[str] = None

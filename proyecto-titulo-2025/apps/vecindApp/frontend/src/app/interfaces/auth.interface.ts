@@ -6,7 +6,7 @@ export interface LoginRequest {
 }
 
 export interface VecinoLoginData {
-  id_vecino?: number;
+  id_vecino: number;
   nombres: string;
   apellido_paterno: string;
   apellido_materno: string;

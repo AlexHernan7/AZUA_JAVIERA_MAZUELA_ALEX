@@ -123,7 +123,7 @@ export class EspacioService {
    * Obtiene los headers de autenticación
    */
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('vecindapp_token');
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -134,7 +134,7 @@ export class EspacioService {
    * Obtiene los headers de autenticación para archivos (sin Content-Type)
    */
   private getAuthHeadersForFile(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('vecindapp_token');
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });

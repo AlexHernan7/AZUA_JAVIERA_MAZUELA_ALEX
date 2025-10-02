@@ -2,8 +2,8 @@
 <section
   class="rounded-3 mb-4 position-relative overflow-hidden"
   style="
-    background-image: url('assets/reservas/hero.jpg');
-    background-size: cover; background-position: center; min-height: 180px;
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+    min-height: 180px;
   "
 >
   <div class="p-4 p-lg-5" style="background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.68)); max-width: 720px;">
@@ -12,18 +12,34 @@
   </div>
 </section>
 
+<!-- ESTADO DE CARGA -->
+<div *ngIf="loading()" class="text-center py-5">
+  <div class="spinner-border text-teal" role="status">
+    <span class="visually-hidden">Cargando espacios...</span>
+  </div>
+  <p class="mt-2 text-muted">Cargando espacios disponibles...</p>
+</div>
+
+<!-- ESTADO DE ERROR -->
+<div *ngIf="error()" class="alert alert-danger mx-2" role="alert">
+  <h4 class="alert-heading">Error</h4>
+  <p>{{ error() }}</p>
+  <hr>
+  <button class="btn btn-outline-danger" (click)="cargarEspacios()">Reintentar</button>
+</div>
+
 <!-- TARJETAS DE ESPACIOS -->
-<div class="row g-4 mb-4 mx-2">
+<div class="row g-4 mb-4 mx-2" *ngIf="!loading() && !error()">
   <div class="col-md-4" *ngFor="let e of espacios">
     <div class="card shadow-sm h-100">
       <div class="ratio ratio-16x9">
-        <img [src]="e.foto" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
+        <img [src]="getEspacioImage(e)" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
       </div>
       <div class="card-body d-flex flex-column gap-2">
         <h5 class="mb-1">{{ e.nombre }}</h5>
         <div class="d-flex align-items-center justify-content-between small text-secondary">
           <span>Capacidad: <strong class="text-body">{{ e.capacidad }}</strong> personas</span>
-          <span>Valor: <strong class="text-body">{{ formatoMoneda(e.valor) }}</strong> / hora</span>
+          <span>Valor: <strong class="text-body">{{ formatoMoneda(toNumber(e.valor)) }}</strong> / hora</span>
         </div>
         <div class="mt-auto">
           <button type="button" class="btn btn-teal w-100" (click)="reservar(e)">Reservar</button>
@@ -33,16 +49,25 @@
   </div>
 </div>
 
+<!-- MENSAJE SI NO HAY ESPACIOS -->
+<div *ngIf="!loading() && !error() && espacios.length === 0" class="text-center py-5">
+  <div class="text-muted">
+    <i class="bi bi-building" style="font-size: 3rem;"></i>
+    <h4 class="mt-3">No hay espacios disponibles</h4>
+    <p>No se encontraron espacios comunitarios en tu junta de vecinos.</p>
+  </div>
+</div>
+
 <!-- PANEL DE RESERVA (aparece al seleccionar un espacio) -->
 <div class="card shadow-sm mb-5" *ngIf="panelAbierto()">
   <div class="card-header d-flex align-items-center justify-content-between">
     <div class="d-flex align-items-center gap-3">
-      <img [src]="seleccionado()!.foto" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
+      <img [src]="getEspacioImage(seleccionado()!)" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
       <div>
         <div class="fw-semibold">{{ seleccionado()!.nombre }}</div>
         <div class="small text-secondary">
           Capacidad: {{ seleccionado()!.capacidad }} &nbsp;•&nbsp;
-          Valor: {{ formatoMoneda(seleccionado()!.valor) }}/hora
+          Valor: {{ formatoMoneda(toNumber(seleccionado()!.valor)) }}/hora
         </div>
       </div>
     </div>
@@ -92,14 +117,20 @@
           </div>
 
           <div class="d-flex align-items-center gap-3 mt-3">
-            <button type="submit" class="btn btn-outline-secondary">Comprobar disponibilidad</button>
+            <button type="submit" class="btn btn-outline-secondary" [disabled]="verificandoDisponibilidad()">
+              <span *ngIf="verificandoDisponibilidad()" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Comprobar disponibilidad
+            </button>
             <div class="small"
-                 [class.text-success]="disponibilidad === 'ok'"
-                 [class.text-danger]="disponibilidad === 'no'">
-              <ng-container [ngSwitch]="disponibilidad">
-                <span *ngSwitchCase="'ok'">El horario seleccionado está disponible</span>
-                <span *ngSwitchCase="'no'">El horario seleccionado NO está disponible</span>
-                <span *ngSwitchDefault>&nbsp;</span>
+                 [class.text-success]="disponibilidad?.disponible === true"
+                 [class.text-danger]="disponibilidad?.disponible === false">
+              <ng-container *ngIf="disponibilidad">
+                <span *ngIf="disponibilidad.disponible" class="text-success">
+                  ✓ El horario seleccionado está disponible
+                </span>
+                <span *ngIf="!disponibilidad.disponible" class="text-danger">
+                  ✗ {{ disponibilidad.mensaje }}
+                </span>
               </ng-container>
             </div>
           </div>
@@ -111,30 +142,31 @@
         <div class="border rounded-3 p-3">
           <div class="fw-semibold mb-2">Información del espacio</div>
 
-          <div class="mb-2">
+          <div class="mb-2" *ngIf="hasPermitido()">
             <div class="small text-secondary">Permitido</div>
             <ul class="mb-2 ps-3">
-              <li *ngFor="let p of seleccionado()!.permitido">{{ p }}</li>
+              <li *ngFor="let p of getPermitido()">{{ p }}</li>
             </ul>
           </div>
 
-          <div class="mb-2">
+          <div class="mb-2" *ngIf="hasNoPermitido()">
             <div class="small text-secondary">No permitido</div>
             <ul class="mb-2 ps-3">
-              <li *ngFor="let p of seleccionado()!.noPermitido">{{ p }}</li>
+              <li *ngFor="let p of getNoPermitido()">{{ p }}</li>
             </ul>
           </div>
 
           <div class="small text-secondary">
             Tiempo máximo por reserva:
-            <strong class="text-body">{{ seleccionado()!.maxHoras }} h</strong>
+            <strong class="text-body">{{ seleccionado()!.max_horas }} h</strong>
           </div>
         </div>
 
         <button class="btn btn-teal btn-lg w-100 mt-3"
-                [disabled]="form.invalid || disponibilidad !== 'ok'"
+                [disabled]="form.invalid || !disponibilidad?.disponible || creandoReserva()"
                 (click)="irAPagar()">
-          Ir a pagar
+          <span *ngIf="creandoReserva()" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ creandoReserva() ? 'Creando reserva...' : 'Crear reserva' }}
         </button>
       </div>
     </div>

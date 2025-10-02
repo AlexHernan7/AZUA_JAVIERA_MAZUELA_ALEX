@@ -1,18 +1,18 @@
-"""inicial_completa_con_todas_las_tablas
+"""migracion_inicial_completa
 
-Revision ID: 7d6fbf4d187c
+Revision ID: 371433ac8f3c
 Revises: 
-Create Date: 2025-09-22 12:00:56.391497
+Create Date: 2025-10-01 22:26:29.773922
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
-revision: str = '7d6fbf4d187c'
+revision: str = '371433ac8f3c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,6 +40,25 @@ def upgrade() -> None:
     sa.UniqueConstraint('codigo'),
     schema='vecindapp'
     )
+    op.create_table('webhook_event',
+    sa.Column('id_webhook_event', sa.BigInteger(), autoincrement=True, nullable=False),
+    sa.Column('provider', sa.Text(), nullable=False),
+    sa.Column('external_id', sa.Text(), nullable=False),
+    sa.Column('event_type', sa.Text(), nullable=False),
+    sa.Column('status', sa.Text(), nullable=False),
+    sa.Column('received_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('processed_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('raw_payload', sa.JSON(), nullable=False),
+    sa.Column('headers', sa.JSON(), nullable=True),
+    sa.Column('processing_attempts', sa.BigInteger(), nullable=True),
+    sa.Column('last_error', sa.Text(), nullable=True),
+    sa.Column('id_payment_transaction', sa.BigInteger(), nullable=True),
+    sa.CheckConstraint("provider = ANY (ARRAY['mercadopago'::text, 'stripe'::text, 'webpay'::text])", name='ck_webhook_event_provider'),
+    sa.CheckConstraint("status = ANY (ARRAY['received'::text, 'processing'::text, 'processed'::text, 'failed'::text, 'ignored'::text])", name='ck_webhook_event_status'),
+    sa.PrimaryKeyConstraint('id_webhook_event'),
+    schema='vecindapp'
+    )
+    op.create_index('ix_webhook_provider_external_id', 'webhook_event', ['provider', 'external_id'], unique=True, schema='vecindapp')
     op.create_table('comuna',
     sa.Column('id_comuna', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('id_region', sa.BigInteger(), nullable=False),
@@ -53,13 +72,18 @@ def upgrade() -> None:
     sa.Column('id_junta', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('id_comuna', sa.BigInteger(), nullable=True),
     sa.Column('nombre', sa.Text(), nullable=False),
+    sa.Column('rut', sa.Text(), nullable=False),
     sa.Column('direccion', sa.Text(), nullable=True),
     sa.Column('telefono', sa.Text(), nullable=True),
     sa.Column('email', sa.Text(), nullable=True),
     sa.Column('descripcion', sa.Text(), nullable=True),
+    sa.Column('fecha_constitucion', sa.Date(), nullable=True),
+    sa.Column('activa', sa.Boolean(), nullable=False),
+    sa.Column('logo', sa.LargeBinary(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['id_comuna'], ['vecindapp.comuna.id_comuna'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id_junta'),
+    sa.UniqueConstraint('rut'),
     schema='vecindapp'
     )
     op.create_table('espacio',
@@ -67,16 +91,24 @@ def upgrade() -> None:
     sa.Column('id_junta', sa.BigInteger(), nullable=False),
     sa.Column('nombre', sa.Text(), nullable=False),
     sa.Column('tipo', sa.Text(), nullable=False),
-    sa.Column('capacidad', sa.Integer(), nullable=True),
+    sa.Column('capacidad', sa.Integer(), nullable=False),
+    sa.Column('valor', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('foto', sa.Text(), nullable=True),
+    sa.Column('permitido', sa.ARRAY(sa.Text()), nullable=True),
+    sa.Column('no_permitido', sa.ARRAY(sa.Text()), nullable=True),
+    sa.Column('max_horas', sa.Integer(), nullable=False),
     sa.Column('activo', sa.Boolean(), nullable=False),
     sa.CheckConstraint("tipo IN ('cancha','sala','plaza','otro')", name='ck_espacio_tipo'),
+    sa.CheckConstraint('capacidad > 0', name='ck_espacio_capacidad_positiva'),
+    sa.CheckConstraint('max_horas > 0', name='ck_espacio_max_horas_positivo'),
+    sa.CheckConstraint('valor >= 0', name='ck_espacio_valor_positivo'),
     sa.ForeignKeyConstraint(['id_junta'], ['vecindapp.junta.id_junta'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id_espacio'),
     schema='vecindapp'
     )
     op.create_table('usuario',
     sa.Column('id_usuario', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('id_junta', sa.BigInteger(), nullable=False),
+    sa.Column('id_junta', sa.BigInteger(), nullable=True),
     sa.Column('email', sa.Text(), nullable=False),
     sa.Column('pass_hash', sa.Text(), nullable=False),
     sa.Column('activo', sa.Boolean(), nullable=False),
@@ -110,30 +142,29 @@ def upgrade() -> None:
     sa.UniqueConstraint('rut'),
     schema='vecindapp'
     )
-    op.create_table('transaccion',
-    sa.Column('id_transaccion', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('id_junta', sa.BigInteger(), nullable=False),
+    op.create_table('payment_intent',
+    sa.Column('id_payment_intent', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('id_usuario', sa.BigInteger(), nullable=False),
-    sa.Column('origen_tipo', sa.Text(), nullable=False),
-    sa.Column('origen_id', sa.BigInteger(), nullable=False),
-    sa.Column('proveedor', sa.Text(), nullable=False),
-    sa.Column('monto', sa.Numeric(precision=14, scale=2), nullable=False),
-    sa.Column('moneda', sa.Text(), nullable=False),
-    sa.Column('estado', sa.Text(), nullable=False),
-    sa.Column('external_id', sa.Text(), nullable=True),
-    sa.Column('creado_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('autorizado_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('anulado_at', sa.DateTime(timezone=True), nullable=True),
-    sa.CheckConstraint("estado IN ('iniciado','autorizado','rechazado','anulado')", name='ck_tx_estado'),
-    sa.CheckConstraint("origen_tipo IN ('certificado_pedido','reserva')", name='ck_tx_origen_tipo'),
-    sa.CheckConstraint("proveedor IN ('webpay','mercadopago','paypal')", name='ck_tx_proveedor'),
-    sa.CheckConstraint('monto >= 0', name='ck_tx_monto'),
-    sa.ForeignKeyConstraint(['id_junta'], ['vecindapp.junta.id_junta'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['id_usuario'], ['vecindapp.usuario.id_usuario'], ondelete='RESTRICT'),
-    sa.PrimaryKeyConstraint('id_transaccion'),
+    sa.Column('entity_type', sa.Text(), nullable=False),
+    sa.Column('entity_id', sa.BigInteger(), nullable=False),
+    sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('currency', sa.Text(), nullable=False),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('status', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('mp_preference_id', sa.Text(), nullable=True),
+    sa.Column('mp_init_point', sa.Text(), nullable=True),
+    sa.Column('mp_sandbox_init_point', sa.Text(), nullable=True),
+    sa.Column('extra_data', sa.JSON(), nullable=True),
+    sa.CheckConstraint("entity_type = ANY (ARRAY['certificado'::text, 'reserva'::text])", name='ck_payment_intent_entity_type'),
+    sa.CheckConstraint("status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'failed'::text, 'expired'::text, 'cancelled'::text])", name='ck_payment_intent_status'),
+    sa.CheckConstraint('amount > 0', name='ck_payment_intent_amount_positive'),
+    sa.ForeignKeyConstraint(['id_usuario'], ['vecindapp.usuario.id_usuario'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id_payment_intent'),
     schema='vecindapp'
     )
-    op.create_index('ix_tx_origen', 'transaccion', ['id_junta', 'origen_tipo', 'origen_id'], unique=False, schema='vecindapp')
     op.create_table('usuario_rol',
     sa.Column('id_usuario', sa.BigInteger(), nullable=False),
     sa.Column('id_rol', sa.BigInteger(), nullable=False),
@@ -173,7 +204,7 @@ def upgrade() -> None:
     sa.Column('estado', sa.Text(), nullable=False),
     sa.Column('motivo_solicitud', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.CheckConstraint("estado IN ('iniciado','pagado','emitido','rechazado')", name='ck_cert_pedido_estado'),
+    sa.CheckConstraint("estado IN ('iniciado','pendiente_pago','emitido','rechazado')", name='ck_cert_pedido_estado'),
     sa.ForeignKeyConstraint(['creado_por'], ['vecindapp.usuario.id_usuario'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['id_junta'], ['vecindapp.junta.id_junta'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['id_vecino'], ['vecindapp.vecino.id_vecino'], ondelete='CASCADE'),
@@ -181,26 +212,30 @@ def upgrade() -> None:
     schema='vecindapp'
     )
     op.create_index('ix_cert_pedido_estado', 'certificado_pedido', ['id_junta', 'estado'], unique=False, schema='vecindapp')
-    op.create_table('detalle_transaccion',
-    sa.Column('id_detalle', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('id_transaccion', sa.BigInteger(), nullable=False),
-    sa.Column('etiqueta', sa.Text(), nullable=True),
-    sa.Column('valor', sa.Text(), nullable=True),
+    op.create_table('payment_transaction',
+    sa.Column('id_payment_transaction', sa.BigInteger(), autoincrement=True, nullable=False),
+    sa.Column('id_payment_intent', sa.BigInteger(), nullable=False),
+    sa.Column('provider', sa.Text(), nullable=False),
+    sa.Column('external_id', sa.Text(), nullable=True),
+    sa.Column('external_reference', sa.Text(), nullable=True),
+    sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('currency', sa.Text(), nullable=False),
+    sa.Column('status', sa.Text(), nullable=False),
+    sa.Column('payment_method_id', sa.Text(), nullable=True),
+    sa.Column('payment_type_id', sa.Text(), nullable=True),
+    sa.Column('installments', sa.BigInteger(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['id_transaccion'], ['vecindapp.transaccion.id_transaccion'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id_detalle'),
-    schema='vecindapp'
-    )
-    op.create_table('pago_externo',
-    sa.Column('id_pago_externo', sa.BigInteger(), autoincrement=True, nullable=False),
-    sa.Column('id_transaccion', sa.BigInteger(), nullable=False),
-    sa.Column('codigo_respuesta', sa.Text(), nullable=True),
-    sa.Column('estado_pago', sa.Text(), nullable=True),
-    sa.Column('payload', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('fecha_respuesta', sa.DateTime(timezone=True), nullable=True),
-    sa.ForeignKeyConstraint(['id_transaccion'], ['vecindapp.transaccion.id_transaccion'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id_pago_externo'),
-    sa.UniqueConstraint('id_transaccion', name='ux_pagoext_tx'),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('processed_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('raw_data', sa.JSON(), nullable=True),
+    sa.Column('payer_email', sa.Text(), nullable=True),
+    sa.Column('payer_identification_type', sa.Text(), nullable=True),
+    sa.Column('payer_identification_number', sa.Text(), nullable=True),
+    sa.CheckConstraint("provider = ANY (ARRAY['mercadopago'::text, 'stripe'::text, 'webpay'::text])", name='ck_payment_transaction_provider'),
+    sa.CheckConstraint("status = ANY (ARRAY['created'::text, 'pending'::text, 'in_process'::text, 'approved'::text, 'rejected'::text, 'cancelled'::text, 'refunded'::text, 'charged_back'::text])", name='ck_payment_transaction_status'),
+    sa.CheckConstraint('amount > 0', name='ck_payment_transaction_amount_positive'),
+    sa.ForeignKeyConstraint(['id_payment_intent'], ['vecindapp.payment_intent.id_payment_intent'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id_payment_transaction'),
     schema='vecindapp'
     )
     op.create_table('reserva',
@@ -252,19 +287,19 @@ def downgrade() -> None:
     op.drop_index('ix_reserva_estado', table_name='reserva', schema='vecindapp')
     op.drop_index('ix_reserva_espacio_tiempo', table_name='reserva', schema='vecindapp')
     op.drop_table('reserva', schema='vecindapp')
-    op.drop_table('pago_externo', schema='vecindapp')
-    op.drop_table('detalle_transaccion', schema='vecindapp')
+    op.drop_table('payment_transaction', schema='vecindapp')
     op.drop_index('ix_cert_pedido_estado', table_name='certificado_pedido', schema='vecindapp')
     op.drop_table('certificado_pedido', schema='vecindapp')
     op.drop_table('vecino', schema='vecindapp')
     op.drop_table('usuario_rol', schema='vecindapp')
-    op.drop_index('ix_tx_origen', table_name='transaccion', schema='vecindapp')
-    op.drop_table('transaccion', schema='vecindapp')
+    op.drop_table('payment_intent', schema='vecindapp')
     op.drop_table('directiva', schema='vecindapp')
     op.drop_table('usuario', schema='vecindapp')
     op.drop_table('espacio', schema='vecindapp')
     op.drop_table('junta', schema='vecindapp')
     op.drop_table('comuna', schema='vecindapp')
+    op.drop_index('ix_webhook_provider_external_id', table_name='webhook_event', schema='vecindapp')
+    op.drop_table('webhook_event', schema='vecindapp')
     op.drop_table('rol', schema='vecindapp')
     op.drop_table('region', schema='vecindapp')
     # ### end Alembic commands ###
