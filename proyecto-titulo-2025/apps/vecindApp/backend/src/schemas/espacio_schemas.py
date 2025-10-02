@@ -52,7 +52,8 @@ class EspacioCreateRequest(BaseModel):
         """Valida que la foto sea una ruta válida si se proporciona."""
         if v is not None and v.strip():
             # Validar que sea una ruta válida (básico)
-            if not v.strip().startswith(('/', 'http://', 'https://')):
+            # Acepta rutas absolutas, URLs y rutas relativas de uploads
+            if not (v.strip().startswith(('/', 'http://', 'https://', 'uploads/'))):
                 raise ValueError("La foto debe ser una ruta válida o URL")
         return v
 
@@ -101,7 +102,8 @@ class EspacioUpdateRequest(BaseModel):
         """Valida que la foto sea una ruta válida si se proporciona."""
         if v is not None and v.strip():
             # Validar que sea una ruta válida (básico)
-            if not v.strip().startswith(('/', 'http://', 'https://')):
+            # Acepta rutas absolutas, URLs y rutas relativas de uploads
+            if not (v.strip().startswith(('/', 'http://', 'https://', 'uploads/'))):
                 raise ValueError("La foto debe ser una ruta válida o URL")
         return v
 

@@ -11,7 +11,7 @@ async def create_initial_data():
     
     async with get_transaction_session() as session:
         try:
-            print("🔧 Creando datos iniciales...")
+            print("Creando datos iniciales...")
             
             # 1. Crear Región Metropolitana
             # Verificar si ya existe
@@ -33,7 +33,7 @@ async def create_initial_data():
                 WHERE nombre = 'Región Metropolitana de Santiago'
             """))
             id_region = result.scalar()
-            print(f"✅ Región: Región Metropolitana (ID: {id_region})")
+            print(f"[OK] Region: Region Metropolitana (ID: {id_region})")
             
             # 2. Crear Comuna de Maipú
             # Verificar si ya existe
@@ -55,7 +55,7 @@ async def create_initial_data():
                 WHERE nombre = 'Maipú' AND id_region = :id_region
             """), {"id_region": id_region})
             id_comuna = result.scalar()
-            print(f"✅ Comuna: Maipú (ID: {id_comuna})")
+            print(f"[OK] Comuna: Maipu (ID: {id_comuna})")
             
             # 3. Crear juntas de ejemplo
             juntas = [
@@ -74,8 +74,8 @@ async def create_initial_data():
                 
                 if not existing_junta:
                     await session.execute(text("""
-                        INSERT INTO "vecindapp".junta (id_comuna, nombre, rut, direccion, telefono, email, descripcion) 
-                        VALUES (:id_comuna, :nombre, :rut, :direccion, :telefono, :email, :descripcion)
+                        INSERT INTO "vecindapp".junta (id_comuna, nombre, rut, direccion, telefono, email, descripcion, activa) 
+                        VALUES (:id_comuna, :nombre, :rut, :direccion, :telefono, :email, :descripcion, :activa)
                     """), {
                         "id_comuna": id_comuna,
                         "nombre": nombre,
@@ -83,11 +83,12 @@ async def create_initial_data():
                         "direccion": direccion,
                         "telefono": telefono,
                         "email": email,
-                        "descripcion": descripcion
+                        "descripcion": descripcion,
+                        "activa": True
                     })
-                    print(f"✅ Junta creada: {nombre} (RUT: {rut})")
+                    print(f"[OK] Junta creada: {nombre} (RUT: {rut})")
                 else:
-                    print(f"ℹ️  Junta ya existe: {nombre}")
+                    print(f"[INFO] Junta ya existe: {nombre}")
             
             # 4. Crear roles del sistema
             roles = [
@@ -113,9 +114,9 @@ async def create_initial_data():
                         "nombre": nombre,
                         "descripcion": descripcion
                     })
-                    print(f"✅ Rol creado: {nombre} (código: {codigo})")
+                    print(f"[OK] Rol creado: {nombre} (codigo: {codigo})")
                 else:
-                    print(f"ℹ️  Rol ya existe: {nombre} (código: {codigo})")
+                    print(f"[INFO] Rol ya existe: {nombre} (codigo: {codigo})")
             
             # 6. Crear usuario administrador
             from src.core.security import hash_password
@@ -159,38 +160,38 @@ async def create_initial_data():
                     "id_rol": admin_role_id
                 })
                 
-                print(f"✅ Usuario administrador creado: admin@admin.cl")
+                print(f"[OK] Usuario administrador creado: admin@admin.cl")
             else:
-                print(f"ℹ️  Usuario administrador ya existe: admin@admin.cl")
+                print(f"[INFO] Usuario administrador ya existe: admin@admin.cl")
             
             # Confirmar todos los cambios
             await session.commit()
-            print("\n🎉 ¡Datos iniciales creados exitosamente!")
+            print("\n[SUCCESS] Datos iniciales creados exitosamente!")
             
             # Mostrar resumen con IDs reales
             result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".junta WHERE id_comuna = :id_comuna"), {"id_comuna": id_comuna})
             total_juntas = result.scalar()
             
-            print("\n📋 RESUMEN:")
-            print(f"- 1 Región: Región Metropolitana (ID: {id_region})")
-            print(f"- 1 Comuna: Maipú (ID: {id_comuna})")
-            print(f"- {total_juntas} Juntas de vecinos en Maipú")
+            print("\n[RESUMEN]:")
+            print(f"- 1 Region: Region Metropolitana (ID: {id_region})")
+            print(f"- 1 Comuna: Maipu (ID: {id_comuna})")
+            print(f"- {total_juntas} Juntas de vecinos en Maipu")
             print(f"- 3 Roles: vecino, directiva, admin")
             print(f"- 1 Usuario administrador: admin@admin.cl")
             
-            print("\n🚀 Ya puedes probar el sistema!")
-            print("📧 Usuario admin: admin@admin.cl")
-            print("🔑 Contraseña: admin")
+            print("\n[READY] Ya puedes probar el sistema!")
+            print("Usuario admin: admin@admin.cl")
+            print("Contrasena: admin")
             print("\nDatos de prueba para registro:")
             print(f"- id_comuna: {id_comuna}")
             print("- id_junta: 1, 2 o 3 (cualquiera de las juntas creadas)")
             
         except Exception as e:
             await session.rollback()
-            print(f"❌ Error creando datos iniciales: {e}")
+            print(f"[ERROR] Error creando datos iniciales: {e}")
             raise
 
 
 if __name__ == "__main__":
-    print("🔄 Iniciando creación de datos iniciales...")
+    print("Iniciando creacion de datos iniciales...")
     asyncio.run(create_initial_data())

@@ -71,9 +71,9 @@ def run_migrations_online() -> None:
         try:
             connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {settings.database.db_schema}"))
             connection.commit()
-            print(f"✅ Schema {settings.database.db_schema} verificado/creado")
+            print(f"Schema {settings.database.db_schema} verificado/creado")
         except Exception as e:
-            print(f"⚠️  Warning al crear schema: {e}")
+            print(f"Warning al crear schema: {e}")
         
         context.configure(
             connection=connection,
