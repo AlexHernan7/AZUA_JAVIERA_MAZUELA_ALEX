@@ -79,6 +79,33 @@ export interface DisponibilidadResponse {
   mensaje: string;
 }
 
+export interface ReservaConPagoRequest {
+  id_espacio: number;
+  id_junta: number;
+  id_vecino: number;
+  fecha: string; // formato YYYY-MM-DD
+  hora_inicio: string; // formato HH:MM
+  hora_termino: string; // formato HH:MM
+  motivo: string;
+  asistentes?: number;
+  observaciones?: string;
+  acepta_reglamento: boolean;
+}
+
+export interface ReservaWebpayResponse {
+  reserva: ReservaResponse;
+  payment_intent: {
+    id_payment_intent: number;
+    amount: number;
+    status: string;
+    description: string;
+  };
+  message: string;
+  payment_url: string;
+  webpay_token: string;
+  provider: string;
+}
+
 export interface ApiError {
   detail: string;
 }

@@ -134,12 +134,12 @@ class PaymentService:
         amount: Decimal,
         description: str,
         extra_data: Optional[dict] = None
-    ) -> Tuple[PaymentIntentResponse, str]:
+    ) -> Tuple[PaymentIntentResponse, str, str]:
         """
         Crea una nueva intención de pago usando Webpay Plus.
         
         Returns:
-            Tupla (PaymentIntentResponse, webpay_url)
+            Tupla (PaymentIntentResponse, webpay_url, webpay_token)
         """
         try:
             # 1. Verificar que el usuario existe

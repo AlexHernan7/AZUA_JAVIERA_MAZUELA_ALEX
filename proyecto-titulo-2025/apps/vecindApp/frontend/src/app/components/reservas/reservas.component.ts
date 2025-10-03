@@ -6,7 +6,7 @@ import { EspacioService } from '../../services/espacio.service';
 import { ReservaService } from '../../services/reserva.service';
 import { AuthService } from '../../services/auth.service';
 import { EspacioResponse } from '../../interfaces/espacio.interface';
-import { DisponibilidadRequest, DisponibilidadResponse, ReservaCreateRequest } from '../../interfaces/reserva.interface';
+import { DisponibilidadRequest, DisponibilidadResponse, ReservaCreateRequest, ReservaConPagoRequest, ReservaWebpayResponse } from '../../interfaces/reserva.interface';
 import { UserLoginData } from '../../interfaces/auth.interface';
 
 @Component({
@@ -28,7 +28,7 @@ export class ReservasComponent implements OnInit, OnDestroy {
   panelAbierto = computed(() => this.seleccionado() !== null);
 
   // "calendario" simple: selector de horas (solo UI)
-  horas = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  horas = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
 
   // formulario (se inicializa en el constructor)
   form!: FormGroup;
@@ -107,16 +107,28 @@ export class ReservasComponent implements OnInit, OnDestroy {
   // Abrir panel de reserva con el espacio elegido
   reservar(espacio: EspacioResponse) {
     this.seleccionado.set(espacio);
+    
+    // Calcular hora de inicio por defecto (mínimo 30 minutos desde ahora)
+    const horaMinima = this.getHoraMinima();
+    const horaTermino = this.calcularHoraTermino(horaMinima);
+    
     // preset UI de ejemplo
     this.form.reset({
       fecha: this.hoyISO(),
-      horaInicio: '10:00',
-      horaTermino: '12:00',
+      horaInicio: horaMinima,
+      horaTermino: horaTermino,
       motivo: '',
       asistentes: null,
       aceptaReglamento: false
     });
     this.disponibilidad = null;
+  }
+
+  // Calcular hora de término basada en la hora de inicio
+  private calcularHoraTermino(horaInicio: string): string {
+    const [hora, minuto] = horaInicio.split(':').map(Number);
+    const horaTermino = hora + 2; // 2 horas por defecto
+    return `${horaTermino.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
   }
 
   cerrarPanel() {
@@ -129,10 +141,29 @@ export class ReservasComponent implements OnInit, OnDestroy {
     const espacio = this.seleccionado();
     if (!espacio || !this.form.valid) return;
 
+    const formValue = this.form.value;
+    
+    // Validar fecha
+    if (this.esFechaPasada(formValue.fecha)) {
+      this.disponibilidad = {
+        disponible: false,
+        mensaje: 'No se pueden hacer reservas para fechas u horarios pasados'
+      };
+      return;
+    }
+
+    // Validar horario de inicio
+    if (this.esHorarioPasado(formValue.fecha, formValue.horaInicio)) {
+      this.disponibilidad = {
+        disponible: false,
+        mensaje: 'No se pueden hacer reservas para fechas u horarios pasados'
+      };
+      return;
+    }
+
     this.verificandoDisponibilidad.set(true);
     this.disponibilidad = null;
 
-    const formValue = this.form.value;
     const disponibilidadData: DisponibilidadRequest = {
       id_espacio: espacio.id_espacio,
       fecha: formValue.fecha,
@@ -158,7 +189,7 @@ export class ReservasComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Crear reserva
+  // Crear reserva con pago
   irAPagar() {
     const espacio = this.seleccionado();
     if (!espacio || !this.form.valid || !this.disponibilidad?.disponible) {
@@ -175,7 +206,7 @@ export class ReservasComponent implements OnInit, OnDestroy {
     this.creandoReserva.set(true);
 
     const formValue = this.form.value;
-    const reservaData: ReservaCreateRequest = {
+    const reservaData: ReservaConPagoRequest = {
       id_espacio: espacio.id_espacio,
       id_junta: 2, // Por ahora hardcodeado, debería venir del usuario
       id_vecino: currentUser.vecino.id_vecino,
@@ -185,28 +216,43 @@ export class ReservasComponent implements OnInit, OnDestroy {
       motivo: formValue.motivo,
       asistentes: formValue.asistentes || undefined,
       observaciones: formValue.observaciones || undefined,
-      acepta_reglamento: true // Por ahora siempre true, debería venir del formulario
+      acepta_reglamento: formValue.aceptaReglamento
     };
 
-
-    this.reservaService.createReserva(reservaData)
+    this.reservaService.createReservaConWebpay(reservaData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (reserva) => {
-          console.log('Reserva creada exitosamente:', reserva);
-          alert(`¡Reserva creada exitosamente! ID: ${reserva.id_reserva}`);
-          this.cerrarPanel();
-          this.creandoReserva.set(false);
+        next: (response: ReservaWebpayResponse) => {
+          console.log('Reserva con pago creada exitosamente:', response);
+          
+          // Redirigir a Webpay para completar el pago
+          if (response.payment_url && response.webpay_token) {
+            // Guardar información de la reserva en localStorage para después del pago
+            localStorage.setItem('reserva_pendiente', JSON.stringify({
+              reserva_id: response.reserva.id_reserva,
+              espacio_nombre: espacio.nombre,
+              fecha: formValue.fecha,
+              hora_inicio: formValue.horaInicio,
+              hora_termino: formValue.horaTermino,
+              valor: response.payment_intent.amount
+            }));
+            
+            // Redirigir a Webpay usando POST (como en certificados)
+            this.redirectToWebpay(response.payment_url, response.webpay_token);
+          } else {
+            alert('Error: No se recibió la URL de pago');
+            this.creandoReserva.set(false);
+          }
         },
         error: (error) => {
-          console.error('Error creando reserva:', error);
+          console.error('Error creando reserva con pago:', error);
           alert('Error al crear la reserva: ' + (error.error?.detail || error.message));
           this.creandoReserva.set(false);
         }
       });
   }
 
-  private hoyISO(): string {
+  hoyISO(): string {
     const d = new Date();
     return d.toISOString().split('T')[0];
   }
@@ -218,6 +264,61 @@ export class ReservasComponent implements OnInit, OnDestroy {
     const m1 = h1h * 60 + h1m;
     const m2 = h2h * 60 + h2m;
     return (m2 - m1) / 60;
+  }
+
+  // Validar si la fecha es pasada
+  private esFechaPasada(fecha: string): boolean {
+    const hoy = new Date();
+    const fechaReserva = new Date(fecha);
+    hoy.setHours(0, 0, 0, 0);
+    fechaReserva.setHours(0, 0, 0, 0);
+    return fechaReserva < hoy;
+  }
+
+  // Validar si el horario es pasado (solo para hoy)
+  esHorarioPasado(fecha: string, hora: string): boolean {
+    const hoy = new Date();
+    const fechaReserva = new Date(fecha);
+    
+    // Si no es hoy, no es horario pasado
+    if (fechaReserva.toDateString() !== hoy.toDateString()) {
+      return false;
+    }
+    
+    const ahora = new Date();
+    const [horaH, horaM] = hora.split(':').map(Number);
+    const horarioReserva = new Date();
+    horarioReserva.setHours(horaH, horaM, 0, 0);
+    
+    return horarioReserva <= ahora;
+  }
+
+  // Obtener la hora mínima permitida para hoy
+  getHoraMinima(): string {
+    const ahora = new Date();
+    const horaActual = ahora.getHours();
+    const minutoActual = ahora.getMinutes();
+    
+    // Agregar 30 minutos de margen
+    const horaMinima = horaActual + (minutoActual >= 30 ? 1 : 0);
+    const minutoMinimo = minutoActual >= 30 ? 0 : 30;
+    
+    return `${horaMinima.toString().padStart(2, '0')}:${minutoMinimo.toString().padStart(2, '0')}`;
+  }
+
+  // Validar si la fecha seleccionada es válida
+  esFechaValida(): boolean {
+    const fecha = this.form.get('fecha')?.value;
+    if (!fecha) return false;
+    return !this.esFechaPasada(fecha);
+  }
+
+  // Validar si el horario de inicio es válido
+  esHorarioInicioValido(): boolean {
+    const fecha = this.form.get('fecha')?.value;
+    const horaInicio = this.form.get('horaInicio')?.value;
+    if (!fecha || !horaInicio) return false;
+    return !this.esHorarioPasado(fecha, horaInicio);
   }
 
   formatoMoneda(n: number): string {
@@ -277,5 +378,30 @@ export class ReservasComponent implements OnInit, OnDestroy {
       default:
         return 'https://via.placeholder.com/400x225/6b7280/ffffff?text=Espacio+Comunitario';
     }
+  }
+
+  /**
+   * Redirige a Webpay con el token usando POST
+   */
+  private redirectToWebpay(webpayUrl: string, token: string): void {
+    // Crear un formulario dinámico para enviar el token como POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = webpayUrl;
+    form.style.display = 'none';
+
+    // Crear input para el token
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'token_ws';
+    tokenInput.value = token;
+
+    form.appendChild(tokenInput);
+    document.body.appendChild(form);
+
+    console.log('🔄 Enviando token a Webpay:', token.substring(0, 20) + '...');
+    
+    // Enviar el formulario
+    form.submit();
   }
 }

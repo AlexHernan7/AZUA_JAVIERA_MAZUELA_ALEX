@@ -177,6 +177,22 @@ class ReservaService:
             inicio_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_inicio))
             fin_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_termino))
 
+            # Validar que no sea fecha pasada
+            hoy = datetime.now().date()
+            if disponibilidad_data.fecha < hoy:
+                return DisponibilidadResponse(
+                    disponible=False,
+                    mensaje="No se pueden hacer reservas para fechas pasadas"
+                )
+
+            # Validar que no sea horario pasado (solo para hoy)
+            ahora = datetime.now()
+            if disponibilidad_data.fecha == hoy and inicio_dt <= ahora:
+                return DisponibilidadResponse(
+                    disponible=False,
+                    mensaje="No se pueden hacer reservas para horarios pasados"
+                )
+
             # Verificar que el espacio existe
             espacio = await self._get_espacio_by_id(disponibilidad_data.id_espacio)
             if not espacio:
@@ -528,3 +544,68 @@ class ReservaService:
         except Exception as e:
             logger.error(f"💥 Error creando reserva con pago: {str(e)}")
             raise ValueError(f"Error creando reserva con pago: {str(e)}")
+
+    async def crear_reserva_con_webpay(
+        self, 
+        reserva_data: ReservaConPagoRequest,
+        user_id: int
+    ) -> tuple[ReservaResponse, PaymentIntentResponse, str, str]:
+        """
+        Crea una reserva pendiente de pago y genera la intención de pago con Webpay.
+        
+        Args:
+            reserva_data: Datos de la reserva a crear
+            user_id: ID del usuario que crea la reserva
+            
+        Returns:
+            Tupla (ReservaResponse, PaymentIntentResponse, webpay_url, webpay_token)
+            
+        Raises:
+            ValueError: Si hay errores en la creación
+        """
+        try:
+            # 1. Obtener datos del vecino para la descripción
+            result = await self.db.execute(
+                select(Vecino).where(Vecino.id_usuario == user_id)
+            )
+            vecino = result.scalar_one_or_none()
+            if not vecino:
+                raise ValueError("No se encontró perfil de vecino asociado")
+            
+            # 2. Crear reserva (estado: pendiente_pago)
+            reserva = await self.create_reserva(reserva_data, user_id)
+            
+            # 3. Crear intención de pago con Webpay
+            logger.info(f"💰 Valor de reserva: {reserva.valor_reserva} (tipo: {type(reserva.valor_reserva)})")
+            
+            # Verificar que el valor sea mayor a 0
+            if reserva.valor_reserva <= 0:
+                raise ValueError(f"El valor de la reserva debe ser mayor a 0. Valor actual: {reserva.valor_reserva}")
+            
+            # Usar monto real de la reserva
+            monto_webpay = reserva.valor_reserva
+            logger.info(f"💰 Usando monto real de reserva: {monto_webpay}")
+            
+            payment_intent, webpay_url, webpay_token = await self.payment_service.create_webpay_payment_intent(
+                user_id=user_id,
+                entity_type="reserva",  # Usar entity_type correcto
+                entity_id=reserva.id_reserva,
+                amount=monto_webpay,  # Usar monto real
+                description=f"Reserva {reserva.espacio_nombre}",  # Descripción correcta del espacio
+                extra_data={
+                    "reserva_id": reserva.id_reserva,
+                    "espacio_nombre": reserva.espacio_nombre,
+                    "fecha": reserva.inicio.strftime("%Y-%m-%d"),
+                    "hora_inicio": reserva.inicio.strftime("%H:%M"),
+                    "hora_termino": reserva.fin.strftime("%H:%M"),
+                    "vecino_rut": vecino.rut
+                }
+            )
+            
+            logger.info(f"🏟️💳 Reserva con Webpay creada: reserva={reserva.id_reserva}, payment={payment_intent.id_payment_intent}")
+            
+            return reserva, payment_intent, webpay_url, webpay_token
+            
+        except Exception as e:
+            logger.error(f"💥 Error creando reserva con Webpay: {str(e)}")
+            raise ValueError(f"Error creando reserva con Webpay: {str(e)}")

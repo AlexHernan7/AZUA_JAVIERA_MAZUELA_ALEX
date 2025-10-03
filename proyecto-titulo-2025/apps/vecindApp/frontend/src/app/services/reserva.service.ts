@@ -8,6 +8,8 @@ import {
   ReservaListResponse,
   DisponibilidadRequest,
   DisponibilidadResponse,
+  ReservaConPagoRequest,
+  ReservaWebpayResponse,
   ApiError 
 } from '../interfaces/reserva.interface';
 import { AuthService } from './auth.service';
@@ -89,6 +91,18 @@ export class ReservaService {
     const headers = this.getAuthHeaders();
     
     return this.http.put<ReservaResponse>(`${this.API_URL}/reservas/${id}`, reservaData, { headers })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Crea una reserva con pago Webpay
+   */
+  createReservaConWebpay(reservaData: ReservaConPagoRequest): Observable<ReservaWebpayResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.post<ReservaWebpayResponse>(`${this.API_URL}/reservas/webpay-payment`, reservaData, { headers })
       .pipe(
         catchError(this.handleError)
       );

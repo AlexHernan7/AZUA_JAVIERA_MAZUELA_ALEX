@@ -50,7 +50,7 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
               </div>
 
               <!-- Información del certificado -->
-              <div class="certificate-section animate-fade-in" *ngIf="certificado">
+              <div class="certificate-section animate-fade-in" *ngIf="certificado && !isReserva">
                 <div class="certificate-card">
                   <div class="certificate-header">
                     <div class="certificate-icon">
@@ -78,8 +78,45 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
                 </div>
               </div>
 
+              <!-- Información de la reserva -->
+              <div class="reservation-section animate-fade-in" *ngIf="isReserva && reservaInfo">
+                <div class="reservation-card">
+                  <div class="reservation-header">
+                    <div class="reservation-icon">
+                      <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="reservation-info">
+                      <h3 class="reservation-title">Reserva Confirmada</h3>
+                      <p class="reservation-subtitle">Tu reserva ha sido confirmada exitosamente</p>
+                    </div>
+                  </div>
+                  <div class="reservation-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Espacio:</span>
+                      <span class="detail-value">{{ reservaInfo.espacio_nombre }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Fecha:</span>
+                      <span class="detail-value">{{ reservaInfo.fecha | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Horario:</span>
+                      <span class="detail-value">{{ reservaInfo.hora_inicio }} - {{ reservaInfo.hora_termino }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">ID Reserva:</span>
+                      <span class="detail-value">#{{ reservaInfo.reserva_id }}</span>
+                    </div>
+                  </div>
+                  <div class="reservation-note">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Recibirás un correo de confirmación con todos los detalles</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- Estado de procesamiento -->
-              <div class="processing-section animate-fade-in" *ngIf="!certificado && paymentStatus">
+              <div class="processing-section animate-fade-in" *ngIf="!certificado && !isReserva && paymentStatus">
                 <div class="processing-card">
                   <div class="processing-icon">
                     <div class="spinner-custom"></div>
@@ -96,9 +133,9 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
               <!-- Acciones principales -->
               <div class="actions-section">
                 <div class="action-buttons">
-                  <button class="btn-secondary-action" (click)="irACertificados()">
-                    <i class="bi bi-collection"></i>
-                    <span>Mis Certificados</span>
+                  <button class="btn-secondary-action" (click)="isReserva ? irAReservas() : irACertificados()">
+                    <i class="bi" [class.bi-calendar-check]="isReserva" [class.bi-collection]="!isReserva"></i>
+                    <span>{{ isReserva ? 'Mis Reservas' : 'Mis Certificados' }}</span>
                   </button>
                   <button class="btn-primary-action" (click)="irAInicio()">
                     <i class="bi bi-house-door"></i>
@@ -287,6 +324,100 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
         font-size: 1.75rem;
       }
     }
+
+    /* ESTILOS PARA RESERVAS */
+    .reservation-section {
+      margin-top: 2rem;
+    }
+
+    .reservation-card {
+      background: linear-gradient(135deg, #f0fdfa 0%, #e6fffa 100%);
+      border: 2px solid #0f766e;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 16px rgba(15, 118, 110, 0.1);
+    }
+
+    .reservation-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .reservation-icon {
+      width: 60px;
+      height: 60px;
+      background: #0f766e;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+    }
+
+    .reservation-icon i {
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .reservation-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f766e;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .reservation-subtitle {
+      color: #6b7280;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .reservation-details {
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .detail-value {
+      font-weight: 700;
+      color: #0f766e;
+    }
+
+    .reservation-note {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 118, 110, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #0f766e;
+    }
+
+    .reservation-note i {
+      color: #0f766e;
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .reservation-note span {
+      color: #374151;
+      font-size: 0.9rem;
+    }
   `]
 })
 export class PaymentSuccessComponent implements OnInit {
@@ -295,6 +426,10 @@ export class PaymentSuccessComponent implements OnInit {
   paymentStatus: PaymentStatusResponse | null = null;
   certificado: CertificadoResponse | null = null;
   paymentAmount = 0;
+  
+  // Información de reserva
+  reservaInfo: any = null;
+  isReserva = false;
   
   // Parámetros de la URL
   paymentId: string | null = null;
@@ -309,7 +444,19 @@ export class PaymentSuccessComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Obtener parámetros de MercadoPago
+    // Verificar si hay información de reserva en localStorage
+    const reservaPendiente = localStorage.getItem('reserva_pendiente');
+    if (reservaPendiente) {
+      this.reservaInfo = JSON.parse(reservaPendiente);
+      this.isReserva = true;
+      this.paymentAmount = this.reservaInfo.valor;
+      console.log('🏟️ Información de reserva encontrada:', this.reservaInfo);
+      
+      // Limpiar localStorage
+      localStorage.removeItem('reserva_pendiente');
+    }
+    
+    // Obtener parámetros de la URL
     this.route.queryParams.subscribe(params => {
       this.paymentId = params['payment_id'] || null;
       this.preferenceId = params['preference_id'] || null;
@@ -326,15 +473,22 @@ export class PaymentSuccessComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     
-    // Por ahora, simulamos que el pago fue exitoso
-    // En una implementación real, aquí consultarías el estado del pago
+    // Si es una reserva, usar el monto real
+    if (this.isReserva && this.reservaInfo) {
+      this.paymentAmount = this.reservaInfo.valor;
+      this.isLoading = false;
+      return;
+    }
+    
+    // Para certificados, simular el proceso
     setTimeout(() => {
       this.isLoading = false;
-      this.paymentAmount = 1000; // $1.000 CLP
+      this.paymentAmount = 2000; // $2.000 CLP para certificados
       
-      // Simular que el certificado ya está listo
-      // En la implementación real, consultarías el estado real
-      this.verificarCertificado();
+      // Verificar certificado solo si no es reserva
+      if (!this.isReserva) {
+        this.verificarCertificado();
+      }
     }, 2000);
   }
 
@@ -381,6 +535,10 @@ export class PaymentSuccessComponent implements OnInit {
 
   irACertificados() {
     this.router.navigate(['/certificados']);
+  }
+
+  irAReservas() {
+    this.router.navigate(['/reservas']);
   }
 
   irAInicio() {

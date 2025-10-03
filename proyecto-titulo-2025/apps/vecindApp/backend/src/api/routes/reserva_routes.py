@@ -18,6 +18,7 @@ from src.schemas.reserva_schemas import (
     ReservaListResponse,
     DisponibilidadRequest,
     DisponibilidadResponse,
+    ReservaConPagoRequest,
 )
 from src.schemas.auth_schemas import ErrorResponse
 from src.api.routes.user_routes import verify_user_token
@@ -340,4 +341,56 @@ async def cancel_reserva(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
+        )
+
+
+@router.post(
+    "/webpay-payment",
+    response_model=dict,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear reserva con Webpay Plus",
+    description="Crea una reserva de espacio con pago Webpay Plus y retorna token para redirección"
+)
+async def crear_reserva_webpay_payment(
+    request: ReservaConPagoRequest,
+    user_id: int = Depends(verify_user_token),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Crea una reserva pendiente de pago con Webpay Plus.
+    
+    Returns:
+        Dict con reserva, payment_intent, payment_url y webpay_token
+    """
+    try:
+        service = ReservaService(db)
+        
+        # Crear reserva con pago Webpay
+        reserva, payment_intent, webpay_url, webpay_token = await service.crear_reserva_con_webpay(
+            reserva_data=request,
+            user_id=user_id
+        )
+        
+        logger.info(f"🏟️💳 Reserva con Webpay creada: reserva={reserva.id_reserva}, payment={payment_intent.id_payment_intent}")
+        
+        return {
+            "reserva": reserva,
+            "payment_intent": payment_intent,
+            "message": "Reserva creada. Complete el pago para confirmar la reserva.",
+            "payment_url": webpay_url,
+            "webpay_token": webpay_token,
+            "provider": "webpay"
+        }
+        
+    except ValueError as e:
+        logger.warning(f"❌ Error creando reserva con Webpay: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "Error en la solicitud", "detalle": str(e)}
+        )
+    except Exception as e:
+        logger.error(f"💥 Error inesperado en webpay-payment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
         )

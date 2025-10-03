@@ -82,13 +82,19 @@
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label">Fecha</label>
-              <input type="date" class="form-control" formControlName="fecha">
+              <input type="date" class="form-control" formControlName="fecha" [min]="hoyISO()">
+              <div class="invalid-feedback d-block" *ngIf="!esFechaValida() && form.get('fecha')?.touched">
+                No se pueden hacer reservas para fechas pasadas
+              </div>
             </div>
             <div class="col-md-4">
               <label class="form-label">Hora inicio</label>
               <select class="form-select" formControlName="horaInicio">
-                <option *ngFor="let h of horas" [value]="h">{{ h }}</option>
+                <option *ngFor="let h of horas" [value]="h" [disabled]="esHorarioPasado(form.get('fecha')?.value, h)">{{ h }}</option>
               </select>
+              <div class="invalid-feedback d-block" *ngIf="!esHorarioInicioValido() && form.get('horaInicio')?.touched">
+                No se pueden hacer reservas para horarios pasados
+              </div>
             </div>
             <div class="col-md-4">
               <label class="form-label">Hora término</label>
@@ -166,7 +172,7 @@
                 [disabled]="form.invalid || !disponibilidad?.disponible || creandoReserva()"
                 (click)="irAPagar()">
           <span *ngIf="creandoReserva()" class="spinner-border spinner-border-sm me-2" role="status"></span>
-          {{ creandoReserva() ? 'Creando reserva...' : 'Crear reserva' }}
+          {{ creandoReserva() ? 'Procesando pago...' : 'Proceder al pago' }}
         </button>
       </div>
     </div>

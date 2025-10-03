@@ -76,8 +76,16 @@ class WebpayService:
             amount_cents = int(amount)
             
             logger.info(f"🔄 Creando transacción Webpay para payment_intent {payment_intent_id}")
-            logger.info(f"💰 Monto: ${amount} CLP ({amount_cents} centavos)")
+            logger.info(f"💰 Monto original: {amount} (tipo: {type(amount)})")
+            logger.info(f"💰 Monto en centavos: {amount_cents}")
             logger.info(f"🆔 Order ID: {order_id}")
+            logger.info(f"🔗 Return URL: {self.webpay_settings.return_url}")
+            logger.info(f"🏪 Commerce Code: {self.webpay_settings.commerce_code}")
+            logger.info(f"🌍 Environment: {self.webpay_settings.environment}")
+            
+            # Verificar que el monto sea válido
+            if amount_cents <= 0:
+                raise ValueError(f"El monto debe ser mayor a 0. Monto actual: {amount_cents}")
             
             # Crear transacción en Webpay
             transaction = Transaction(self.options)
@@ -87,6 +95,8 @@ class WebpayService:
                 amount=amount_cents,
                 return_url=self.webpay_settings.return_url
             )
+            
+            logger.info(f"📋 Respuesta de Webpay: {response}")
             
             token = response.get('token')
             url = response.get('url')
