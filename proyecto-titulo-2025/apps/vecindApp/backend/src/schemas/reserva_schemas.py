@@ -113,6 +113,7 @@ class ReservaResponse(BaseModel):
     estado: str = Field(..., description="Estado de la reserva")
     observaciones: Optional[str] = Field(None, description="Observaciones adicionales")
     created_at: datetime = Field(..., description="Fecha de creación de la reserva")
+    valor_reserva: Decimal = Field(..., description="Valor total de la reserva en CLP")
     
     # Información adicional del espacio
     espacio_nombre: Optional[str] = Field(None, description="Nombre del espacio")
@@ -181,3 +182,54 @@ class DisponibilidadResponse(BaseModel):
     disponible: bool = Field(..., description="Si el horario está disponible")
     mensaje: str = Field(..., description="Mensaje explicativo")
     reservas_conflicto: Optional[List[dict]] = Field(None, description="Reservas que causan conflicto")
+
+
+class ReservaConPagoRequest(BaseModel):
+    """Schema para crear una reserva con pago."""
+    
+    id_espacio: int = Field(..., gt=0, description="ID del espacio a reservar")
+    id_junta: int = Field(..., gt=0, description="ID de la junta de vecinos")
+    id_vecino: int = Field(..., gt=0, description="ID del vecino que hace la reserva")
+    fecha: date = Field(..., description="Fecha de la reserva")
+    hora_inicio: str = Field(..., description="Hora de inicio (formato HH:MM)")
+    hora_termino: str = Field(..., description="Hora de término (formato HH:MM)")
+    motivo: str = Field(..., min_length=3, max_length=200, description="Motivo de la reserva")
+    asistentes: Optional[int] = Field(None, ge=1, description="Número de asistentes (opcional)")
+    observaciones: Optional[str] = Field(None, max_length=500, description="Observaciones adicionales")
+    acepta_reglamento: bool = Field(..., description="Si acepta el reglamento de uso")
+    
+    @validator("fecha")
+    def validate_fecha(cls, v):
+        """Valida que la fecha no sea en el pasado."""
+        if v < date.today():
+            raise ValueError("La fecha de reserva no puede ser en el pasado")
+        return v
+
+    @validator("hora_inicio", "hora_termino")
+    def validate_hora_format(cls, v):
+        """Valida el formato de hora HH:MM."""
+        try:
+            time.fromisoformat(v)
+        except ValueError:
+            raise ValueError("La hora debe estar en formato HH:MM (ej: 14:30)")
+        return v
+
+    @validator("hora_termino")
+    def validate_hora_termino(cls, v, values):
+        """Valida que la hora de término sea posterior a la de inicio."""
+        if "hora_inicio" in values:
+            try:
+                inicio = time.fromisoformat(values["hora_inicio"])
+                termino = time.fromisoformat(v)
+                if termino <= inicio:
+                    raise ValueError("La hora de término debe ser posterior a la hora de inicio")
+            except ValueError:
+                pass  # El error de formato ya se maneja en el validador anterior
+        return v
+
+    @validator("acepta_reglamento")
+    def validate_acepta_reglamento(cls, v):
+        """Valida que se acepte el reglamento."""
+        if not v:
+            raise ValueError("Debe aceptar el reglamento de uso para hacer la reserva")
+        return v

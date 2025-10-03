@@ -4,6 +4,7 @@ Schemas para certificados de residencia.
 
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 from pydantic import BaseModel, Field
 
 
@@ -11,6 +12,7 @@ class CertificadoPedidoCreate(BaseModel):
     """Schema para crear una solicitud de certificado."""
     
     motivo_solicitud: str = Field(..., description="Motivo de la solicitud del certificado")
+    valor_certificado: Optional[Decimal] = Field(None, description="Valor del certificado en CLP (opcional, usa valor por defecto si no se especifica)")
 
 
 class CertificadoPedidoResponse(BaseModel):
@@ -19,6 +21,7 @@ class CertificadoPedidoResponse(BaseModel):
     id_pedido: int
     estado: str
     created_at: datetime
+    valor_certificado: Decimal
     vecino_nombres: str
     vecino_apellidos: str
     vecino_rut: str

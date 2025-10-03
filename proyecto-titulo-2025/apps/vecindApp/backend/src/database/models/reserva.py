@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     CheckConstraint,
     Index,
+    Numeric,
     func,
 )
 from sqlalchemy.orm import relationship
@@ -24,6 +25,7 @@ class Reserva(Base):
             name="ck_reserva_estado",
         ),
         CheckConstraint("fin > inicio", name="ck_reserva_intervalo"),
+        CheckConstraint("valor_reserva >= 0", name="ck_reserva_valor_positivo"),
         Index("ix_reserva_estado", "id_junta", "estado"),
         Index("ix_reserva_espacio_tiempo", "id_espacio", "inicio", "fin"),
         {"schema": "vecindapp"},
@@ -57,6 +59,9 @@ class Reserva(Base):
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    valor_reserva = Column(
+        Numeric(10, 2), nullable=False, default=0.00
+    )
 
     # Relaciones
     junta = relationship("Junta", back_populates="reservas")
@@ -67,4 +72,4 @@ class Reserva(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Reserva(id_reserva={self.id_reserva}, id_espacio={self.id_espacio}, estado='{self.estado}')>"
+        return f"<Reserva(id_reserva={self.id_reserva}, id_espacio={self.id_espacio}, estado='{self.estado}', valor={self.valor_reserva})>"

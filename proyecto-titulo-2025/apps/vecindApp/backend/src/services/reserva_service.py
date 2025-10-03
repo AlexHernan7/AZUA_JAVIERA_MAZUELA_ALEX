@@ -23,8 +23,11 @@ from src.schemas.reserva_schemas import (
     ReservaResponse,
     ReservaListResponse,
     DisponibilidadRequest,
-    DisponibilidadResponse
+    DisponibilidadResponse,
+    ReservaConPagoRequest
 )
+from src.schemas.payment_schemas import PaymentIntentResponse
+from src.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +40,7 @@ class ReservaService:
     def __init__(self, db: AsyncSession):
         """Inicializa el servicio con la sesión de base de datos."""
         self.db = db
+        self.payment_service = PaymentService(db)
 
     async def create_reserva(
         self, 
@@ -80,13 +84,16 @@ class ReservaService:
             if espacio.id_junta != reserva_data.id_junta:
                 raise ValueError("El espacio no pertenece a la junta especificada")
 
-            # 5. Validar duración máxima de reserva
+            # 5. Validar duración máxima de reserva y calcular valor
             inicio_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_inicio))
             fin_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_termino))
             duracion_horas = (fin_dt - inicio_dt).total_seconds() / 3600
             
             if duracion_horas > espacio.max_horas:
                 raise ValueError(f"La duración máxima permitida es {espacio.max_horas} horas")
+            
+            # Calcular valor total de la reserva
+            valor_total = Decimal(str(duracion_horas)) * espacio.valor
 
             # 6. Verificar disponibilidad (validación de solapamiento)
             disponible = await self._verificar_disponibilidad(
@@ -107,7 +114,8 @@ class ReservaService:
                 inicio=inicio_dt,
                 fin=fin_dt,
                 estado="pendiente",
-                observaciones=reserva_data.observaciones
+                observaciones=reserva_data.observaciones,
+                valor_reserva=valor_total
             )
 
             self.db.add(nueva_reserva)
@@ -132,6 +140,7 @@ class ReservaService:
                     estado=nueva_reserva.estado,
                     observaciones=nueva_reserva.observaciones,
                     created_at=nueva_reserva.created_at,
+                    valor_reserva=nueva_reserva.valor_reserva,
                     espacio_nombre=None,
                     espacio_tipo=None,
                     espacio_capacidad=None,
@@ -422,6 +431,7 @@ class ReservaService:
                 estado=reserva.estado,
                 observaciones=reserva.observaciones,
                 created_at=reserva.created_at,
+                valor_reserva=reserva.valor_reserva,
                 espacio_nombre=reserva.espacio.nombre if reserva.espacio else None,
                 espacio_tipo=reserva.espacio.tipo if reserva.espacio else None,
                 espacio_capacidad=reserva.espacio.capacidad if reserva.espacio else None,
@@ -463,3 +473,58 @@ class ReservaService:
         except Exception as e:
             logger.error(f"Error al obtener vecino {vecino_id}: {e}")
             return None
+
+    async def crear_reserva_con_pago(
+        self, 
+        reserva_data: ReservaConPagoRequest,
+        user_id: int
+    ) -> tuple[ReservaResponse, PaymentIntentResponse]:
+        """
+        Crea una reserva pendiente de pago y genera la intención de pago.
+        
+        Args:
+            reserva_data: Datos de la reserva a crear
+            user_id: ID del usuario que crea la reserva
+            
+        Returns:
+            Tupla (ReservaResponse, PaymentIntentResponse)
+            
+        Raises:
+            ValueError: Si hay errores en la creación
+        """
+        try:
+            # 1. Obtener datos del vecino para la descripción
+            result = await self.db.execute(
+                select(Vecino).where(Vecino.id_usuario == user_id)
+            )
+            vecino = result.scalar_one_or_none()
+            if not vecino:
+                raise ValueError("No se encontró perfil de vecino asociado")
+            
+            # 2. Crear reserva (estado: pendiente)
+            reserva = await self.create_reserva(reserva_data, user_id)
+            
+            # 3. Crear intención de pago
+            payment_intent = await self.payment_service.create_payment_intent(
+                user_id=user_id,
+                entity_type="reserva",
+                entity_id=reserva.id_reserva,
+                amount=reserva.valor_reserva,
+                description=f"Reserva de espacio - {reserva.espacio_nombre}",
+                extra_data={
+                    "reserva_id": reserva.id_reserva,
+                    "espacio_nombre": reserva.espacio_nombre,
+                    "fecha": reserva.inicio.strftime("%Y-%m-%d"),
+                    "hora_inicio": reserva.inicio.strftime("%H:%M"),
+                    "hora_termino": reserva.fin.strftime("%H:%M"),
+                    "vecino_rut": vecino.rut
+                }
+            )
+            
+            logger.info(f"🏟️💳 Reserva con pago creada: reserva={reserva.id_reserva}, payment={payment_intent.id_payment_intent}")
+            
+            return reserva, payment_intent
+            
+        except Exception as e:
+            logger.error(f"💥 Error creando reserva con pago: {str(e)}")
+            raise ValueError(f"Error creando reserva con pago: {str(e)}")

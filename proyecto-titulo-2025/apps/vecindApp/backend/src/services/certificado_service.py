@@ -67,14 +67,14 @@ class CertificadoService:
                 raise ValueError("No se encontró perfil de vecino asociado")
             
             # 2. Crear pedido de certificado (estado: pendiente_pago)
-            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago")
+            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago", valor_certificado=self.PRECIO_CERTIFICADO)
             
             # 3. Crear intención de pago
             payment_intent = await self.payment_service.create_payment_intent(
                 user_id=user_id,
                 entity_type="certificado",
                 entity_id=pedido.id_pedido,
-                amount=self.PRECIO_CERTIFICADO,
+                amount=pedido.valor_certificado,
                 description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
                 extra_data={
                     "certificado_pedido_id": pedido.id_pedido,
@@ -119,14 +119,14 @@ class CertificadoService:
                 raise ValueError("No se encontró perfil de vecino asociado")
             
             # 2. Crear pedido de certificado (estado: pendiente_pago)
-            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago")
+            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago", valor_certificado=self.PRECIO_CERTIFICADO)
             
             # 3. Crear intención de pago con Webpay
             payment_intent, webpay_url, webpay_token = await self.payment_service.create_webpay_payment_intent(
                 user_id=user_id,
                 entity_type="certificado",
                 entity_id=pedido.id_pedido,
-                amount=self.PRECIO_CERTIFICADO,
+                amount=pedido.valor_certificado,
                 description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
                 extra_data={
                     "certificado_pedido_id": pedido.id_pedido,
@@ -282,12 +282,15 @@ class CertificadoService:
             junta=vecino.junta.nombre if vecino.junta else None
         )
     
-    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str, estado_inicial: str = "iniciado") -> CertificadoPedidoResponse:
+    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str, estado_inicial: str = "iniciado", valor_certificado: Optional[Decimal] = None) -> CertificadoPedidoResponse:
         """
         Crea una nueva solicitud de certificado.
         
         Args:
             user_id: ID del usuario autenticado
+            motivo_solicitud: Motivo de la solicitud
+            estado_inicial: Estado inicial del pedido
+            valor_certificado: Valor del certificado (opcional, usa valor por defecto si no se especifica)
             
         Returns:
             CertificadoPedidoResponse con los datos del pedido creado
@@ -314,13 +317,17 @@ class CertificadoService:
         if not vecino.junta:
             raise ValueError("El vecino debe estar asociado a una junta de vecinos")
         
+        # Usar valor proporcionado o valor por defecto
+        valor_final = valor_certificado if valor_certificado is not None else self.PRECIO_CERTIFICADO
+        
         # Crear nuevo pedido
         nuevo_pedido = CertificadoPedido(
             id_junta=vecino.junta.id_junta,
             id_vecino=vecino.id_vecino,
             creado_por=user_id,
             estado=estado_inicial,
-            motivo_solicitud=motivo_solicitud
+            motivo_solicitud=motivo_solicitud,
+            valor_certificado=valor_final
         )
         
         self.db.add(nuevo_pedido)
@@ -333,6 +340,7 @@ class CertificadoService:
             id_pedido=nuevo_pedido.id_pedido,
             estado=nuevo_pedido.estado,
             created_at=nuevo_pedido.created_at,
+            valor_certificado=nuevo_pedido.valor_certificado,
             vecino_nombres=vecino.nombres,
             vecino_apellidos=f"{vecino.apellido_paterno} {vecino.apellido_materno}",
             vecino_rut=vecino.rut,

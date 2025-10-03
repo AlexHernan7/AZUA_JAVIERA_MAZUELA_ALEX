@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     CheckConstraint,
     Index,
+    Numeric,
     func,
 )
 from sqlalchemy.orm import relationship
@@ -23,6 +24,7 @@ class CertificadoPedido(Base):
             "estado IN ('iniciado','pendiente_pago','emitido','rechazado')",
             name="ck_cert_pedido_estado",
         ),
+        CheckConstraint("valor_certificado > 0", name="ck_cert_pedido_valor_positivo"),
         Index("ix_cert_pedido_estado", "id_junta", "estado"),
         {"schema": "vecindapp"},
     )
@@ -48,6 +50,9 @@ class CertificadoPedido(Base):
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    valor_certificado = Column(
+        Numeric(10, 2), nullable=False, default=2000.00
+    )
 
     # Relaciones
     junta = relationship("Junta", back_populates="certificados_pedidos")
@@ -58,4 +63,4 @@ class CertificadoPedido(Base):
     certificado = relationship("Certificado", back_populates="pedido", uselist=False)
 
     def __repr__(self) -> str:
-        return f"<CertificadoPedido(id_pedido={self.id_pedido}, id_vecino={self.id_vecino}, estado='{self.estado}')>"
+        return f"<CertificadoPedido(id_pedido={self.id_pedido}, id_vecino={self.id_vecino}, estado='{self.estado}', valor={self.valor_certificado})>"
