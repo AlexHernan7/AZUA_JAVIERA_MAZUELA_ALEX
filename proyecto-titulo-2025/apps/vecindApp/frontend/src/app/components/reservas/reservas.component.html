@@ -99,8 +99,11 @@
             <div class="col-md-4">
               <label class="form-label">Hora término</label>
               <select class="form-select" formControlName="horaTermino">
-                <option *ngFor="let h of horas" [value]="h">{{ h }}</option>
+                <option *ngFor="let h of getHorasTerminoDisponibles()" [value]="h">{{ h }}</option>
               </select>
+              <div class="invalid-feedback d-block" *ngIf="!esHorarioTerminoValido() && form.get('horaTermino')?.touched">
+                La hora término debe ser posterior a la hora inicio
+              </div>
             </div>
 
             <div class="col-md-6">

@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DirectivaService } from '../../services/directiva.service';
 import { AuthService } from '../../services/auth.service';
+import { JuntaService } from '../../services/junta.service';
 import { DirectivaResponse } from '../../interfaces/directiva.interface';
+import { JuntaResponse } from '../../interfaces/junta.interface';
 
 export interface Junta {
   id_junta: number;
@@ -51,7 +53,8 @@ export class JuntaProfileComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private directivaService: DirectivaService,
-    private authService: AuthService
+    private authService: AuthService,
+    private juntaService: JuntaService
   ) {}
 
   ngOnInit(): void {
@@ -73,26 +76,41 @@ export class JuntaProfileComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    // Obtener datos del usuario logueado para mostrar info básica de la junta
+    // Obtener datos del usuario logueado
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser && currentUser.vecino) {
-      // Crear objeto junta básico con datos del usuario
-      this.junta = {
-        id_junta: 1,
-        id_comuna: 1,
-        nombre: currentUser.vecino.junta || 'Junta de Vecinos Barrio Oeste',
-        direccion: 'Información disponible próximamente',
-        telefono: 'Información disponible próximamente',
-        email: 'Información disponible próximamente',
-        descripcion: 'Información de la junta de vecinos. Los datos detallados se mostrarán cuando estén disponibles.',
-        comuna_nombre: currentUser.vecino.comuna || 'Comuna',
-        region_nombre: currentUser.vecino.region || 'Región',
-        logo_url: ''
-      };
+    if (!currentUser || !currentUser.vecino || !currentUser.vecino.id_junta) {
+      this.error = 'Usuario no tiene una junta asociada.';
+      this.isLoading = false;
+      return;
     }
 
-    // Cargar directivos reales de la junta del usuario
-    this.loadDirectivos();
+    // Cargar información detallada de la junta del usuario
+    this.juntaService.getJuntaById(currentUser.vecino.id_junta).subscribe({
+      next: (juntaData: JuntaResponse) => {
+        // Convertir JuntaResponse a Junta para compatibilidad con el template
+        this.junta = {
+          id_junta: juntaData.id_junta,
+          id_comuna: juntaData.id_comuna,
+          nombre: juntaData.nombre,
+          direccion: juntaData.direccion || 'Dirección no disponible',
+          telefono: juntaData.telefono || 'Teléfono no disponible',
+          email: juntaData.email || 'Email no disponible',
+          descripcion: juntaData.descripcion || 'Descripción no disponible',
+          comuna_nombre: juntaData.comuna_nombre,
+          region_nombre: juntaData.region_nombre,
+          logo_url: juntaData.logo || '',
+          created_at: juntaData.created_at
+        };
+
+        // Cargar directivos de la junta
+        this.loadDirectivos();
+      },
+      error: (error: any) => {
+        console.error('Error al cargar información de la junta:', error);
+        this.error = error.message || 'Error al cargar la información de la junta.';
+        this.isLoading = false;
+      }
+    });
   }
 
   /**

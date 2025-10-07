@@ -18,6 +18,7 @@ export interface VecinoLoginData {
   comuna?: string;
   region?: string;
   junta?: string;
+  id_junta?: number;
   // Campos adicionales para directivos (cuando se usan datos de directiva)
   cargo?: string;
   fecha_inicio_cargo?: string;

@@ -200,14 +200,18 @@ class ReservaService:
                     mensaje="No se pueden hacer reservas para fechas pasadas"
                 )
 
-            # Validar que no sea horario pasado (solo para hoy, con margen de 30 minutos)
-            ahora = datetime.now()
-            margen_minutos = 30
-            if disponibilidad_data.fecha == hoy and inicio_dt <= (ahora + timedelta(minutes=margen_minutos)):
-                return DisponibilidadResponse(
-                    disponible=False,
-                    mensaje=f"No se pueden hacer reservas para horarios pasados (margen: {margen_minutos} minutos)"
-                )
+            # Validación de horarios pasados deshabilitada - permitir reservas en cualquier momento
+            # (Comentado para permitir reservas sin restricciones de tiempo)
+            # from datetime import timezone
+            # ahora = datetime.now(timezone.utc)
+            # if disponibilidad_data.fecha == hoy:
+            #     hora_actual = ahora.time()
+            #     hora_inicio = time.fromisoformat(disponibilidad_data.hora_inicio)
+            #     if hora_inicio <= hora_actual:
+            #         return DisponibilidadResponse(
+            #             disponible=False,
+            #             mensaje="No se pueden hacer reservas para horarios pasados"
+            #         )
 
             # Verificar que el espacio existe
             espacio = await self._get_espacio_by_id(disponibilidad_data.id_espacio)
@@ -255,6 +259,9 @@ class ReservaService:
 
         except Exception as e:
             logger.error(f"Error al verificar disponibilidad: {e}")
+            logger.error(f"Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback completo: {traceback.format_exc()}")
             return DisponibilidadResponse(
                 disponible=False,
                 mensaje="Error al verificar disponibilidad"
@@ -372,6 +379,16 @@ class ReservaService:
             Lista de IDs de estados activos
         """
         try:
+            # Primero, obtener todos los estados para debug
+            query_all = select(EstadoReserva)
+            result_all = await self.db.execute(query_all)
+            all_estados = result_all.scalars().all()
+            
+            logger.info(f"🔍 Todos los estados en la BD: {len(all_estados)}")
+            for estado in all_estados:
+                logger.info(f"   - ID: {estado.id_estado}, Nombre: {estado.nombre_estado}, Activo: {estado.activo}")
+            
+            # Buscar estados activos
             query = select(EstadoReserva.id_estado).where(
                 and_(
                     EstadoReserva.activo == True,
@@ -379,7 +396,15 @@ class ReservaService:
                 )
             )
             result = await self.db.execute(query)
-            return [row[0] for row in result.fetchall()]
+            estados_ids = [row[0] for row in result.fetchall()]
+            
+            logger.info(f"✅ Estados activos encontrados: {estados_ids}")
+            
+            if not estados_ids:
+                logger.warning("⚠️ No se encontraron estados activos, usando fallback")
+                return [1, 2, 3, 4]  # IDs por defecto
+            
+            return estados_ids
         except Exception as e:
             logger.error(f"Error al obtener estados activos: {e}")
             # Fallback a estados por defecto si hay error

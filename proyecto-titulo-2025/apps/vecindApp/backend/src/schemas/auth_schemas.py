@@ -432,6 +432,7 @@ class LoginResponse(BaseModel):
                         "comuna": "Maipú",
                         "region": "Región Metropolitana",
                         "junta": "Junta de Vecinos Los Aromos",
+                        "id_junta": 1,
                     },
                 },
             }
@@ -476,6 +477,7 @@ class VecinoLoginData(BaseModel):
     comuna: Optional[str] = None
     region: Optional[str] = None
     junta: Optional[str] = None
+    id_junta: Optional[int] = None
     # Campos adicionales para directivos
     cargo: Optional[str] = None
     fecha_inicio_cargo: Optional[str] = None  # ISO string

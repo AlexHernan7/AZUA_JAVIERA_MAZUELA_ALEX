@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from src.core.logging import configure_logging
 from src.api.routes.auth_routes import router as auth_router
 from src.api.routes.user_routes import router as user_router
 from src.api.routes.news_routes import router as news_router
@@ -11,6 +12,9 @@ from src.api.routes.junta_routes import router as junta_router
 from src.api.routes.espacio_routes import router as espacio_router
 from src.api.routes.reserva_routes import router as reserva_router
 from src.api.routes.master_routes import router as master_router
+
+# Configurar logging
+configure_logging()
 
 # Crear una instancia de FastAPI con prefijo /api
 app = FastAPI(

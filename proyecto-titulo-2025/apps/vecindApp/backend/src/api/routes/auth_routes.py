@@ -352,6 +352,7 @@ async def login_user(
                         else None
                     ),
                     junta=vecino.junta.nombre if vecino.junta else None,
+                    id_junta=vecino.junta.id_junta if vecino.junta else None,
                 )
                 if vecino
                 else (
@@ -369,6 +370,7 @@ async def login_user(
                         comuna=None,  # Los directivos no tienen comuna personal
                         region=None,
                         junta=directiva.junta.nombre if directiva.junta else None,
+                        id_junta=directiva.junta.id_junta if directiva.junta else None,
                         cargo=directiva.cargo,  # Agregar el cargo del directivo
                         fecha_inicio_cargo=directiva.fecha_inicio_cargo.isoformat() if directiva.fecha_inicio_cargo else None,
                         fecha_termino_cargo=directiva.fecha_termino_cargo.isoformat() if directiva.fecha_termino_cargo else None,
