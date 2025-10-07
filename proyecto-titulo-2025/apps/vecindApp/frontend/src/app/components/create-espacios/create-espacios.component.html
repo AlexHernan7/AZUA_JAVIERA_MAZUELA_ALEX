@@ -55,20 +55,20 @@
 
               <!-- Tipo de Espacio -->
               <div class="col-md-6 mb-3">
-                <label for="tipo" class="form-label">Tipo de Espacio *</label>
+                <label for="id_tipo" class="form-label">Tipo de Espacio *</label>
                 <select 
                   class="form-select" 
-                  id="tipo"
-                  formControlName="tipo"
-                  [class.is-invalid]="isFieldInvalid('tipo')"
+                  id="id_tipo"
+                  formControlName="id_tipo"
+                  [class.is-invalid]="isFieldInvalid('id_tipo')"
                 >
                   <option value="">Selecciona un tipo</option>
-                  <option *ngFor="let tipo of tiposEspacio" [value]="tipo.value">
-                    {{ tipo.label }}
+                  <option *ngFor="let tipo of tiposEspacio" [value]="tipo.id_tipo">
+                    {{ tipo.tipo }}
                   </option>
                 </select>
-                <div *ngIf="getFieldError('tipo')" class="invalid-feedback">
-                  {{ getFieldError('tipo') }}
+                <div *ngIf="getFieldError('id_tipo')" class="invalid-feedback">
+                  {{ getFieldError('id_tipo') }}
                 </div>
               </div>
 

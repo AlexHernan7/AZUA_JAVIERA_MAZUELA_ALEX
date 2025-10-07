@@ -20,12 +20,8 @@ class CertificadoPedido(Base):
 
     __tablename__ = "certificado_pedido"
     __table_args__ = (
-        CheckConstraint(
-            "estado IN ('iniciado','pendiente_pago','emitido','rechazado')",
-            name="ck_cert_pedido_estado",
-        ),
         CheckConstraint("valor_certificado > 0", name="ck_cert_pedido_valor_positivo"),
-        Index("ix_cert_pedido_estado", "id_junta", "estado"),
+        Index("ix_cert_pedido_estado", "id_junta", "id_estado"),
         {"schema": "vecindapp"},
     )
 
@@ -45,8 +41,16 @@ class CertificadoPedido(Base):
         ForeignKey("vecindapp.usuario.id_usuario", ondelete="RESTRICT"),
         nullable=False,
     )
-    estado = Column(Text, nullable=False, default="iniciado")
-    motivo_solicitud = Column(Text, nullable=True)
+    id_estado = Column(
+        BigInteger,
+        ForeignKey("vecindapp.estado_certificado.id_estado", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    id_motivo = Column(
+        BigInteger,
+        ForeignKey("vecindapp.motivo_solicitud.id_motivo", ondelete="RESTRICT"),
+        nullable=False,
+    )
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -60,6 +64,8 @@ class CertificadoPedido(Base):
     creado_por_usuario = relationship(
         "Usuario", back_populates="certificados_pedidos", foreign_keys=[creado_por]
     )
+    estado = relationship("EstadoCertificado", back_populates="certificados_pedidos")
+    motivo = relationship("MotivoSolicitud", back_populates="certificados_pedidos")
     certificado = relationship("Certificado", back_populates="pedido", uselist=False)
 
     def __repr__(self) -> str:

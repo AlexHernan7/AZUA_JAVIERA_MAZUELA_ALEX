@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 class CertificadoPedidoCreate(BaseModel):
     """Schema para crear una solicitud de certificado."""
     
-    motivo_solicitud: str = Field(..., description="Motivo de la solicitud del certificado")
+    id_motivo: int = Field(..., description="ID del motivo de solicitud")
     valor_certificado: Optional[Decimal] = Field(None, description="Valor del certificado en CLP (opcional, usa valor por defecto si no se especifica)")
 
 
@@ -19,7 +19,8 @@ class CertificadoPedidoResponse(BaseModel):
     """Schema para respuesta de pedido de certificado."""
     
     id_pedido: int
-    estado: str
+    id_estado: int
+    estado: str  # nombre_estado de la relación
     created_at: datetime
     valor_certificado: Decimal
     vecino_nombres: str
@@ -29,7 +30,9 @@ class CertificadoPedidoResponse(BaseModel):
     comuna: Optional[str] = None
     region: Optional[str] = None
     junta: Optional[str] = None
-    motivo_solicitud: Optional[str] = None
+    id_motivo: int
+    motivo_solicitud: str  # motivo de la relación
+    motivo_grupo: Optional[str] = None  # grupo del motivo
     
     class Config:
         from_attributes = True
@@ -67,7 +70,7 @@ class CertificadoGenerateRequest(BaseModel):
     """Schema para confirmar generación de certificado."""
     
     confirmar_datos: bool = Field(..., description="Debe ser True para confirmar")
-    motivo_solicitud: str = Field(..., description="Motivo de la solicitud del certificado")
+    id_motivo: int = Field(..., description="ID del motivo de la solicitud del certificado")
     # Permitir actualizar dirección si es necesaria
     direccion_actualizada: Optional[str] = None
 

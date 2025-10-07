@@ -65,13 +65,15 @@
         <!-- Motivo (combo con grupos) -->
         <div class="border rounded-3 p-3 mb-3">
           <label class="form-label fw-semibold">Motivo de la solicitud *</label>
-          <select class="form-select" formControlName="motivo">
+          <select class="form-select" formControlName="id_motivo">
             <option value="" disabled selected>Selecciona un motivo</option>
-            <optgroup *ngFor="let g of motivosCatalog" [label]="g.grupo">
-              <option *ngFor="let op of g.items" [value]="op">{{ op }}</option>
-            </optgroup>
+            <ng-container *ngIf="tieneMotivos">
+              <optgroup *ngFor="let grupo of motivosAgrupados | keyvalue" [label]="grupo.key">
+                <option *ngFor="let motivo of grupo.value" [value]="motivo.id_motivo">{{ motivo.motivo }}</option>
+              </optgroup>
+            </ng-container>
           </select>
-          <div class="invalid mt-2" *ngIf="form.get('motivo')?.touched && form.get('motivo')?.invalid">
+          <div class="invalid mt-2" *ngIf="form.get('id_motivo')?.touched && form.get('id_motivo')?.invalid">
             Debes seleccionar un motivo.
           </div>
         </div>

@@ -20,9 +20,6 @@ class Espacio(Base):
 
     __tablename__ = "espacio"
     __table_args__ = (
-        CheckConstraint(
-            "tipo IN ('cancha','sala','plaza','otro')", name="ck_espacio_tipo"
-        ),
         CheckConstraint("valor >= 0", name="ck_espacio_valor_positivo"),
         CheckConstraint("capacidad > 0", name="ck_espacio_capacidad_positiva"),
         CheckConstraint("max_horas > 0", name="ck_espacio_max_horas_positivo"),
@@ -35,8 +32,12 @@ class Espacio(Base):
         ForeignKey("vecindapp.junta.id_junta", ondelete="CASCADE"),
         nullable=False,
     )
+    id_tipo = Column(
+        BigInteger,
+        ForeignKey("vecindapp.tipo_espacio.id_tipo", ondelete="RESTRICT"),
+        nullable=False,
+    )
     nombre = Column(Text, nullable=False)
-    tipo = Column(Text, nullable=False)
     capacidad = Column(Integer, nullable=False)
     valor = Column(Numeric(10, 2), nullable=False)  # Precio por hora en CLP
     foto = Column(Text)  # Ruta a la imagen del espacio
@@ -47,9 +48,10 @@ class Espacio(Base):
 
     # Relaciones
     junta = relationship("Junta", back_populates="espacios")
+    tipo_espacio = relationship("TipoEspacio", back_populates="espacios")
     reservas = relationship(
         "Reserva", back_populates="espacio", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
-        return f"<Espacio(id_espacio={self.id_espacio}, nombre='{self.nombre}', tipo='{self.tipo}')>"
+        return f"<Espacio(id_espacio={self.id_espacio}, nombre='{self.nombre}', id_tipo={self.id_tipo})>"

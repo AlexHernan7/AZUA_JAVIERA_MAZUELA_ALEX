@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 async def create_espacio(
     # Campos del formulario
     nombre: str = Form(...),
-    tipo: str = Form(...),
+    id_tipo: int = Form(...),
     capacidad: int = Form(...),
     valor: float = Form(...),
     max_horas: int = Form(4),
@@ -64,7 +64,7 @@ async def create_espacio(
     
     Args:
         nombre: Nombre del espacio
-        tipo: Tipo de espacio
+        id_tipo: ID del tipo de espacio
         capacidad: Capacidad máxima
         valor: Precio por hora
         max_horas: Máximo de horas por reserva
@@ -90,7 +90,7 @@ async def create_espacio(
         # Crear objeto de datos del espacio
         espacio_data = EspacioCreateRequest(
             nombre=nombre,
-            tipo=tipo,
+            id_tipo=id_tipo,
             capacidad=capacidad,
             valor=valor,
             max_horas=max_horas,

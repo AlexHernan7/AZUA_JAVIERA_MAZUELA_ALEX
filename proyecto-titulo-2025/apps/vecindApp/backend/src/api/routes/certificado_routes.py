@@ -88,7 +88,7 @@ async def crear_certificado_webpay_payment(
         # Crear certificado con pago Webpay
         pedido, payment_intent, webpay_url, webpay_token = await service.crear_certificado_con_webpay(
             user_id=user_id,
-            motivo_solicitud=request.motivo_solicitud
+            id_motivo=request.id_motivo
         )
         
         logger.info(f"📝💳 Certificado con Webpay creado: pedido={pedido.id_pedido}, payment={payment_intent.id_payment_intent}")

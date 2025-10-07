@@ -1,13 +1,15 @@
 // Interfaces para certificados basadas en los schemas del backend
 
 export interface CertificadoPedidoCreate {
-  motivo_solicitud: string;
+  id_motivo: number;
 }
 
 export interface CertificadoPedidoResponse {
   id_pedido: number;
+  id_estado: number;
   estado: string;
   created_at: string;
+  valor_certificado: number;
   vecino_nombres: string;
   vecino_apellidos: string;
   vecino_rut: string;
@@ -15,7 +17,9 @@ export interface CertificadoPedidoResponse {
   comuna?: string;
   region?: string;
   junta?: string;
-  motivo_solicitud?: string;
+  id_motivo: number;
+  motivo_solicitud: string;
+  motivo_grupo?: string;
 }
 
 export interface CertificadoConfirmacionData {

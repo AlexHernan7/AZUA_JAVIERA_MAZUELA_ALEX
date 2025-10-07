@@ -65,8 +65,8 @@ class EspacioService:
             # 3. Crear el espacio
             nuevo_espacio = Espacio(
                 id_junta=espacio_data.id_junta,
+                id_tipo=espacio_data.id_tipo,
                 nombre=espacio_data.nombre,
-                tipo=espacio_data.tipo,
                 capacidad=espacio_data.capacidad,
                 valor=espacio_data.valor,
                 foto=espacio_data.foto,
@@ -82,7 +82,9 @@ class EspacioService:
 
             logger.info(f"Espacio '{nuevo_espacio.nombre}' creado exitosamente con ID {nuevo_espacio.id_espacio}")
 
-            return EspacioResponse.from_orm(nuevo_espacio)
+            # Recargar el espacio con la relación tipo
+            espacio_completo = await self._get_espacio_by_id(nuevo_espacio.id_espacio)
+            return EspacioResponse.from_orm(espacio_completo)
 
         except IntegrityError as e:
             await self.db.rollback()
@@ -104,7 +106,9 @@ class EspacioService:
             EspacioResponse o None si no existe
         """
         result = await self.db.execute(
-            select(Espacio).where(Espacio.id_espacio == espacio_id)
+            select(Espacio)
+            .options(selectinload(Espacio.tipo_espacio))
+            .where(Espacio.id_espacio == espacio_id)
         )
         espacio = result.scalar_one_or_none()
         
@@ -132,7 +136,7 @@ class EspacioService:
             EspacioListResponse: Lista paginada de espacios
         """
         # Construir query base
-        query = select(Espacio).where(Espacio.id_junta == id_junta)
+        query = select(Espacio).options(selectinload(Espacio.tipo_espacio)).where(Espacio.id_junta == id_junta)
         
         if activo_only:
             query = query.where(Espacio.activo == True)
@@ -261,7 +265,9 @@ class EspacioService:
     async def _get_espacio_by_id(self, espacio_id: int) -> Optional[Espacio]:
         """Obtiene un espacio por ID (método privado)."""
         result = await self.db.execute(
-            select(Espacio).where(Espacio.id_espacio == espacio_id)
+            select(Espacio)
+            .options(selectinload(Espacio.tipo_espacio))
+            .where(Espacio.id_espacio == espacio_id)
         )
         return result.scalar_one_or_none()
 

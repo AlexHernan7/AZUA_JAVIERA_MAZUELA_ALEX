@@ -37,7 +37,7 @@ export class EspacioService {
     
     // Agregar todos los campos del espacio al FormData
     formData.append('nombre', espacioData.nombre);
-    formData.append('tipo', espacioData.tipo);
+    formData.append('id_tipo', espacioData.id_tipo.toString());
     formData.append('capacidad', espacioData.capacidad.toString());
     formData.append('valor', espacioData.valor.toString());
     formData.append('max_horas', espacioData.max_horas.toString());

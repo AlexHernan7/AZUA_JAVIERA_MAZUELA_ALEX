@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { EspacioService } from '../../services/espacio.service';
 import { AuthService } from '../../services/auth.service';
 import { JuntaService } from '../../services/junta.service';
+import { MasterService, TipoEspacioResponse } from '../../services/master.service';
 import { EspacioCreateRequest } from '../../interfaces/espacio.interface';
 import { JuntaListResponse } from '../../interfaces/junta.interface';
 
@@ -21,34 +22,29 @@ export class CreateEspaciosComponent implements OnInit {
   error: string | null = null;
   success = false;
   juntas: JuntaListResponse[] = [];
+  tiposEspacio: TipoEspacioResponse[] = [];
   selectedFile: File | null = null;
   filePreview: string | null = null;
-
-  // Opciones para el formulario
-  tiposEspacio = [
-    { value: 'cancha', label: 'Cancha' },
-    { value: 'sala', label: 'Sala' },
-    { value: 'plaza', label: 'Plaza' },
-    { value: 'otro', label: 'Otro' }
-  ];
 
   constructor(
     private fb: FormBuilder,
     private espacioService: EspacioService,
     private authService: AuthService,
     private juntaService: JuntaService,
+    private masterService: MasterService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadJuntas();
+    this.loadTiposEspacio();
   }
 
   private initForm(): void {
     this.espacioForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      tipo: ['', Validators.required],
+      id_tipo: ['', Validators.required],
       capacidad: ['', [Validators.required, Validators.min(1)]],
       valor: ['', [Validators.required, Validators.min(0)]],
       foto: [''],
@@ -71,6 +67,7 @@ export class CreateEspaciosComponent implements OnInit {
       // Procesar arrays de permitido y no permitido
       const espacioData: EspacioCreateRequest = {
         ...formData,
+        id_tipo: parseInt(formData.id_tipo), // Convertir a número
         permitido: this.processArrayField(formData.permitido),
         no_permitido: this.processArrayField(formData.no_permitido),
         id_junta: parseInt(formData.id_junta) // Convertir a número
@@ -193,6 +190,19 @@ export class CreateEspaciosComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar juntas:', error);
         this.error = 'Error al cargar la lista de juntas';
+      }
+    });
+  }
+
+  private loadTiposEspacio(): void {
+    this.masterService.getTiposEspacio(true).subscribe({
+      next: (response) => {
+        this.tiposEspacio = response;
+        console.log('Tipos de espacio cargados:', this.tiposEspacio);
+      },
+      error: (error) => {
+        console.error('Error al cargar tipos de espacio:', error);
+        this.error = 'Error al cargar los tipos de espacio';
       }
     });
   }

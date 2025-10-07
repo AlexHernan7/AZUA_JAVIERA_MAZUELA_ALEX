@@ -70,7 +70,7 @@ class ReservaUpdateRequest(BaseModel):
     motivo: Optional[str] = Field(None, min_length=3, max_length=200, description="Motivo de la reserva")
     asistentes: Optional[int] = Field(None, ge=1, description="Número de asistentes")
     observaciones: Optional[str] = Field(None, max_length=500, description="Observaciones adicionales")
-    estado: Optional[str] = Field(None, description="Estado de la reserva")
+    id_estado: Optional[int] = Field(None, description="ID del estado de la reserva")
 
     @validator("fecha")
     def validate_fecha(cls, v):
@@ -89,15 +89,6 @@ class ReservaUpdateRequest(BaseModel):
                 raise ValueError("La hora debe estar en formato HH:MM (ej: 14:30)")
         return v
 
-    @validator("estado")
-    def validate_estado(cls, v):
-        """Valida que el estado sea válido."""
-        if v is not None:
-            estados_validos = ['pendiente', 'pagada', 'aprobada', 'rechazada', 'cancelada', 'confirmada']
-            if v.lower() not in estados_validos:
-                raise ValueError(f"Estado debe ser uno de: {', '.join(estados_validos)}")
-            return v.lower()
-        return v
 
 
 class ReservaResponse(BaseModel):
@@ -108,9 +99,10 @@ class ReservaResponse(BaseModel):
     id_espacio: int = Field(..., description="ID del espacio reservado")
     id_vecino: int = Field(..., description="ID del vecino que hizo la reserva")
     creado_por: int = Field(..., description="ID del usuario que creó la reserva")
+    id_estado: int = Field(..., description="ID del estado de la reserva")
     inicio: datetime = Field(..., description="Fecha y hora de inicio")
     fin: datetime = Field(..., description="Fecha y hora de término")
-    estado: str = Field(..., description="Estado de la reserva")
+    estado: str = Field(..., description="Estado de la reserva (nombre del estado)")
     observaciones: Optional[str] = Field(None, description="Observaciones adicionales")
     created_at: datetime = Field(..., description="Fecha de creación de la reserva")
     valor_reserva: Decimal = Field(..., description="Valor total de la reserva en CLP")
@@ -124,7 +116,7 @@ class ReservaResponse(BaseModel):
     # Información del vecino
     vecino_nombre: Optional[str] = Field(None, description="Nombre del vecino")
     vecino_email: Optional[str] = Field(None, description="Email del vecino")
-
+    
     class Config:
         from_attributes = True
 

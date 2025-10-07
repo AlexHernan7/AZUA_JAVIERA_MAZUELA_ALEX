@@ -34,7 +34,7 @@ class CertificadoService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.pdf_generator = CertificadoPDFGenerator()
-        self.payment_service = PaymentService(db)
+        # No inicializar PaymentService aquí para evitar conflictos de sesión
         
     # Configuración de precios (en CLP)
     PRECIO_CERTIFICADO = Decimal("2000")  # $2.000 CLP
@@ -94,14 +94,14 @@ class CertificadoService:
     async def crear_certificado_con_webpay(
         self, 
         user_id: int, 
-        motivo_solicitud: str
+        id_motivo: int
     ) -> Tuple[CertificadoPedidoResponse, PaymentIntentResponse, str, str]:
         """
         Crea un certificado pendiente de pago y genera la intención de pago con Webpay.
         
         Args:
             user_id: ID del usuario solicitante
-            motivo_solicitud: Motivo de la solicitud
+            id_motivo: ID del motivo de solicitud
             
         Returns:
             Tupla (CertificadoPedido, PaymentIntent, webpay_url, webpay_token)
@@ -118,22 +118,28 @@ class CertificadoService:
             if not vecino:
                 raise ValueError("No se encontró perfil de vecino asociado")
             
-            # 2. Crear pedido de certificado (estado: pendiente_pago)
-            pedido = await self.crear_pedido_certificado(user_id, motivo_solicitud, estado_inicial="pendiente_pago", valor_certificado=self.PRECIO_CERTIFICADO)
+            # 2. Crear pedido de certificado (estado: pendiente_pago) - sin commit
+            pedido = await self.crear_pedido_certificado(user_id, id_motivo, estado_inicial="pendiente_pago", valor_certificado=self.PRECIO_CERTIFICADO, hacer_commit=False)
             
-            # 3. Crear intención de pago con Webpay
-            payment_intent, webpay_url, webpay_token = await self.payment_service.create_webpay_payment_intent(
-                user_id=user_id,
-                entity_type="certificado",
-                entity_id=pedido.id_pedido,
-                amount=pedido.valor_certificado,
-                description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
-                extra_data={
-                    "certificado_pedido_id": pedido.id_pedido,
-                    "motivo_solicitud": motivo_solicitud,
-                    "vecino_rut": vecino.rut
-                }
-            )
+            # 3. Crear intención de pago con Webpay usando una nueva sesión
+            from src.database.session import get_transaction_session
+            async with get_transaction_session() as payment_db:
+                payment_service = PaymentService(payment_db)
+                payment_intent, webpay_url, webpay_token = await payment_service.create_webpay_payment_intent(
+                    user_id=user_id,
+                    entity_type="certificado",
+                    entity_id=pedido.id_pedido,
+                    amount=pedido.valor_certificado,
+                    description=f"Certificado de residencia - {vecino.nombres} {vecino.apellido_paterno}",
+                    extra_data={
+                        "certificado_pedido_id": pedido.id_pedido,
+                        "id_motivo": id_motivo,
+                        "vecino_rut": vecino.rut
+                    }
+                )
+            
+            # 4. Hacer commit de la transacción principal
+            await self.db.commit()
             
             logger.info(f"📄💳 Certificado con Webpay creado: pedido={pedido.id_pedido}, payment={payment_intent.id_payment_intent}")
             
@@ -180,7 +186,15 @@ class CertificadoService:
                 if pedido.estado == "emitido":
                     existing_cert = await self._get_certificado_by_pedido_id(certificado_pedido_id)
                     if existing_cert:
-                        return await self._certificado_to_response(existing_cert)
+                        return CertificadoResponse(
+                            id_certificado=existing_cert.id_certificado,
+                            numero=existing_cert.numero,
+                            fecha_emision=existing_cert.fecha_emision,
+                            direccion=existing_cert.direccion,
+                            comuna=existing_cert.comuna,
+                            region=existing_cert.region,
+                            pdf_url=existing_cert.pdf_url
+                        )
             
             # 3. Generar certificado (similar al método original pero sin verificar pago)
             numero_certificado = await self._generar_numero_certificado(pedido.id_junta)
@@ -233,7 +247,16 @@ class CertificadoService:
             
             logger.info(f"📄✅ Certificado liberado por pago: {numero_certificado}")
             
-            return await self._certificado_to_response(nuevo_certificado)
+            # 9. Retornar respuesta directamente sin llamar a método async
+            return CertificadoResponse(
+                id_certificado=nuevo_certificado.id_certificado,
+                numero=nuevo_certificado.numero,
+                fecha_emision=nuevo_certificado.fecha_emision,
+                direccion=nuevo_certificado.direccion,
+                comuna=nuevo_certificado.comuna,
+                region=nuevo_certificado.region,
+                pdf_url=nuevo_certificado.pdf_url
+            )
             
         except Exception as e:
             await self.db.rollback()
@@ -282,15 +305,16 @@ class CertificadoService:
             junta=vecino.junta.nombre if vecino.junta else None
         )
     
-    async def crear_pedido_certificado(self, user_id: int, motivo_solicitud: str, estado_inicial: str = "iniciado", valor_certificado: Optional[Decimal] = None) -> CertificadoPedidoResponse:
+    async def crear_pedido_certificado(self, user_id: int, id_motivo: int, estado_inicial: str = "iniciado", valor_certificado: Optional[Decimal] = None, hacer_commit: bool = True) -> CertificadoPedidoResponse:
         """
         Crea una nueva solicitud de certificado.
         
         Args:
             user_id: ID del usuario autenticado
-            motivo_solicitud: Motivo de la solicitud
+            id_motivo: ID del motivo de solicitud
             estado_inicial: Estado inicial del pedido
             valor_certificado: Valor del certificado (opcional, usa valor por defecto si no se especifica)
+            hacer_commit: Si hacer commit de la transacción (por defecto True)
             
         Returns:
             CertificadoPedidoResponse con los datos del pedido creado
@@ -320,25 +344,45 @@ class CertificadoService:
         # Usar valor proporcionado o valor por defecto
         valor_final = valor_certificado if valor_certificado is not None else self.PRECIO_CERTIFICADO
         
+        # Obtener ID del estado
+        from src.database.models.estado_certificado import EstadoCertificado
+        estado_result = await self.db.execute(
+            select(EstadoCertificado).where(EstadoCertificado.nombre_estado == estado_inicial)
+        )
+        estado_obj = estado_result.scalar_one_or_none()
+        if not estado_obj:
+            raise ValueError(f"Estado '{estado_inicial}' no encontrado")
+        
         # Crear nuevo pedido
         nuevo_pedido = CertificadoPedido(
             id_junta=vecino.junta.id_junta,
             id_vecino=vecino.id_vecino,
             creado_por=user_id,
-            estado=estado_inicial,
-            motivo_solicitud=motivo_solicitud,
+            id_estado=estado_obj.id_estado,
+            id_motivo=id_motivo,
             valor_certificado=valor_final
         )
         
         self.db.add(nuevo_pedido)
-        await self.db.commit()
-        await self.db.refresh(nuevo_pedido)
+        if hacer_commit:
+            await self.db.commit()
+            await self.db.refresh(nuevo_pedido)
+        else:
+            await self.db.flush()  # Solo flush para obtener el ID
         
         logger.info(f"✅ Pedido de certificado creado: ID {nuevo_pedido.id_pedido}")
         
+        # Obtener datos del motivo
+        from src.database.models.motivo_solicitud import MotivoSolicitud
+        motivo_result = await self.db.execute(
+            select(MotivoSolicitud).where(MotivoSolicitud.id_motivo == id_motivo)
+        )
+        motivo_obj = motivo_result.scalar_one_or_none()
+        
         return CertificadoPedidoResponse(
             id_pedido=nuevo_pedido.id_pedido,
-            estado=nuevo_pedido.estado,
+            id_estado=nuevo_pedido.id_estado,
+            estado=estado_obj.nombre_estado,
             created_at=nuevo_pedido.created_at,
             valor_certificado=nuevo_pedido.valor_certificado,
             vecino_nombres=vecino.nombres,
@@ -348,7 +392,9 @@ class CertificadoService:
             comuna=vecino.comuna.nombre if vecino.comuna else None,
             region=vecino.comuna.region.nombre if vecino.comuna and vecino.comuna.region else None,
             junta=vecino.junta.nombre if vecino.junta else None,
-            motivo_solicitud=nuevo_pedido.motivo_solicitud
+            id_motivo=nuevo_pedido.id_motivo,
+            motivo_solicitud=motivo_obj.motivo if motivo_obj else "Motivo no encontrado",
+            motivo_grupo=motivo_obj.grupo if motivo_obj else None
         )
     
     async def generar_certificado(

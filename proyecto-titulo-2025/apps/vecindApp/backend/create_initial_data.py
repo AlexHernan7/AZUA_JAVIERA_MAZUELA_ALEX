@@ -118,6 +118,127 @@ async def create_initial_data():
                 else:
                     print(f"[INFO] Rol ya existe: {nombre} (codigo: {codigo})")
             
+            # 5. Crear tablas maestras
+            print("\n[INFO] Creando tablas maestras...")
+            
+            # 5.1 Estados de certificado
+            estados_certificado = [
+                ("pendiente_pago", "Certificado pendiente de pago"),
+                ("generado", "Certificado generado y listo"),
+                ("entregado", "Certificado entregado al solicitante")
+            ]
+            
+            for nombre_estado, descripcion in estados_certificado:
+                result = await session.execute(text("""
+                    SELECT id_estado FROM "vecindapp".estado_certificado 
+                    WHERE nombre_estado = :nombre_estado
+                """), {"nombre_estado": nombre_estado})
+                existing_estado = result.scalar()
+                
+                if not existing_estado:
+                    await session.execute(text("""
+                        INSERT INTO "vecindapp".estado_certificado (nombre_estado, descripcion, activo) 
+                        VALUES (:nombre_estado, :descripcion, true)
+                    """), {
+                        "nombre_estado": nombre_estado,
+                        "descripcion": descripcion
+                    })
+                    print(f"[OK] Estado certificado creado: {nombre_estado}")
+                else:
+                    print(f"[INFO] Estado certificado ya existe: {nombre_estado}")
+            
+            # 5.2 Estados de reserva
+            estados_reserva = [
+                ("pendiente", "Reserva pendiente de confirmación"),
+                ("pagada", "Reserva pagada"),
+                ("aprobada", "Reserva aprobada por la junta"),
+                ("rechazada", "Reserva rechazada"),
+                ("cancelada", "Reserva cancelada"),
+                ("confirmada", "Reserva confirmada y activa")
+            ]
+            
+            for nombre_estado, descripcion in estados_reserva:
+                result = await session.execute(text("""
+                    SELECT id_estado FROM "vecindapp".estado_reserva 
+                    WHERE nombre_estado = :nombre_estado
+                """), {"nombre_estado": nombre_estado})
+                existing_estado = result.scalar()
+                
+                if not existing_estado:
+                    await session.execute(text("""
+                        INSERT INTO "vecindapp".estado_reserva (nombre_estado, descripcion, activo) 
+                        VALUES (:nombre_estado, :descripcion, true)
+                    """), {
+                        "nombre_estado": nombre_estado,
+                        "descripcion": descripcion
+                    })
+                    print(f"[OK] Estado reserva creado: {nombre_estado}")
+                else:
+                    print(f"[INFO] Estado reserva ya existe: {nombre_estado}")
+            
+            # 5.3 Tipos de espacio
+            tipos_espacio = [
+                ("cancha", "Cancha deportiva"),
+                ("sala", "Sala de reuniones o eventos"),
+                ("plaza", "Plaza o espacio al aire libre"),
+                ("otro", "Otro tipo de espacio")
+            ]
+            
+            for tipo, descripcion in tipos_espacio:
+                result = await session.execute(text("""
+                    SELECT id_tipo FROM "vecindapp".tipo_espacio 
+                    WHERE tipo = :tipo
+                """), {"tipo": tipo})
+                existing_tipo = result.scalar()
+                
+                if not existing_tipo:
+                    await session.execute(text("""
+                        INSERT INTO "vecindapp".tipo_espacio (tipo, descripcion, activo) 
+                        VALUES (:tipo, :descripcion, true)
+                    """), {
+                        "tipo": tipo,
+                        "descripcion": descripcion
+                    })
+                    print(f"[OK] Tipo espacio creado: {tipo}")
+                else:
+                    print(f"[INFO] Tipo espacio ya existe: {tipo}")
+            
+            # 5.4 Motivos de solicitud
+            motivos_solicitud = [
+                ("Postulación a beneficios sociales (Registro Social de Hogares, subsidios habitacionales, bonos)", "Trámites ante instituciones públicas", "Para postular a beneficios sociales del estado"),
+                ("Procesos en municipalidades (inscripción en juntas de vecinos, becas municipales o ayudas sociales)", "Trámites ante instituciones públicas", "Para trámites municipales"),
+                ("Solicitudes en el SII o Tesorería para acreditar domicilio tributario", "Trámites ante instituciones públicas", "Para acreditar domicilio tributario"),
+                ("Juicios civiles, laborales o de familia (para demostrar residencia)", "Procesos judiciales o notariales", "Para procesos judiciales"),
+                ("Trámites de posesión efectiva, herencias o escrituras", "Procesos judiciales o notariales", "Para trámites notariales"),
+                ("Cambio de domicilio en causas judiciales", "Procesos judiciales o notariales", "Para cambio de domicilio judicial"),
+                ("Acreditar residencia ante el Servicio Nacional de Migraciones", "Trámites migratorios", "Para trámites migratorios"),
+                ("Solicitudes de permanencia definitiva, visados o nacionalización", "Trámites migratorios", "Para permanencia definitiva"),
+                ("Bancos o financieras (abrir cuentas, solicitar créditos)", "Instituciones privadas", "Para trámites bancarios"),
+                ("Aseguradoras o instituciones educativas para validar dirección", "Instituciones privadas", "Para validar dirección"),
+                ("Postulación a colegios con criterios de cercanía", "Otros casos prácticos", "Para postulación escolar"),
+                ("Contratos de arriendo o servicios básicos sin boletas propias", "Otros casos prácticos", "Para contratos de servicios")
+            ]
+            
+            for motivo, grupo, descripcion in motivos_solicitud:
+                result = await session.execute(text("""
+                    SELECT id_motivo FROM "vecindapp".motivo_solicitud 
+                    WHERE motivo = :motivo
+                """), {"motivo": motivo})
+                existing_motivo = result.scalar()
+                
+                if not existing_motivo:
+                    await session.execute(text("""
+                        INSERT INTO "vecindapp".motivo_solicitud (motivo, grupo, descripcion, activo) 
+                        VALUES (:motivo, :grupo, :descripcion, true)
+                    """), {
+                        "motivo": motivo,
+                        "grupo": grupo,
+                        "descripcion": descripcion
+                    })
+                    print(f"[OK] Motivo solicitud creado: {motivo[:50]}...")
+                else:
+                    print(f"[INFO] Motivo solicitud ya existe: {motivo[:50]}...")
+            
             # 6. Crear usuario administrador
             from src.core.security import hash_password
             
@@ -172,11 +293,28 @@ async def create_initial_data():
             result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".junta WHERE id_comuna = :id_comuna"), {"id_comuna": id_comuna})
             total_juntas = result.scalar()
             
+            # Contar registros de tablas maestras
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".estado_certificado"))
+            total_estados_cert = result.scalar()
+            
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".estado_reserva"))
+            total_estados_res = result.scalar()
+            
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".tipo_espacio"))
+            total_tipos_esp = result.scalar()
+            
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".motivo_solicitud"))
+            total_motivos = result.scalar()
+            
             print("\n[RESUMEN]:")
             print(f"- 1 Region: Region Metropolitana (ID: {id_region})")
             print(f"- 1 Comuna: Maipu (ID: {id_comuna})")
             print(f"- {total_juntas} Juntas de vecinos en Maipu")
             print(f"- 3 Roles: vecino, directiva, admin")
+            print(f"- {total_estados_cert} Estados de certificado")
+            print(f"- {total_estados_res} Estados de reserva")
+            print(f"- {total_tipos_esp} Tipos de espacio")
+            print(f"- {total_motivos} Motivos de solicitud")
             print(f"- 1 Usuario administrador: admin@admin.cl")
             
             print("\n[READY] Ya puedes probar el sistema!")

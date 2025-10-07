@@ -2,7 +2,7 @@
 
 export interface EspacioCreateRequest {
   nombre: string;
-  tipo: 'cancha' | 'sala' | 'plaza' | 'otro';
+  id_tipo: number;
   capacidad: number;
   valor: number;
   foto?: string;

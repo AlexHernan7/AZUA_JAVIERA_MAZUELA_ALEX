@@ -6,7 +6,7 @@ Maneja la creación, actualización y consulta de reservas con validación de so
 
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, and_, or_
+from sqlalchemy import select, update, delete, and_, or_, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from typing import Optional, List, Dict, Any
@@ -17,6 +17,7 @@ from src.database.models.reserva import Reserva
 from src.database.models.espacio import Espacio
 from src.database.models.vecino import Vecino
 from src.database.models.junta import Junta
+from src.database.models.estado_reserva import EstadoReserva
 from src.schemas.reserva_schemas import (
     ReservaCreateRequest,
     ReservaUpdateRequest,
@@ -85,8 +86,9 @@ class ReservaService:
                 raise ValueError("El espacio no pertenece a la junta especificada")
 
             # 5. Validar duración máxima de reserva y calcular valor
-            inicio_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_inicio))
-            fin_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_termino))
+            from datetime import timezone
+            inicio_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_inicio), timezone.utc)
+            fin_dt = datetime.combine(reserva_data.fecha, time.fromisoformat(reserva_data.hora_termino), timezone.utc)
             duracion_horas = (fin_dt - inicio_dt).total_seconds() / 3600
             
             if duracion_horas > espacio.max_horas:
@@ -105,15 +107,20 @@ class ReservaService:
             if not disponible:
                 raise ValueError("El horario seleccionado no está disponible. Ya existe una reserva en ese período.")
 
-            # 7. Crear la reserva
+            # 7. Obtener ID del estado "pendiente"
+            estado_pendiente = await self._get_estado_by_nombre("pendiente")
+            if not estado_pendiente:
+                raise ValueError("No se encontró el estado 'pendiente' en la base de datos")
+
+            # 8. Crear la reserva
             nueva_reserva = Reserva(
                 id_junta=reserva_data.id_junta,
                 id_espacio=reserva_data.id_espacio,
                 id_vecino=reserva_data.id_vecino,
                 creado_por=user_id,
+                id_estado=estado_pendiente.id_estado,
                 inicio=inicio_dt,
                 fin=fin_dt,
-                estado="pendiente",
                 observaciones=reserva_data.observaciones,
                 valor_reserva=valor_total
             )
@@ -135,9 +142,10 @@ class ReservaService:
                     id_espacio=nueva_reserva.id_espacio,
                     id_vecino=nueva_reserva.id_vecino,
                     creado_por=nueva_reserva.creado_por,
+                    id_estado=estado_pendiente.id_estado,
                     inicio=nueva_reserva.inicio,
                     fin=nueva_reserva.fin,
-                    estado=nueva_reserva.estado,
+                    estado=estado_pendiente.nombre_estado,
                     observaciones=nueva_reserva.observaciones,
                     created_at=nueva_reserva.created_at,
                     valor_reserva=nueva_reserva.valor_reserva,
@@ -173,9 +181,16 @@ class ReservaService:
             DisponibilidadResponse: Resultado de la verificación
         """
         try:
-            # Convertir a datetime
-            inicio_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_inicio))
-            fin_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_termino))
+            # Convertir a datetime con zona horaria UTC
+            from datetime import timezone
+            inicio_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_inicio), timezone.utc)
+            fin_dt = datetime.combine(disponibilidad_data.fecha, time.fromisoformat(disponibilidad_data.hora_termino), timezone.utc)
+            
+            logger.info(f"🕐 Verificando disponibilidad:")
+            logger.info(f"   - Espacio ID: {disponibilidad_data.id_espacio}")
+            logger.info(f"   - Fecha: {disponibilidad_data.fecha}")
+            logger.info(f"   - Hora inicio: {disponibilidad_data.hora_inicio} -> {inicio_dt}")
+            logger.info(f"   - Hora fin: {disponibilidad_data.hora_termino} -> {fin_dt}")
 
             # Validar que no sea fecha pasada
             hoy = datetime.now().date()
@@ -185,12 +200,13 @@ class ReservaService:
                     mensaje="No se pueden hacer reservas para fechas pasadas"
                 )
 
-            # Validar que no sea horario pasado (solo para hoy)
+            # Validar que no sea horario pasado (solo para hoy, con margen de 30 minutos)
             ahora = datetime.now()
-            if disponibilidad_data.fecha == hoy and inicio_dt <= ahora:
+            margen_minutos = 30
+            if disponibilidad_data.fecha == hoy and inicio_dt <= (ahora + timedelta(minutes=margen_minutos)):
                 return DisponibilidadResponse(
                     disponible=False,
-                    mensaje="No se pueden hacer reservas para horarios pasados"
+                    mensaje=f"No se pueden hacer reservas para horarios pasados (margen: {margen_minutos} minutos)"
                 )
 
             # Verificar que el espacio existe
@@ -214,12 +230,16 @@ class ReservaService:
                 fin_dt
             )
 
+            logger.info(f"🎯 Resultado de disponibilidad: {disponible}")
+
             if disponible:
+                logger.info("✅ Horario disponible")
                 return DisponibilidadResponse(
                     disponible=True,
                     mensaje="El horario seleccionado está disponible"
                 )
             else:
+                logger.info("❌ Horario no disponible, obteniendo detalles de conflicto")
                 # Obtener reservas que causan conflicto
                 reservas_conflicto = await self._get_reservas_conflicto(
                     disponibilidad_data.id_espacio,
@@ -326,6 +346,45 @@ class ReservaService:
             logger.error(f"Error al obtener reservas del espacio {id_espacio}: {e}")
             raise
 
+    async def _get_estado_by_nombre(self, nombre_estado: str) -> Optional[EstadoReserva]:
+        """
+        Obtiene un estado de reserva por su nombre.
+        
+        Args:
+            nombre_estado: Nombre del estado a buscar
+            
+        Returns:
+            EstadoReserva o None si no se encuentra
+        """
+        try:
+            query = select(EstadoReserva).where(EstadoReserva.nombre_estado == nombre_estado)
+            result = await self.db.execute(query)
+            return result.scalar_one_or_none()
+        except Exception as e:
+            logger.error(f"Error al obtener estado '{nombre_estado}': {e}")
+            return None
+
+    async def _get_estados_activos_ids(self) -> List[int]:
+        """
+        Obtiene los IDs de los estados de reserva que se consideran activos.
+        
+        Returns:
+            Lista de IDs de estados activos
+        """
+        try:
+            query = select(EstadoReserva.id_estado).where(
+                and_(
+                    EstadoReserva.activo == True,
+                    EstadoReserva.nombre_estado.in_(['pendiente', 'pagada', 'aprobada', 'confirmada'])
+                )
+            )
+            result = await self.db.execute(query)
+            return [row[0] for row in result.fetchall()]
+        except Exception as e:
+            logger.error(f"Error al obtener estados activos: {e}")
+            # Fallback a estados por defecto si hay error
+            return [1, 2, 3, 4]  # IDs por defecto
+
     async def _verificar_disponibilidad(
         self,
         id_espacio: int,
@@ -349,20 +408,68 @@ class ReservaService:
             # - La reserva existente empieza antes de que termine la nueva Y
             # - La reserva existente termina después de que empiece la nueva
             
-            query = select(Reserva).where(
+            logger.info(f"🔍 Buscando reservas en conflicto para espacio {id_espacio}")
+            logger.info(f"   - Rango: {inicio} a {fin}")
+            
+            # Obtener IDs de estados activos
+            estados_activos_ids = await self._get_estados_activos_ids()
+            logger.info(f"📊 Estados activos IDs: {estados_activos_ids}")
+            
+            # Primero, mostrar todas las reservas del espacio para esa fecha
+            query_todas = select(Reserva).options(
+                selectinload(Reserva.estado)
+            ).where(
                 and_(
                     Reserva.id_espacio == id_espacio,
-                    Reserva.estado.in_(['pendiente', 'pagada', 'aprobada', 'confirmada']),
-                    Reserva.inicio < fin,  # La reserva existente empieza antes de que termine la nueva
-                    Reserva.fin > inicio   # La reserva existente termina después de que empiece la nueva
+                    Reserva.id_estado.in_(estados_activos_ids),
+                    func.date(Reserva.inicio) == inicio.date()
+                )
+            )
+            result_todas = await self.db.execute(query_todas)
+            todas_reservas = result_todas.scalars().all()
+            
+            logger.info(f"📅 Todas las reservas del día {inicio.date()}: {len(todas_reservas)}")
+            for reserva in todas_reservas:
+                estado_nombre = reserva.estado.nombre_estado if reserva.estado else f"ID:{reserva.id_estado}"
+                logger.info(f"   - Reserva {reserva.id_reserva}: {reserva.inicio} a {reserva.fin} (estado: {estado_nombre})")
+            
+            # Lógica de solapamiento mejorada:
+            # Dos intervalos se solapan si:
+            # - El inicio de uno es menor que el fin del otro Y
+            # - El fin de uno es mayor que el inicio del otro
+            # Pero excluimos solapamientos en los bordes (inicio = fin)
+            query = select(Reserva).options(
+                selectinload(Reserva.estado)
+            ).where(
+                and_(
+                    Reserva.id_espacio == id_espacio,
+                    Reserva.id_estado.in_(estados_activos_ids),
+                    Reserva.inicio < fin,    # La reserva existente empieza antes de que termine la nueva
+                    Reserva.fin > inicio     # La reserva existente termina después de que empiece la nueva
                 )
             )
             
             result = await self.db.execute(query)
             reservas_conflicto = result.scalars().all()
             
+            logger.info(f"📋 Reservas en conflicto encontradas: {len(reservas_conflicto)}")
+            for reserva in reservas_conflicto:
+                estado_nombre = reserva.estado.nombre_estado if reserva.estado else f"ID:{reserva.id_estado}"
+                logger.info(f"   - Reserva {reserva.id_reserva}: {reserva.inicio} a {reserva.fin} (estado: {estado_nombre})")
+                
+                # Verificar si realmente hay solapamiento
+                solapamiento_real = (
+                    reserva.inicio < fin and 
+                    reserva.fin > inicio
+                )
+                logger.info(f"     🔍 Solapamiento real: {solapamiento_real}")
+                logger.info(f"     📅 Reserva inicio < fin solicitado: {reserva.inicio} < {fin} = {reserva.inicio < fin}")
+                logger.info(f"     📅 Reserva fin > inicio solicitado: {reserva.fin} > {inicio} = {reserva.fin > inicio}")
+            
             # Si hay reservas que se solapan, no está disponible
-            return len(reservas_conflicto) == 0
+            disponible = len(reservas_conflicto) == 0
+            logger.info(f"✅ Disponible: {disponible}")
+            return disponible
             
         except Exception as e:
             logger.error(f"Error al verificar disponibilidad: {e}")
@@ -386,10 +493,15 @@ class ReservaService:
             Lista de diccionarios con información de las reservas en conflicto
         """
         try:
-            query = select(Reserva).where(
+            # Obtener IDs de estados activos
+            estados_activos_ids = await self._get_estados_activos_ids()
+            
+            query = select(Reserva).options(
+                selectinload(Reserva.estado)
+            ).where(
                 and_(
                     Reserva.id_espacio == id_espacio,
-                    Reserva.estado.in_(['pendiente', 'pagada', 'aprobada', 'confirmada']),
+                    Reserva.id_estado.in_(estados_activos_ids),
                     Reserva.inicio < fin,
                     Reserva.fin > inicio
                 )
@@ -404,7 +516,7 @@ class ReservaService:
                     "id_reserva": reserva.id_reserva,
                     "inicio": reserva.inicio.isoformat(),
                     "fin": reserva.fin.isoformat(),
-                    "estado": reserva.estado
+                    "estado": reserva.estado.nombre_estado if reserva.estado else None
                 })
             
             return reservas_conflicto
@@ -425,7 +537,7 @@ class ReservaService:
         """
         try:
             query = select(Reserva).options(
-                selectinload(Reserva.espacio),
+                selectinload(Reserva.espacio).selectinload(Espacio.tipo_espacio),
                 selectinload(Reserva.vecino)
             ).where(Reserva.id_reserva == reserva_id)
             
@@ -442,14 +554,15 @@ class ReservaService:
                 id_espacio=reserva.id_espacio,
                 id_vecino=reserva.id_vecino,
                 creado_por=reserva.creado_por,
+                id_estado=reserva.id_estado,
                 inicio=reserva.inicio,
                 fin=reserva.fin,
-                estado=reserva.estado,
+                estado=reserva.estado.nombre_estado if reserva.estado else None,
                 observaciones=reserva.observaciones,
                 created_at=reserva.created_at,
                 valor_reserva=reserva.valor_reserva,
                 espacio_nombre=reserva.espacio.nombre if reserva.espacio else None,
-                espacio_tipo=reserva.espacio.tipo if reserva.espacio else None,
+                espacio_tipo=reserva.espacio.tipo_espacio.tipo if reserva.espacio and reserva.espacio.tipo_espacio else None,
                 espacio_capacidad=reserva.espacio.capacidad if reserva.espacio else None,
                 espacio_valor=reserva.espacio.valor if reserva.espacio else None,
                 vecino_nombre=f"{reserva.vecino.nombres} {reserva.vecino.apellido_paterno} {reserva.vecino.apellido_materno or ''}".strip() if reserva.vecino else None,

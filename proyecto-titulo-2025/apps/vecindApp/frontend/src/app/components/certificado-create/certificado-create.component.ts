@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, FormGroup, Validators } from '@angula
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { CertificadoService } from '../../services/certificado.service';
+import { MasterService, MotivoSolicitudResponse, MotivoGrupoResponse } from '../../services/master.service';
 import { UserLoginData } from '../../interfaces/auth.interface';
 import { 
   CertificadoPedidoResponse, 
@@ -44,56 +45,25 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     day: '2-digit', month: '2-digit', year: 'numeric'
   });
 
-  // Catálogo de motivos (grupos y opciones) - mantengo los que ya tienes
-  motivosCatalog: MotivoGrupo[] = [
-  {
-    grupo: 'Trámites ante instituciones públicas',
-    items: [
-      'Postulación a beneficios sociales (Registro Social de Hogares, subsidios habitacionales, bonos)',
-      'Procesos en municipalidades (inscripción en juntas de vecinos, becas municipales o ayudas sociales)',
-      'Solicitudes en el SII o Tesorería para acreditar domicilio tributario',
-    ],
-  },
-  {
-    grupo: 'Procesos judiciales o notariales',
-    items: [
-      'Juicios civiles, laborales o de familia (para demostrar residencia)',
-      'Trámites de posesión efectiva, herencias o escrituras',
-      'Cambio de domicilio en causas judiciales',
-    ],
-  },
-  {
-    grupo: 'Trámites migratorios',
-    items: [
-      'Acreditar residencia ante el Servicio Nacional de Migraciones',
-      'Solicitudes de permanencia definitiva, visados o nacionalización',
-    ],
-  },
-  {
-    grupo: 'Instituciones privadas',
-    items: [
-      'Bancos o financieras (abrir cuentas, solicitar créditos)',
-      'Aseguradoras o instituciones educativas para validar dirección',
-    ],
-  },
-  {
-    grupo: 'Otros casos prácticos',
-    items: [
-      'Postulación a colegios con criterios de cercanía',
-      'Contratos de arriendo o servicios básicos sin boletas propias',
-    ],
-  },
-];
+  // Motivos obtenidos del backend
+  motivos: MotivoSolicitudResponse[] = [];
+  motivosAgrupados: { [grupo: string]: MotivoSolicitudResponse[] } = {};
+
+  // Getter para verificar si hay motivos cargados
+  get tieneMotivos(): boolean {
+    return Object.keys(this.motivosAgrupados).length > 0;
+  }
 
   constructor(
     private fb: FormBuilder, 
     private auth: AuthService,
-    private certificadoService: CertificadoService
+    private certificadoService: CertificadoService,
+    private masterService: MasterService
   ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      motivo: ['', Validators.required],
+      id_motivo: ['', Validators.required],
       confirmo: [false],
     }); 
 
@@ -101,6 +71,9 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
       this.currentUser = u;
       this.checkFormState();
     }));
+
+    // Cargar motivos del backend
+    this.cargarMotivos();
     
     // Escuchar cambios en el formulario para actualizar estados
     this.sub.add(this.form.valueChanges.subscribe(() => {
@@ -130,11 +103,43 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
    * Verifica el estado del formulario y actualiza los botones
    */
   private checkFormState(): void {
-    const motivoValido = this.form.get('motivo')?.valid;
+    const motivoValido = this.form.get('id_motivo')?.valid;
     const confirmado = this.form.get('confirmo')?.value;
     
     this.puedeGenerar = !!(motivoValido && confirmado && !this.isLoading);
     this.puedeDescargar = !!(this.certificadoGenerado && !this.isLoading);
+  }
+
+  /**
+   * Carga los motivos de solicitud desde el backend
+   */
+  cargarMotivos(): void {
+    console.log('🔄 Cargando motivos desde el backend...');
+    this.sub.add(
+      this.masterService.getMotivosSolicitudAgrupados()
+        .subscribe({
+          next: (response) => {
+            console.log('✅ Respuesta del backend:', response);
+            
+            // Convertir array de grupos a objeto con claves
+            this.motivosAgrupados = {};
+            response.grupos.forEach((grupo: MotivoGrupoResponse) => {
+              this.motivosAgrupados[grupo.grupo] = grupo.items;
+            });
+            
+            // Crear lista plana de motivos para búsqueda
+            this.motivos = response.grupos.flatMap((grupo: MotivoGrupoResponse) => grupo.items);
+            
+            console.log('✅ Motivos cargados:', this.motivos);
+            console.log('✅ Motivos agrupados:', this.motivosAgrupados);
+          },
+          error: (error) => {
+            console.error('❌ Error cargando motivos:', error);
+            console.error('❌ Error completo:', error);
+            this.errorMessage = 'Error al cargar los motivos de solicitud: ' + error.message;
+          }
+        })
+    );
   }
 
   /**
@@ -146,11 +151,11 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
     this.clearMessages();
     this.isLoading = true;
     
-    const motivo = this.form.get('motivo')?.value;
+    const id_motivo = this.form.get('id_motivo')?.value;
     
     // NUEVO: Solicitar certificado con Webpay
     const request = {
-      motivo_solicitud: motivo
+      id_motivo: id_motivo
     };
     
     this.sub.add(

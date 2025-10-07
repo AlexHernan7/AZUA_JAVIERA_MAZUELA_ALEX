@@ -242,11 +242,100 @@ async def _process_webpay_return(
         if new_status == PaymentIntentStatus.COMPLETED:
             # Procesar según el tipo de entidad
             if payment_intent_response.entity_type == "certificado":
-                # Es un certificado
-                certificado_service = CertificadoService(db)
+                # Es un certificado - generar certificado directamente
+                from src.database.models.certificado_pedido import CertificadoPedido
+                from src.database.models.estado_certificado import EstadoCertificado
+                from src.database.models.certificado import Certificado
+                from src.database.models.vecino import Vecino
+                from src.database.models.comuna import Comuna
+                from src.database.models.junta import Junta
+                from src.utils.pdf_generator import CertificadoPDFGenerator
+                from sqlalchemy import update, select, func
+                from sqlalchemy.orm import selectinload
+                from datetime import datetime
+                from decimal import Decimal
+                
                 certificado_pedido_id = payment_intent_response.entity_id
-                await certificado_service.liberar_certificado_por_pago(certificado_pedido_id)
-                logger.info(f"✅ Transacción aprobada para PaymentIntent {payment_intent_id}. Certificado liberado.")
+                
+                # Obtener el pedido con todas las relaciones necesarias
+                pedido_result = await db.execute(
+                    select(CertificadoPedido)
+                    .options(
+                        selectinload(CertificadoPedido.vecino).selectinload(Vecino.comuna).selectinload(Comuna.region),
+                        selectinload(CertificadoPedido.junta),
+                        selectinload(CertificadoPedido.motivo)
+                    )
+                    .where(CertificadoPedido.id_pedido == certificado_pedido_id)
+                )
+                pedido = pedido_result.scalar_one_or_none()
+                
+                if not pedido:
+                    logger.error(f"❌ No se encontró pedido de certificado con ID {certificado_pedido_id}")
+                else:
+                    # Obtener el ID del estado "generado"
+                    estado_result = await db.execute(
+                        select(EstadoCertificado.id_estado)
+                        .where(EstadoCertificado.nombre_estado == "generado")
+                    )
+                    estado_generado_id = estado_result.scalar_one_or_none()
+                    
+                    if estado_generado_id:
+                        # Generar número de certificado
+                        count_result = await db.execute(
+                            select(func.count(Certificado.id_certificado))
+                            .where(Certificado.id_junta == pedido.id_junta)
+                        )
+                        count = count_result.scalar() or 0
+                        year = datetime.now().year
+                        numero_certificado = f"CERT-{pedido.id_junta}-{year}-{count + 1:04d}"
+                        
+                        # Preparar datos para el PDF
+                        datos_pdf = {
+                            'numero': numero_certificado,
+                            'fecha_emision': datetime.now(),
+                            'nombres': pedido.vecino.nombres,
+                            'apellido_paterno': pedido.vecino.apellido_paterno,
+                            'apellido_materno': pedido.vecino.apellido_materno,
+                            'rut': pedido.vecino.rut,
+                            'direccion': pedido.vecino.direccion,
+                            'comuna': pedido.vecino.comuna.nombre if pedido.vecino.comuna else None,
+                            'region': (
+                                pedido.vecino.comuna.region.nombre 
+                                if pedido.vecino.comuna and pedido.vecino.comuna.region 
+                                else None
+                            ),
+                            'junta': pedido.junta.nombre if pedido.junta else None,
+                            'motivo_solicitud': pedido.motivo.motivo if pedido.motivo else "No especificado"
+                        }
+                        
+                        # Generar PDF
+                        pdf_generator = CertificadoPDFGenerator()
+                        pdf_base64 = pdf_generator.generar_certificado_base64(datos_pdf)
+                        pdf_url = f"data:application/pdf;base64,{pdf_base64}"
+                        
+                        # Crear certificado
+                        nuevo_certificado = Certificado(
+                            id_junta=pedido.id_junta,
+                            id_pedido=pedido.id_pedido,
+                            numero=numero_certificado,
+                            direccion=pedido.vecino.direccion,
+                            comuna=pedido.vecino.comuna.nombre if pedido.vecino.comuna else None,
+                            region=(
+                                pedido.vecino.comuna.region.nombre 
+                                if pedido.vecino.comuna and pedido.vecino.comuna.region 
+                                else None
+                            ),
+                            pdf_url=pdf_url
+                        )
+                        
+                        # Actualizar estado del pedido y agregar certificado
+                        pedido.id_estado = estado_generado_id
+                        db.add(nuevo_certificado)
+                        await db.commit()
+                        
+                        logger.info(f"✅ Transacción aprobada para PaymentIntent {payment_intent_id}. Certificado generado: {numero_certificado}")
+                    else:
+                        logger.error(f"❌ No se encontró estado 'generado' en la base de datos")
                 
             elif payment_intent_response.entity_type == "reserva":
                 # Es una reserva

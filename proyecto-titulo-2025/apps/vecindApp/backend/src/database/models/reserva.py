@@ -20,13 +20,9 @@ class Reserva(Base):
 
     __tablename__ = "reserva"
     __table_args__ = (
-        CheckConstraint(
-            "estado IN ('pendiente','pagada','aprobada','rechazada','cancelada','confirmada')",
-            name="ck_reserva_estado",
-        ),
         CheckConstraint("fin > inicio", name="ck_reserva_intervalo"),
         CheckConstraint("valor_reserva >= 0", name="ck_reserva_valor_positivo"),
-        Index("ix_reserva_estado", "id_junta", "estado"),
+        Index("ix_reserva_estado", "id_junta", "id_estado"),
         Index("ix_reserva_espacio_tiempo", "id_espacio", "inicio", "fin"),
         {"schema": "vecindapp"},
     )
@@ -52,9 +48,13 @@ class Reserva(Base):
         ForeignKey("vecindapp.usuario.id_usuario", ondelete="RESTRICT"),
         nullable=False,
     )
+    id_estado = Column(
+        BigInteger,
+        ForeignKey("vecindapp.estado_reserva.id_estado", ondelete="RESTRICT"),
+        nullable=False,
+    )
     inicio = Column(DateTime(timezone=True), nullable=False)
     fin = Column(DateTime(timezone=True), nullable=False)
-    estado = Column(Text, nullable=False, default="pendiente")
     observaciones = Column(Text)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -70,6 +70,7 @@ class Reserva(Base):
     creado_por_usuario = relationship(
         "Usuario", back_populates="reservas_creadas", foreign_keys=[creado_por]
     )
+    estado = relationship("EstadoReserva", back_populates="reservas")
 
     def __repr__(self) -> str:
         return f"<Reserva(id_reserva={self.id_reserva}, id_espacio={self.id_espacio}, estado='{self.estado}', valor={self.valor_reserva})>"
