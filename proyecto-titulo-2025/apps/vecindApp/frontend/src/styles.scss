@@ -271,6 +271,17 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 /* Listado de datos (línea) en encabezado */
 .junta-meta { color: var(--ink-700); }
 
+ //                                           S T Y L E S  R E P O R T E S
+
+.kpi { border-radius: 16px; }
+.kpi .card-body { padding: 1rem 1.25rem; }
+.kpi-label { color: #6b7280; font-weight: 600; font-size: .9rem; }
+.kpi-value { color: #0c2a33; font-weight: 800; font-size: 1.75rem; line-height: 1; }
+.card-header { border-bottom: 1px solid rgba(0,0,0,.06); }
+
+
+
+
 
 
 @media (max-width: 992px)

@@ -1,0 +1,93 @@
+<div class="public-shell">
+  <div class="container-xxl py-4">
+    <!-- Encabezado + filtros -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <h1 class="h3 mb-0 fw-bold text-teal-700">Reportes</h1>
+      <div class="d-flex align-items-center gap-2">
+        <span class="text-secondary small">Rango:</span>
+        <div class="btn-group">
+          <button class="btn btn-outline-teal-menu" [class.active]="rango()==='7d'" (click)="rango.set('7d')">7 días</button>
+          <button class="btn btn-outline-teal-menu" [class.active]="rango()==='30d'" (click)="rango.set('30d')">30 días</button>
+          <button class="btn btn-outline-teal-menu" [class.active]="rango()==='90d'" (click)="rango.set('90d')">90 días</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-sm-6 col-lg-3" *ngFor="let k of kpis()">
+        <div class="card kpi border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="kpi-label">{{ k.label }}</div>
+            <div class="kpi-value">
+              <ng-container *ngIf="k.prefix">{{k.prefix}}</ng-container>
+              {{ k.value | number:'1.0-0':'es-CL' }}
+              <ng-container *ngIf="k.suffix">{{k.suffix}}</ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white fw-semibold">Ingresos por mes</div>
+          <div class="card-body"><canvas #barCanvas></canvas></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white fw-semibold">Distribución de reservas</div>
+          <div class="card-body"><canvas #pieCanvas></canvas></div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-semibold">Certificados vs Reservas (evolución)</div>
+          <div class="card-body"><canvas #lineCanvas></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen simple -->
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        Resumen
+        <button class="btn btn-outline-teal-menu btn-sm">Exportar CSV</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Tipo</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Ingresos (CLP)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cancha</td><td class="text-end">86</td><td class="text-end">430.000</td>
+            </tr>
+            <tr>
+              <td>Sala 1</td><td class="text-end">64</td><td class="text-end">448.000</td>
+            </tr>
+            <tr>
+              <td>Sala 2</td><td class="text-end">52</td><td class="text-end">364.000</td>
+            </tr>
+            <tr>
+              <td>Certificados</td><td class="text-end">187</td><td class="text-end">374.000</td>
+            </tr>
+            <tr class="fw-semibold">
+              <td>Total</td><td class="text-end">389</td><td class="text-end">1.616.000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
