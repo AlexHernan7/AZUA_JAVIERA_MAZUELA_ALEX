@@ -1,8 +1,9 @@
 
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed , HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule ,NavigationEnd} from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-menu-auth',
@@ -11,7 +12,23 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './menu-auth.component.html',
 })
 export class MenuAuthComponent {
-  constructor(private router: Router, public auth: AuthService) {}
+  constructor(private router: Router, public auth: AuthService) { 
+    
+    this.router.events
+      .pipe(filter(ev => ev instanceof NavigationEnd))
+      .subscribe(() => this.menuOpen = false);
+    }
+
+    toggleMenu() { this.menuOpen = !this.menuOpen; }
+  onNav() { this.menuOpen = false; }        // se usa en (click) de cada enlace
+
+  // Si cambias el tamaño de la ventana y vuelves a desktop, asegura estado coherente
+  @HostListener('window:resize')
+  onResize() {
+    if (window.innerWidth >= 992 && this.menuOpen) {
+      this.menuOpen = false;
+    }
+  }
 
   logout() {
     this.auth.logout();
@@ -21,10 +38,7 @@ export class MenuAuthComponent {
   go(path: string) { this.router.navigate([path]); }
   
   menuOpen = false;
-  toggleMenu() {
-    this.menuOpen = !this.menuOpen;
-  }
-
+  
   goToNews() { this.router.navigate(['/news']); }
 
   // Métodos para verificar roles
