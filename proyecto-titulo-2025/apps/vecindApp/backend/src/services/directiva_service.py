@@ -245,25 +245,40 @@ class DirectivaService:
 
     async def get_directivos_by_user_junta(self, user_id: int, activos_only: bool = False) -> list[Directiva]:
         """
-        Obtiene los directivos de la junta del vecino logueado.
+        Obtiene los directivos de la junta del usuario logueado (vecino o directivo).
 
         Args:
             user_id: ID del usuario logueado
             activos_only: Si True, solo devuelve directivos activos
 
         Returns:
-            Lista de directivos de la junta del vecino
+            Lista de directivos de la junta del usuario
 
         Raises:
-            ValueError: Si el usuario no tiene un perfil de vecino o no pertenece a una junta
+            ValueError: Si el usuario no tiene perfil de vecino o directivo, o no pertenece a una junta
         """
-        # Obtener el vecino asociado al usuario
+        # Primero intentar obtener el perfil de directivo del usuario
+        directiva_result = await self.db.execute(
+            select(Directiva)
+            .options(selectinload(Directiva.junta))
+            .where(Directiva.id_usuario == user_id)
+        )
+        directiva = directiva_result.scalar_one_or_none()
+        
+        if directiva:
+            # El usuario es un directivo, obtener directivos de su junta
+            if activos_only:
+                return await self.get_directivos_activos_by_junta(directiva.id_junta)
+            else:
+                return await self.get_directivos_by_junta(directiva.id_junta)
+        
+        # Si no es directivo, intentar obtener el perfil de vecino
         vecino = await self.get_vecino_by_user_id(user_id)
         if not vecino:
-            raise ValueError("Usuario no tiene perfil de vecino")
+            raise ValueError("Usuario no tiene perfil de vecino ni de directivo")
 
         if not vecino.id_junta:
-            raise ValueError("Vecino no pertenece a ninguna junta")
+            raise ValueError("Usuario no pertenece a ninguna junta")
 
         # Obtener los directivos de la junta del vecino
         if activos_only:
