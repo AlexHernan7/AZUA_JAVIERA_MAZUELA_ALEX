@@ -76,13 +76,16 @@ export class JuntaProfileComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    // Obtener datos del usuario logueado
+    // Obtener datos del usuario logueado (funciona tanto para vecinos como directivos)
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser || !currentUser.vecino || !currentUser.vecino.id_junta) {
       this.error = 'Usuario no tiene una junta asociada.';
       this.isLoading = false;
       return;
     }
+
+    console.log('Usuario actual:', currentUser);
+    console.log('Datos de vecino/directivo:', currentUser.vecino);
 
     // Cargar información detallada de la junta del usuario
     this.juntaService.getJuntaById(currentUser.vecino.id_junta).subscribe({
