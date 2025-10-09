@@ -47,12 +47,16 @@
     <a [routerLink]="'/news'" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-megaphone"></i> Noticias</a>
     
     
-    <!-- Opciones solo para admin y directiva -->
-    <ng-container *ngIf="!isVecino">
+    <!-- Opciones solo para admin -->
+    <ng-container *ngIf="isAdmin">
       <a routerLink="/directiva/nuevo" routerLinkActive="active"><i class="bi bi-person-plus" (click)="onNav()"></i> Crear directivo</a>
       <a routerLink="/juntas/nueva" routerLinkActive="active"><i class="bi bi-building-add" (click)="onNav()"></i> Crear Junta</a>
       <a routerLink="/espacios/crear" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-building-add"></i> Crear Espacio</a>
       <a routerLink="/config" routerLinkActive="active"><i class="bi bi-gear" (click)="onNav()"></i> Configuración</a>
+    </ng-container>
+    
+    <!-- Opciones solo para directiva -->
+    <ng-container *ngIf="isDirectiva">
       <a routerLink="/reportes" routerLinkActive="active"><i class="bi bi-graph-up"></i> Reportes</a>
     </ng-container>
   </nav>

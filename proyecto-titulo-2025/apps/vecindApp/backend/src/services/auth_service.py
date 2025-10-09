@@ -282,3 +282,42 @@ class AuthService:
             directiva = result.scalar_one_or_none()
 
         return usuario, vecino, directiva, roles
+
+    async def get_user_with_roles(self, user_id: int) -> Optional[Tuple[Usuario, list[str]]]:
+        """
+        Obtiene un usuario con sus roles.
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            Tupla (Usuario, lista_de_roles) o None si no existe
+        """
+        # Obtener usuario con relaciones
+        query = (
+            select(Usuario)
+            .options(
+                selectinload(Usuario.vecino),
+                selectinload(Usuario.directiva),
+                selectinload(Usuario.roles).selectinload(UsuarioRol.rol)
+            )
+            .where(Usuario.id_usuario == user_id)
+        )
+        
+        result = await self.db.execute(query)
+        usuario = result.scalar_one_or_none()
+        
+        if not usuario:
+            return None
+            
+        # Obtener roles
+        roles_query = (
+            select(Rol.codigo)
+            .join(UsuarioRol, Rol.id_rol == UsuarioRol.id_rol)
+            .where(UsuarioRol.id_usuario == user_id)
+        )
+        
+        roles_result = await self.db.execute(roles_query)
+        roles = [row[0] for row in roles_result.fetchall()]
+        
+        return usuario, roles

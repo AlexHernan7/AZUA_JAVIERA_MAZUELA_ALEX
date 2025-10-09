@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { RegisterComponent } from './components/register/register.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { NewsComponent } from './components/news/news.component';
-import { authGuard } from './services/auth.service';
+import { authGuard, directivaGuard } from './services/auth.service';
 import { DirectivaRegisterComponent } from './components/directiva-register/directiva-register.component';
 import { JuntaCreateComponent } from './components/junta-create/junta-create.component';
 import { CertificadoCreateComponent} from './components/certificado-create/certificado-create.component';
@@ -34,7 +34,7 @@ export const appRoutes: Routes = [
   { path: 'reservas', component: ReservasComponent },
   { path: 'espacios/crear', component: CreateEspaciosComponent, canActivate: [authGuard] },
   { path: 'quienes-somos', component: QuienesSomosComponent },
-  { path: 'reportes', component: ReportesComponent },
+  { path: 'reportes', component: ReportesComponent, canActivate: [directivaGuard] },
 
 
 

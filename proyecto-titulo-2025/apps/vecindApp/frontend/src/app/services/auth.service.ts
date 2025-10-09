@@ -16,6 +16,17 @@ export const authGuard: CanActivateFn = () => {
   return false;
 };
 
+export const directivaGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated() && auth.getCurrentUser()?.roles?.includes('directiva')) {
+    return true;
+  }
+  router.navigate(['/']);
+  return false;
+};
+
 @Injectable({
   providedIn: 'root'
 })
