@@ -80,6 +80,21 @@ html, body { height: 100%; }
 .login-card {position: relative; z-index: 1; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);border-radius: 1rem;} 
 .back-arrow {font-size: 1.4rem; color: #6c757d;  text-decoration: none; transition: color 0.2s ease;
   &:hover { color: #495057; }}
+/* login.component.css */
+.is-invalid {border-color: #dc3545 !important;}
+.invalid-feedback { color: #dc3545 !important;}
+/* Contenedor permite posicionar el ojo dentro */
+.input-group.input-password { position: relative;}
+/* Más espacio a la derecha para que no tape el texto */
+.input-group.input-password .form-control { padding-right: 2.75rem; /* espacio para el ojo */}
+/* Botón “ojo” flotando dentro del input (sin borde/caja) */
+.btn-eye { position: absolute; right: .5rem; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; color: #79909a; background: transparent; border: 0; z-index: 2;  cursor: pointer;border-radius: 0 0.375rem 0.375rem 0;}
+.btn-eye:focus { outline: none; box-shadow: none;}
+.input-password .form-control {  border-radius: 0.375rem !important;  /* mismo radio que el email */}
+.form-control.is-invalid,.input-group .form-control.is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 .2rem rgba(220,53,69,.1) !important;}
+
+
 
 //                                           S T Y L E S    Q U I E N E S - S O M O S
 

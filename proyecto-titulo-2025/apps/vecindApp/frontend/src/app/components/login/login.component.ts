@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LoginRequest } from '../../interfaces/auth.interface';
@@ -13,16 +13,13 @@ import { LoginRequest } from '../../interfaces/auth.interface';
   styleUrl: './login.component.css',
 })
 export class LoginComponent implements OnInit {
-  // Modelo para el formulario
-  loginData: LoginRequest = {
-    email: '',
-    password: ''
-  };
+  loginData: LoginRequest = { email: '', password: '' };
 
-  // Estados del componente
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  submitted = false;
+  showPass = false;
 
   constructor(
     private authService: AuthService,
@@ -31,59 +28,61 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Verificar si hay un mensaje en los query parameters
     this.route.queryParams.subscribe(params => {
       if (params['message']) {
         this.successMessage = params['message'];
-        // Limpiar el mensaje después de 5 segundos
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 5000);
+        setTimeout(() => (this.successMessage = ''), 5000);
       }
     });
   }
 
-  /**
-   * Maneja el envío del formulario de login
-   */
-  onLogin(): void {
-    // Limpiar mensaje de error previo
+  toggleShowPass() {
+    this.showPass = !this.showPass;
+  }
+
+  /** Mostrar inválido si el control está sucio/tocado o si ya se intentó enviar */
+  showInvalid(ctrl: any): boolean {
+    return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched || this.submitted);
+  }
+
+  onLogin(form: NgForm): void {
+    this.submitted = true;
     this.errorMessage = '';
 
-    // Validaciones básicas
-    if (!this.loginData.email || !this.loginData.password) {
-      this.errorMessage = 'Por favor, completa todos los campos';
+    if (form.invalid) {
+      this.errorMessage = 'Por favor corrige los campos marcados.';
       return;
     }
 
-    if (!this.isValidEmail(this.loginData.email)) {
-      this.errorMessage = 'Por favor, ingresa un email válido';
-      return;
-    }
+    // saneo básico
+    const payload: LoginRequest = {
+      email: (this.loginData.email || '').trim().toLowerCase(),
+      password: (this.loginData.password || '').trim(),
+    };
 
-    // Iniciar proceso de login
     this.isLoading = true;
 
-    this.authService.login(this.loginData).subscribe({
-      next: (response) => {
+    this.authService.login(payload).subscribe({
+      next: () => {
         this.isLoading = false;
-        
-        // Redirigir al usuario a la página principal
         this.router.navigate(['/']);
       },
-      error: (error) => {
-        console.error('Error en login:', error);
+      error: (err) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Error al iniciar sesión. Verifica tus credenciales.';
-      }
-    });
-  }
 
-  /**
-   * Validación simple de email
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+        // intenta mapear mensajes del backend
+        const raw = (err?.error?.error || err?.error?.detalle || err?.message || '').toString();
+
+        if (/inactivo/i.test(raw)) {
+          this.errorMessage = 'Tu usuario está inactivo. Contacta a la directiva.';
+        } else if (/credenciales inválidas|incorrectos/i.test(raw)) {
+          this.errorMessage = 'Email o contraseña incorrectos.';
+        } else if (/roles/i.test(raw)) {
+          this.errorMessage = 'Tu cuenta no tiene roles asignados. Contacta a la directiva.';
+        } else {
+          this.errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
+        }
+      },
+    });
   }
 }
