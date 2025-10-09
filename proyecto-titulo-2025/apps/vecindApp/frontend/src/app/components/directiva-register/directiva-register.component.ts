@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import {
   FormBuilder,
@@ -49,7 +49,7 @@ export type DirectivoForm = {
 @Component({
   selector: 'app-directiva-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule, RouterModule],
   templateUrl: './directiva-register.component.html',
   styleUrls: ['./directiva-register.component.css'],
 })

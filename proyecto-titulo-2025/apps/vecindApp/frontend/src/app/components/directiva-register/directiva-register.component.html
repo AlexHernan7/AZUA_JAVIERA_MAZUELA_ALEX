@@ -15,9 +15,8 @@
         <!-- Avatar -->
         <div class="col-12 col-md-3">
           <div class="avatar-boxx border rounded-4 p-3 text-center">
-            <img [src]="photoPreview || 'images/avatar-placeholder2.svg'"
-                 alt="Avatar"
-                 class="avatar-imgg rounded-circle mb-3">
+            <img [src]="photoPreview || 'images/avatar-placeholder2.svg'" alt="Avatar"
+              class="avatar-imgg rounded-circle mb-3">
             <label class="btn btn-outline-teal-menu w-100">
               Subir imagen
               <input type="file" class="d-none" accept="image/*" (change)="onFileChange($event)">
@@ -27,6 +26,12 @@
 
         <div class="col-12 col-md-9">
           <div class="row g-3">
+
+            <div class="col-12 ">
+              <label class="form-label fw-semibold">Nombres *</label>
+              <input class="form-control" formControlName="nombres" placeholder="Nombres">
+              <div class="invalid" *ngIf="g('nombres').touched && g('nombres').invalid">Obligatorio (mín. 2)</div>
+            </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Apellido paterno *</label>
@@ -48,6 +53,51 @@
             </div>
 
             <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Teléfono *</label>
+              <input class="form-control" formControlName="telefono" placeholder="+56XXXXXXXXX">
+              <div class="invalid" *ngIf="g('telefono').touched && g('telefono').invalid">Formato +56XXXXXXXXX</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Correo electrónico *</label>
+              <input type="email" class="form-control" formControlName="email" placeholder="correo@dominio.com">
+              <div class="invalid" *ngIf="g('email').touched && g('email').invalid">Email inválido</div>
+            </div>
+
+            <!-- Grupo de contraseñas -->
+            <div class="col-12">
+              <div class="row g-3" formGroupName="passwords">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Contraseña *</label>
+                  <input type="password" class="form-control" formControlName="password" placeholder="8-12 caracteres">
+                  <div class="invalid"
+                    *ngIf="form.get('passwords.password')?.touched && form.get('passwords.password')?.invalid">
+                    8 a 12 caracteres
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Confirmar *</label>
+                  <input type="password" class="form-control" formControlName="confirmPassword"
+                    placeholder="Repite la contraseña">
+                  <div class="invalid"
+                    *ngIf="form.get('passwords')?.touched && form.get('passwords')?.errors?.['mismatch']">
+                    Las contraseñas no coinciden
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Junta de vecinos *</label>
+              <select class="form-select" formControlName="juntaSeleccionada">
+                <option value="" disabled>Selecciona una junta</option>
+                <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
+              </select>
+              <div class="invalid" *ngIf="g('juntaSeleccionada').touched && g('juntaSeleccionada').invalid">Selecciona
+                una junta</div>
+            </div>
+
+            <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Cargo en la directiva *</label>
               <select class="form-select" formControlName="cargo">
                 <option value="" disabled>Selecciona un cargo</option>
@@ -57,55 +107,8 @@
             </div>
 
             <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Junta de vecinos *</label>
-              <select class="form-select" formControlName="juntaSeleccionada">
-                <option value="" disabled>Selecciona una junta</option>
-                <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
-              </select>
-              <div class="invalid" *ngIf="g('juntaSeleccionada').touched && g('juntaSeleccionada').invalid">Selecciona una junta</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Nombres *</label>
-              <input class="form-control" formControlName="nombres" placeholder="Nombres">
-              <div class="invalid" *ngIf="g('nombres').touched && g('nombres').invalid">Obligatorio (mín. 2)</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Correo electrónico *</label>
-              <input type="email" class="form-control" formControlName="email" placeholder="correo@dominio.com">
-              <div class="invalid" *ngIf="g('email').touched && g('email').invalid">Email inválido</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-              <label class="form-label fw-semibold">Teléfono *</label>
-              <input class="form-control" formControlName="telefono" placeholder="+56XXXXXXXXX">
-              <div class="invalid" *ngIf="g('telefono').touched && g('telefono').invalid">Formato +56XXXXXXXXX</div>
-            </div>
-
-            <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Fecha de inicio del cargo</label>
               <input type="date" class="form-control" formControlName="fecha_inicio">
-            </div>
-
-            <!-- Grupo de contraseñas -->
-            <div class="col-12">
-              <div class="row g-3" formGroupName="passwords">
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Contraseña *</label>
-                  <input type="password" class="form-control" formControlName="password" placeholder="8-12 caracteres">
-                  <div class="invalid" *ngIf="form.get('passwords.password')?.touched && form.get('passwords.password')?.invalid">
-                    8 a 12 caracteres
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label fw-semibold">Confirmar *</label>
-                  <input type="password" class="form-control" formControlName="confirmPassword" placeholder="Repite la contraseña">
-                  <div class="invalid" *ngIf="form.get('passwords')?.touched && form.get('passwords')?.errors?.['mismatch']">
-                    Las contraseñas no coinciden
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div class="col-12 col-md-6">
@@ -118,7 +121,8 @@
 
         <!-- Acciones -->
         <div class="col-12 d-flex gap-3 justify-content-end pt-2">
-          <button type="button" class="btn btn-outline-teal-menu" (click)="cancelUI()" [disabled]="isLoading">Cancelar</button>
+          <button type="button" class="btn btn-outline-teal-menu" [routerLink]="'/home'" 
+            [disabled]="isLoading">Cancelar</button>
           <button type="submit" class="btn btn-teal-menu" [disabled]="isLoading">
             <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
             Crear directivo

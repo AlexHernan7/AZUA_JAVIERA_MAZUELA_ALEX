@@ -1,0 +1,107 @@
+<div class="public-shell">
+    <div class="container-xxl py-4">
+        <h1 class="display-5 fw-bold text-dark-emphasis text-center mb-5">Mis trámites</h1>
+        <hr class="mb-5">
+
+        <div class="row g-4">
+            <!-- ====== TARJETA: CERTIFICADOS ====== -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-soft h-100" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+
+
+                        <!-- Resumen con icono -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <!-- Título alineado a la izquierda -->
+                            <h2 class="h4 fw-bold mb-0">Certificados Descargados</h2>
+
+                            <!-- KPI alineado a la derecha -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                                    style="width:56px;height:56px;background:#e6f4ea;">
+                                    <i class="bi bi-check2 text-success fs-2"></i>
+                                </div>
+                                <div class="">
+                                    <div class="h3 fw-bold mb-0">{{ certificados.length }}</div>
+                                    <div class="small text-secondary">Total certificados</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            <a class="list-group-item px-0 py-3 d-flex align-items-start gap-3"
+                                *ngFor="let c of certificados" (click)="verDetalleCert(c.id)" style="cursor:pointer;">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-3"
+                                    style="width:42px;height:42px;background:#f1f5f9;">
+                                    <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ c.titulo }}</div>
+                                    <div class="text-secondary small">{{ c.fecha }}</div>
+                                </div>
+                                <i class="bi bi-chevron-right text-secondary"></i>
+                            </a>
+                        </div>
+
+                        <div class="pt-3">
+                            <button class="btn btn-teal-menu w-100 fw-semibold py-2" (click)="solicitarCertificado()">
+                                Solicitar nuevo certificado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== TARJETA: RESERVAS ====== -->
+            <!-- ====== TARJETA: RESERVAS ====== -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-soft h-100" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+
+                        <!-- Resumen con icono -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <!-- Título alineado a la izquierda -->
+                            <h2 class="h4 fw-bold mb-0">Reservas Realizadas</h2>
+
+                            <!-- KPI alineado a la derecha -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                                    style="width:56px;height:56px;background:#e7f0fb;">
+                                    <i class="bi bi-calendar3 text-primary fs-2"></i>
+                                </div>
+                                <div>
+                                    <div class="h3 fw-bold mb-0">{{ reservas.length }}</div>
+                                    <div class="small text-secondary">Total reservas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista -->
+                        <div class="list-group list-group-flush">
+                            <a class="list-group-item px-0 py-3 d-flex align-items-start gap-3"
+                                *ngFor="let r of reservas" (click)="verDetalleReserva(r.id)" style="cursor:pointer;">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-3"
+                                    style="width:42px;height:42px;background:#f1f5f9;">
+                                    <i class="bi bi-calendar3 fs-5 text-secondary"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ r.espacio }}</div>
+                                    <div class="text-secondary small">{{ r.fecha }}</div>
+                                </div>
+                                <i class="bi bi-chevron-right text-secondary"></i>
+                            </a>
+                        </div>
+
+                        <div class="pt-3">
+                            <button class="btn btn-teal-menu w-100 fw-semibold py-2" (click)="hacerReserva()">
+                                Realizar nueva reserva
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- /tarjetas -->
+        </div>
+    </div>
+</div>

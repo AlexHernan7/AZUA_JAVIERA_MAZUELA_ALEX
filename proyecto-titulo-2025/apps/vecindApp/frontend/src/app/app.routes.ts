@@ -18,6 +18,7 @@ import { ReservasComponent } from './components/reservas/reservas.component';
 import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.component';
 import { CreateEspaciosComponent } from './components/create-espacios/create-espacios.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
+import { TramitesComponent } from './components/tramites/tramites.component';
 
 
 
@@ -34,7 +35,9 @@ export const appRoutes: Routes = [
   { path: 'reservas', component: ReservasComponent },
   { path: 'espacios/crear', component: CreateEspaciosComponent, canActivate: [authGuard] },
   { path: 'quienes-somos', component: QuienesSomosComponent },
-  { path: 'reportes', component: ReportesComponent, canActivate: [directivaGuard] },
+  { path: 'reportes', component: ReportesComponent },
+  { path: 'tramites', component: TramitesComponent },
+
 
 
 
