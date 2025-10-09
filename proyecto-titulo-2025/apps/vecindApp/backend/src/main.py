@@ -12,6 +12,7 @@ from src.api.routes.junta_routes import router as junta_router
 from src.api.routes.espacio_routes import router as espacio_router
 from src.api.routes.reserva_routes import router as reserva_router
 from src.api.routes.master_routes import router as master_router
+from src.api.routes.reporte_routes import router as reporte_router
 
 # Configurar logging
 configure_logging()
@@ -73,6 +74,7 @@ api_router.include_router(espacio_router)
 api_router.include_router(reserva_router)
 api_router.include_router(webpay_router)
 api_router.include_router(master_router)
+api_router.include_router(reporte_router)
 
 # Incluir el router en la aplicación
 app.include_router(api_router)
