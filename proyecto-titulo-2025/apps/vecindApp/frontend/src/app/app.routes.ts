@@ -19,6 +19,7 @@ import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.
 import { CreateEspaciosComponent } from './components/create-espacios/create-espacios.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { TramitesComponent } from './components/tramites/tramites.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 
 
 
@@ -26,6 +27,7 @@ export const appRoutes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'directiva/nuevo', component: DirectivaRegisterComponent },//falta agregar can active, para que solo el admin pueda ingresar a este 
   { path: 'juntas/nueva', component: JuntaCreateComponent },//falta agregar can active, para que solo el admin pueda ingresar a este 
   { path: 'certificados/residencia/crear', component: CertificadoCreateComponent },

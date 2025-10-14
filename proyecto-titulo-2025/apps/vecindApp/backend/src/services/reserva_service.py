@@ -353,6 +353,78 @@ class ReservaService:
             logger.error(f"Error al obtener reservas del espacio {id_espacio}: {e}")
             raise
 
+    async def get_reservas_by_vecino(
+        self,
+        user_id: int,
+        limit: int = 10
+    ) -> List[ReservaResponse]:
+        """
+        Obtiene las reservas de un vecino específico ordenadas por fecha de creación descendente.
+        
+        Args:
+            user_id: ID del usuario
+            limit: Número máximo de reservas a retornar (por defecto 10)
+            
+        Returns:
+            Lista de reservas del vecino
+        """
+        try:
+            # Obtener el vecino asociado al usuario
+            result = await self.db.execute(
+                select(Vecino).where(Vecino.id_usuario == user_id)
+            )
+            vecino = result.scalar_one_or_none()
+            
+            if not vecino:
+                logger.warning(f"No se encontró vecino para user_id {user_id}")
+                return []
+            
+            # Obtener reservas del vecino ordenadas por fecha de la reserva descendente
+            query = select(Reserva).options(
+                selectinload(Reserva.espacio).selectinload(Espacio.tipo_espacio),
+                selectinload(Reserva.vecino),
+                selectinload(Reserva.estado)
+            ).where(
+                Reserva.id_vecino == vecino.id_vecino
+            ).order_by(
+                Reserva.inicio.desc()  # Ordenar por fecha de inicio de la reserva descendente
+            ).limit(limit)
+            
+            result = await self.db.execute(query)
+            reservas = result.scalars().all()
+            
+            # Convertir a response
+            reservas_response = []
+            for reserva in reservas:
+                reserva_response = ReservaResponse(
+                    id_reserva=reserva.id_reserva,
+                    id_junta=reserva.id_junta,
+                    id_espacio=reserva.id_espacio,
+                    id_vecino=reserva.id_vecino,
+                    creado_por=reserva.creado_por,
+                    id_estado=reserva.id_estado,
+                    inicio=reserva.inicio,
+                    fin=reserva.fin,
+                    estado=reserva.estado.nombre_estado if reserva.estado else None,
+                    observaciones=reserva.observaciones,
+                    created_at=reserva.created_at,
+                    valor_reserva=reserva.valor_reserva,
+                    espacio_nombre=reserva.espacio.nombre if reserva.espacio else None,
+                    espacio_tipo=reserva.espacio.tipo_espacio.tipo if reserva.espacio and reserva.espacio.tipo_espacio else None,
+                    espacio_capacidad=reserva.espacio.capacidad if reserva.espacio else None,
+                    espacio_valor=reserva.espacio.valor if reserva.espacio else None,
+                    vecino_nombre=f"{reserva.vecino.nombres} {reserva.vecino.apellido_paterno} {reserva.vecino.apellido_materno or ''}".strip() if reserva.vecino else None,
+                    vecino_email=reserva.vecino.email if reserva.vecino else None
+                )
+                reservas_response.append(reserva_response)
+            
+            logger.info(f"✅ Encontradas {len(reservas_response)} reservas para vecino {vecino.id_vecino}")
+            return reservas_response
+            
+        except Exception as e:
+            logger.error(f"Error al obtener reservas del vecino (user_id {user_id}): {e}")
+            raise
+
     async def _get_estado_by_nombre(self, nombre_estado: str) -> Optional[EstadoReserva]:
         """
         Obtiene un estado de reserva por su nombre.

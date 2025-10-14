@@ -124,6 +124,49 @@ async def verificar_disponibilidad(
 
 
 @router.get(
+    "/mis-reservas",
+    response_model=list[ReservaResponse],
+    summary="Obtener mis reservas",
+    description="Obtiene todas las reservas del usuario autenticado. Requiere autenticación.",
+    responses={
+        200: {"description": "Lista de reservas del usuario"},
+        401: {"description": "Token de autorización requerido"},
+    },
+)
+async def get_mis_reservas(
+    limit: int = Query(default=10, ge=1, le=100, description="Número máximo de reservas a retornar"),
+    user_id: int = Depends(verify_user_token),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Obtiene las reservas del usuario autenticado ordenadas por fecha de creación descendente.
+    
+    Args:
+        limit: Número máximo de reservas a retornar (por defecto 10)
+        user_id: ID del usuario autenticado
+        db: Sesión de base de datos
+    
+    Returns:
+        Lista de reservas del usuario
+    """
+    try:
+        logger.info(f"👤 Usuario {user_id} solicitando sus reservas (limit: {limit})")
+        
+        reserva_service = ReservaService(db)
+        reservas = await reserva_service.get_reservas_by_vecino(user_id, limit)
+        
+        logger.info(f"✅ Se encontraron {len(reservas)} reservas para el usuario {user_id}")
+        return reservas
+        
+    except Exception as e:
+        logger.error(f"❌ Error al obtener reservas del usuario {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
+@router.get(
     "/{reserva_id}",
     response_model=ReservaResponse,
     summary="Obtener reserva por ID",

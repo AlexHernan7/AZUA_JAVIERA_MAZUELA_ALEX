@@ -1,60 +1,192 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { CertificadoService } from '../../services/certificado.service';
+import { ReservaService } from '../../services/reserva.service';
+import { CertificadoResponse } from '../../interfaces/certificado.interface';
+import { ReservaResponse } from '../../interfaces/reserva.interface';
 
-type Certificado = {
+type CertificadoDisplay = {
   titulo: string;
   fecha: string;   // texto formateado
-  id?: number;
+  id: number;
+  esUltimo: boolean; // indica si es el último certificado emitido
 };
 
-type Reserva = {
+type ReservaDisplay = {
   espacio: string;
   fecha: string;   // texto formateado
-  id?: number;
+  id: number;
 };
 
 @Component({
   selector: 'app-tramites',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './tramites.component.html'
+  templateUrl: './tramites.component.html',
+  styleUrls: ['./tramites.component.css']
 })
-export class TramitesComponent {
+export class TramitesComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  // Mock de datos (puedes mapearlos a lo que te devuelva tu API)
-  certificados: Certificado[] = [
-    { titulo: 'Certificado recursuada',  fecha: '10 de abril de 2024', id: 101 },
-    { titulo: 'Certificados descargada', fecha: '28 de abril de 2024', id: 102 },
-    { titulo: 'Solicitud certaiocaolaada', fecha: '2 de marzo de 2024', id: 103 },
-  ];
+  certificados: CertificadoDisplay[] = [];
+  reservas: ReservaDisplay[] = [];
+  
+  totalCertificados = 0; // Total real de certificados del vecino
+  totalReservas = 0; // Total real de reservas del vecino
+  
+  isLoading = true;
+  errorMessage = '';
 
-  reservas: Reserva[] = [
-    { espacio: 'Sancha 10 am', fecha: '20 de abril de 2024', id: 201 },
-    { espacio: 'Sala 1 am',   fecha: '5 de abril de 2024',  id: 202 },
-    { espacio: 'Sala 2',      fecha: '24 de abril de 2024', id: 203 },
-  ];
+  constructor(
+    private router: Router,
+    private certificadoService: CertificadoService,
+    private reservaService: ReservaService
+  ) {}
 
-  constructor(private router: Router) {}
+  ngOnInit() {
+    this.cargarDatos();
+  }
 
-  // Acciones
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Carga certificados y reservas del usuario
+   */
+  cargarDatos() {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    // Cargar certificados
+    this.certificadoService.getMisCertificados()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (certs: CertificadoResponse[]) => {
+          // Guardar el total real
+          this.totalCertificados = certs.length;
+
+          // Ordenar por fecha de emisión descendente y tomar los primeros 3
+          const certsSorted = [...certs].sort((a, b) => {
+            const dateA = new Date(a.fecha_emision).getTime();
+            const dateB = new Date(b.fecha_emision).getTime();
+            return dateB - dateA;
+          }).slice(0, 3);
+
+          // Mapear a formato de display
+          this.certificados = certsSorted.map((cert, index) => ({
+            titulo: `Certificado de Residencia N° ${cert.numero}`,
+            fecha: this.formatearFecha(cert.fecha_emision),
+            id: cert.id_certificado,
+            esUltimo: index === 0 // El primero es el más reciente
+          }));
+        },
+        error: (error) => {
+          console.error('Error al cargar certificados:', error);
+          this.errorMessage = 'Error al cargar certificados';
+        }
+      });
+
+    // Cargar reservas - primero obtener todas para saber el total
+    this.reservaService.getMisReservas(100) // Obtener más para calcular el total
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (reservas: ReservaResponse[]) => {
+          // Guardar el total real
+          this.totalReservas = reservas.length;
+
+          // Tomar las primeras 3 (ya vienen ordenadas por fecha descendente)
+          this.reservas = reservas.slice(0, 3).map(reserva => ({
+            espacio: reserva.espacio_nombre || 'Espacio',
+            fecha: this.formatearFechaReserva(reserva.inicio),
+            id: reserva.id_reserva
+          }));
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar reservas:', error);
+          this.errorMessage = 'Error al cargar reservas';
+          this.isLoading = false;
+        }
+      });
+  }
+
+  /**
+   * Formatea una fecha ISO a formato legible en español
+   */
+  formatearFecha(fechaISO: string): string {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  /**
+   * Formatea una fecha de reserva (inicio)
+   */
+  formatearFechaReserva(fechaISO: string): string {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * Descarga un certificado en PDF
+   */
+  descargarCertificado(cert: CertificadoDisplay) {
+    if (!cert.esUltimo) {
+      // Solo el último certificado se puede descargar según requisitos
+      return;
+    }
+
+    this.certificadoService.descargarCertificadoPDF(cert.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob: Blob) => {
+          this.certificadoService.downloadBlob(blob, `certificado_${cert.id}.pdf`);
+        },
+        error: (error) => {
+          console.error('Error al descargar certificado:', error);
+          alert('Error al descargar el certificado');
+        }
+      });
+  }
+
+  /**
+   * Navega a la página para solicitar un nuevo certificado
+   */
   solicitarCertificado() {
-    // si está autenticado, navega al flujo de certificados; si no, al login
     this.router.navigate(['/certificados/residencia/crear']);
-    // o: this.router.navigate(['/login']);
   }
 
+  /**
+   * Navega a la página para hacer una nueva reserva
+   */
   hacerReserva() {
-    this.router.navigate(['/reservas']); // ajusta a tu ruta real
+    this.router.navigate(['/reservas']);
   }
 
-  verDetalleCert(id?: number) {
-    if (!id) return;
-    this.router.navigate(['/certificados', id]); // ejemplo
+  /**
+   * Ver detalle de certificado (sin funcionalidad por ahora)
+   */
+  verDetalleCert(id: number) {
+    // No hace nada según requisitos
   }
 
-  verDetalleReserva(id?: number) {
-    if (!id) return;
-    this.router.navigate(['/reservas', id]); // ejemplo
+  /**
+   * Ver detalle de reserva (sin funcionalidad por ahora)
+   */
+  verDetalleReserva(id: number) {
+    // No hace nada según requisitos
   }
 }
