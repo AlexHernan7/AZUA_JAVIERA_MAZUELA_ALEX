@@ -147,6 +147,12 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
   backdrop-filter: blur(6px);           /* 👈 blur al fondo */
   -webkit-backdrop-filter: blur(6px);   /* soporte Safari */
   z-index: 0; pointer-events:none;}
+/* ===== Botones de Registro: tamaño y responsive SIN afectar otros ===== */
+.register-card .btn-cta1,.register-card .btn-cta2{
+  font-size: clamp(0.95rem, 1.6vw, 1.125rem); padding: .9rem 1.25rem; line-height: 1; min-height: 44px;    
+  min-width: 160px; display: inline-flex; align-items: center; justify-content: center; border-radius: .6rem; }
+
+
     
   //                                           S T Y L E S    P R O F I L E
 
@@ -357,5 +363,69 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 @media (max-width: 991.98px) {
   .qsomos-sidebar {
     margin-top: 0;
+  }
+}
+
+/* En móviles: que ocupen todo el ancho y no se “achiquen” */
+@media (max-width: 576px){
+  .register-card .col-12.mt-5.d-flex {
+    flex-direction: column;        /* apila los botones */
+    gap: .75rem !important;
+  }
+  .register-card .btn-cta1,
+  .register-card .btn-cta2{
+    width: 100%;
+    min-width: 0;                  /* permite full width */
+  }
+}
+
+/* Navbar: afina tamaño y gaps cuando está cerca del breakpoint */
+@media (max-width: 1199.98px) {
+  .navbar .nav-link {
+    font-size: 1.05rem; /* era fs-5 (~1.25rem), así cabe mejor */
+  }
+  .navbar .navbar-nav {
+    gap: .75rem; /* reduce separación horizontal */
+  }
+}
+
+/* En colapsado (menú hamburguesa) que los links ocupen ancho completo y se vean prolijos */
+@media (max-width: 991.98px) {
+  #mainNavbar .navbar-nav .nav-link {
+    padding: .6rem .25rem;
+  }
+}
+
+/* ===== Navbar solo en hamburguesa (expand-lg => colapsa < 992px) ===== */
+@media (max-width: 991.98px) {
+
+  /* Espaciado general dentro del panel abierto */
+  .navbar .navbar-collapse.show {
+    padding: .5rem .25rem .75rem;
+    align-items: stretch;
+  }
+
+  /* Links: menos separación y paddings coherentes */
+  .navbar .navbar-collapse.show .navbar-nav {
+    gap: .25rem;              /* antes era muy grande */
+    margin: .25rem 0 .5rem;   /* acerca los botones a los links */
+  }
+  .navbar .navbar-collapse.show .navbar-nav .nav-link {
+    padding: .55rem .5rem;    /* altura cómoda sin generar bloques enormes */
+    line-height: 1.2;
+  }
+
+  /* Bloque de botones “Iniciar sesión / Registrarse” */
+  .navbar .navbar-collapse.show .d-flex {
+    gap: .5rem !important;          /* separacion moderada entre botones */
+    padding-top: .5rem;             
+    border-top: 1px solid rgba(0,0,0,.08); /* divide visualmente de los links */
+    margin-top: .25rem;
+  }
+
+  /* Que ambos botones queden proporcionados y no se “peguen” a la izquierda */
+  .navbar .navbar-collapse.show .d-flex .btn {
+    flex: 1;                  /* mismo ancho para ambos */
+    min-width: 0;             /* evita que se rompan por contenido */
   }
 }

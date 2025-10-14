@@ -24,59 +24,129 @@
   <div class="container-xxl">
     <div class="row g-3 g-md-4 ">
 
-      <!-- Card 1 -->
-      <div class="col-12 col-md-6 col-lg-3" (click)="goToRegister()" *ngIf="!authService.isAuthenticated()" style="cursor: pointer;">
-        <div class="feature-card ">
-          <div class="feature-icon pb-1">
-            <!-- usuario -->
-            <i class="bi bi-person-fill-add"></i>
+      <!-- ===== Público / no autenticado ===== -->
+      <ng-container *ngIf="!authService.isAuthenticated()">
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToRegister()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-person-fill-add"></i></div>
+            <div class="feature-title">Inscribirse<br/>en la Junta</div>
           </div>
-          <div class="feature-title">Inscribirse<br/>en la Junta</div>
         </div>
-      </div>
 
-      <!-- Card 2 -->
-<div class="col-12 col-md-6 col-lg-3">
-  <div class="feature-card" (click)="goToCertificado()" style="cursor: pointer;">
-    <div class="feature-icon pb-1">
-      <i class="bi bi-file-earmark-text-fill"></i>
-    </div>
-    <div class="feature-title">Solicitar Certificado <br/> de Residencia</div>
-  </div>
-</div>
-
-      <!-- Card 3 -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="feature-card " (click)="goToReserva()" style="cursor: pointer;">
-          <div class="feature-icon pb-1">
-            <!-- calendario -->
-            <i class="bi bi-calendar-week"></i>
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCertificado()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-file-earmark-text-fill"></i></div>
+            <div class="feature-title">Solicitar Certificado<br/>de Residencia</div>
           </div>
-          <div class="feature-title">Agendar Espacios <br/>Comunitarios</div>
         </div>
-      </div>
 
-      <!-- Card 4 -->
-     <div class="col-12 col-md-6 col-lg-3">
-  <div class="feature-card" [routerLink]="'/news'" style="cursor: pointer;">
-    <div class="feature-icon pb-1">
-      <i class="bi bi-megaphone-fill"></i>
-    </div>
-    <div class="feature-title">Noticias<br/>y Avisos</div>
-  </div>
-</div>
-
-
-      <!-- Card 5 - Solo para usuarios autenticados -->
-      <div class="col-12 col-md-6 col-lg-3" (click)="goToMyJunta()" *ngIf="authService.isAuthenticated()" style="cursor: pointer;">
-        <div class="feature-card">
-          <div class="feature-icon pb-1">
-            <!-- grupo de personas -->
-            <i class="bi bi-people-fill"></i>
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToReserva()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-calendar-week-fill"></i></div>
+            <div class="feature-title">Agendar Espacios<br/>Comunitarios</div>
           </div>
-          <div class="feature-title">Mi Junta<br/>de Vecinos</div>
         </div>
-      </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToNoticias()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="feature-title">Noticias<br/>y Avisos</div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ===== Vecino ===== -->
+      <ng-container *ngIf="authService.isAuthenticated() && isVecino">
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCertificado()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-file-earmark-plus-fill"></i></div>
+            <div class="feature-title">Solicitar<br/>Certificado</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToReserva()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-calendar-week"></i></div>
+            <div class="feature-title">Reservar<br/>Espacios</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToNoticias()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="feature-title">Noticias<br/>y Avisos</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToTramites()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-card-list"></i></div>
+            <div class="feature-title">Mis Trámites</div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ===== Directiva ===== -->
+      <ng-container *ngIf="authService.isAuthenticated() && isDirectiva">
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToReportes()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="feature-title">Reportes</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCrearEspacio()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-building-fill-add"></i></div>
+            <div class="feature-title">Crear<br/>Espacio</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToNoticias()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="feature-title">Noticias<br/>y Avisos</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToMyJunta()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-houses-fill"></i></div>
+            <div class="feature-title">Mi Junta<br/>de Vecinos</div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ===== Admin ===== -->
+      <ng-container *ngIf="authService.isAuthenticated() && isAdmin">
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCrearEspacio()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-building-fill-add"></i></div>
+            <div class="feature-title">Crear<br/>Espacio</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCrearDirectivo()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-person-fill-add"></i></div>
+            <div class="feature-title">Crear<br/>Directivo</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToCrearJunta()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-house-add-fill"></i></div>
+            <div class="feature-title">Crear<br/>Junta</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3" (click)="goToGestionUsuarios()" style="cursor:pointer;">
+          <div class="feature-card">
+            <div class="feature-icon pb-1"><i class="bi bi-people-fill"></i></div>
+            <div class="feature-title">Gestión<br/>de Usuarios</div>
+          </div>
+        </div>
+      </ng-container>
 
     </div>
   </div>

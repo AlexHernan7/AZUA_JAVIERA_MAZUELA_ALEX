@@ -1,16 +1,15 @@
-<!-- Barra superior SOLO en móvil, con el mismo look del sidebar -->
+<!-- Barra superior SOLO en móvil -->
 <div class="side-mobilebar d-lg-none">
   <button class="hamburger-btn" (click)="toggleMenu()" aria-label="Abrir menú">
     <i class="bi bi-list"></i>
   </button>
-
   <div class="brand-mini">
     <img src="images/Logo_vecindapp_menu.png" alt="VecindApp" />
     <span>VecindApp</span>
   </div>
 </div>
 
-<!-- Overlay oscuro cuando el menú está abierto (móvil) -->
+<!-- Overlay oscuro -->
 <div class="side-overlay d-lg-none"
      *ngIf="menuOpen"
      (click)="toggleMenu()"></div>
@@ -36,37 +35,82 @@
 
   <!-- Navegación -->
   <nav>
-    <!-- Opciones para todos los usuarios -->
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true} " (click)="onNav()">
-      <i class="bi bi-house-door"></i> Inicio
-    </a>
-    <a routerLink="/profile" routerLinkActive="active"><i class="bi bi-people" (click)="onNav()"></i>Perfil</a>
-    <a routerLink="/juntas/1" routerLinkActive="active"><i class="bi bi-building" (click)="onNav()"></i> Perfil de la Junta</a>
-    <a routerLink="/certificados/residencia/crear" routerLinkActive="active" (click)="onNav()"><i class="bi bi-file-earmark-plus"></i> Crear Certificado</a>
-    <a routerLink="/reservas" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-calendar-check"></i> Reservas</a>
-    <a [routerLink]="'/news'" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-megaphone"></i> Noticias</a>
-    
-    <!-- Opciones solo para vecinos -->
-    <ng-container *ngIf="isVecino">
-      <a routerLink="/tramites" routerLinkActive="active" (click)="onNav()"><i class="bi bi-files"></i> Mis trámites</a>
-    </ng-container>
-    
-    <!-- Opciones solo para admin -->
-    <ng-container *ngIf="isAdmin">
-      <a routerLink="/directiva/nuevo" routerLinkActive="active"><i class="bi bi-person-plus" (click)="onNav()"></i> Crear directivo</a>
-      <a routerLink="/juntas/nueva" routerLinkActive="active"><i class="bi bi-building-add" (click)="onNav()"></i> Crear Junta</a>
-      <a routerLink="/espacios/crear" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-building-add"></i> Crear Espacio</a>
-      <a  routerLink="/list_user"  routerLinkActive="active"  (click)="menuOpen = false; onNav()">  <i class="bi bi-people-fill"></i> Gestión de Usuarios
-</a>
 
+    <!-- ============ VECINO ============ -->
+    <ng-container *ngIf="isVecino">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="onNav()">
+        <i class="bi bi-house-door-fill"></i> Inicio
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-person-fill"></i> Perfil
+      </a>
+      <a routerLink="/juntas/1" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-houses-fill"></i> Perfil de la Junta
+      </a>
+      <a routerLink="/certificados/residencia/crear" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-file-earmark-plus-fill"></i> Solicitar Certificado
+      </a>
+      <a routerLink="/reservas" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-calendar-check-fill"></i> Reservar Espacios
+      </a>
+      <a [routerLink]="'/news'" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-megaphone-fill"></i> Noticias
+      </a>
+      <a routerLink="/tramites" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-files"></i> Mis trámites
+      </a>
     </ng-container>
-    
-    <!-- Opciones solo para directiva -->
+
+    <!-- ============ DIRECTIVA ============ -->
     <ng-container *ngIf="isDirectiva">
-      <a routerLink="/reportes" routerLinkActive="active" (click)="onNav()"><i class="bi bi-graph-up"></i> Reportes</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="onNav()">
+        <i class="bi bi-house-door-fill"></i> Inicio
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-person-fill"></i> Perfil
+      </a>
+      <a routerLink="/juntas/1" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-houses-fill"></i> Perfil de la Junta
+      </a>
+      <a routerLink="/espacios/crear" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-building-fill-add"></i> Crear Espacio
+      </a>
+      <a [routerLink]="'/news'" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-megaphone-fill"></i> Noticias
+      </a>
+      <a routerLink="/reportes" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-graph-up-arrow"></i> Reportes
+      </a>
     </ng-container>
+
+    <!-- ============ ADMIN ============ -->
+    <ng-container *ngIf="isAdmin">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="onNav()">
+        <i class="bi bi-house-door-fill"></i> Inicio
+      </a>
+      <a routerLink="/profile" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-person-fill"></i> Perfil
+      </a>
+      <a routerLink="/directiva/nuevo" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-person-fill-add"></i> Crear Directivo
+      </a>
+      <a routerLink="/juntas/nueva" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-building-fill-add"></i> Crear Junta
+      </a>
+      <a routerLink="/espacios/crear" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-building-fill-add"></i> Crear Espacio
+      </a>
+      <a routerLink="/list_user" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-people-fill"></i> Gestión de Usuarios
+      </a>
+      <a [routerLink]="'/news'" routerLinkActive="active" (click)="onNav()">
+        <i class="bi bi-megaphone-fill"></i> Noticias
+      </a>
+    </ng-container>
+
   </nav>
 
+  <!-- Logout -->
   <button class="btn-logout" (click)="logout()">
     <i class="bi bi-box-arrow-right"></i> Cerrar sesión
   </button>

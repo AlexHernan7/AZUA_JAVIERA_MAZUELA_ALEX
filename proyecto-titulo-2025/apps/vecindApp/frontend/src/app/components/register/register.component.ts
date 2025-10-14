@@ -265,7 +265,7 @@ export class RegisterComponent implements OnInit {
     // +56 seguido de 9 dígitos
     return /^\+56\d{9}$/.test((phone || '').trim());
   }
-
+ 
   /** Valida RUT chileno con dígito verificador */
   public isValidRut(rut: string): boolean {
     if (!rut) return false;
