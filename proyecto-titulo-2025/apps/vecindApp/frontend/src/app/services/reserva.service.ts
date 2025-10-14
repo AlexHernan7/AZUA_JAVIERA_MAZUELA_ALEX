@@ -109,6 +109,17 @@ export class ReservaService {
   }
 
   /**
+   * Obtiene todas las reservas del usuario autenticado
+   */
+  getMisReservas(limit: number = 10): Observable<ReservaResponse[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<ReservaResponse[]>(`${this.API_URL}/reservas/mis-reservas?limit=${limit}`, { headers })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Obtiene headers de autenticación
    */
   private getAuthHeaders(): HttpHeaders {

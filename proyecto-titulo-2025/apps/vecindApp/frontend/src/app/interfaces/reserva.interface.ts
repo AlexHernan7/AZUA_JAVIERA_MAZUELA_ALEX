@@ -27,31 +27,22 @@ export interface ReservaResponse {
   id_espacio: number;
   id_vecino: number;
   id_junta: number;
-  fecha: string;
-  hora_inicio: string;
-  hora_termino: string;
-  motivo: string;
-  asistentes?: number;
-  estado: 'pendiente' | 'confirmada' | 'cancelada';
-  valor_total: number;
+  creado_por: number;
+  id_estado: number;
+  inicio: string; // Fecha y hora de inicio en formato ISO
+  fin: string; // Fecha y hora de fin en formato ISO
+  estado: string; // Nombre del estado
+  observaciones?: string;
   created_at: string;
-  updated_at: string;
+  valor_reserva: number;
   // Información adicional del espacio
-  espacio?: {
-    id_espacio: number;
-    nombre: string;
-    tipo: string;
-    capacidad: number;
-    valor: number;
-  };
+  espacio_nombre?: string;
+  espacio_tipo?: string;
+  espacio_capacidad?: number;
+  espacio_valor?: number;
   // Información adicional del vecino
-  vecino?: {
-    id_vecino: number;
-    nombres: string;
-    apellido_paterno: string;
-    apellido_materno: string;
-    rut: string;
-  };
+  vecino_nombre?: string;
+  vecino_email?: string;
 }
 
 export interface ReservaListResponse {

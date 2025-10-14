@@ -2087,6 +2087,22 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "resend"
+version = "2.16.0"
+description = "Resend Python SDK"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "resend-2.16.0-py2.py3-none-any.whl", hash = "sha256:ae14dd6825a93c60483bd29d149b9ae7e0af8c3c686b694fb3158b51f7526447"},
+    {file = "resend-2.16.0.tar.gz", hash = "sha256:2f00d1300aa26309291860c345bd796800ab4cd7a2ce76004b5be1d5a5f0af86"},
+]
+
+[package.dependencies]
+requests = ">=2.31.0"
+typing-extensions = ">=4.4.0"
+
+[[package]]
 name = "rsa"
 version = "4.9.1"
 description = "Pure-Python RSA implementation"
@@ -2768,4 +2784,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<=3.13.5"
-content-hash = "d9b08fae3e6b9be8ee3975bb24f6f8404bd458631ac2718906edcafceaa80c82"
+content-hash = "8a8e0ef6dbcd204669050bf6e6f33bca150b0bd594364c92600ec46508db712e"

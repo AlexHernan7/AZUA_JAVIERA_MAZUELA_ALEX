@@ -104,6 +104,13 @@ class WebpaySettings(BaseModel):
     final_url: str = Field("http://localhost:4200/payment/success", description="URL final de éxito")
 
 
+class EmailSettings(BaseModel):
+    """Configuración de envío de emails."""
+    
+    resend_api_key: str = Field(..., description="API Key de Resend")
+    from_email: str = Field("VecindApp <onboarding@resend.dev>", description="Email del remitente")
+
+
 class Settings(BaseSettings):
     """Configuración principal de la aplicación."""
 
@@ -122,6 +129,10 @@ class Settings(BaseSettings):
         return_url=getenv("WEBPAY_RETURN_URL", "http://localhost:8000/api/payments/webpay/return"),
         final_url=getenv("WEBPAY_FINAL_URL", "http://localhost:4200/payment/success")
     ))
+    
+    # Email settings - Resend
+    RESEND_API_KEY: str = Field(default="")
+    RESEND_FROM_EMAIL: str = Field(default="VecindApp <onboarding@resend.dev>")
 
     @classmethod
     def get_database_settings(cls, environment: str) -> dict[str, Any]:
@@ -173,6 +184,8 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
         ),
         news_rss=NewsRSSSettings(),
+        RESEND_API_KEY=getenv("RESEND_API_KEY", ""),
+        RESEND_FROM_EMAIL=getenv("RESEND_FROM_EMAIL", "VecindApp <onboarding@resend.dev>"),
     )
 
 

@@ -6,9 +6,12 @@ Contiene endpoints para registro, login, etc.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 import logging
 
 from src.database.session import get_db_session
+from src.database.models.usuario import Usuario
 from src.services.auth_service import AuthService
 from src.schemas.auth_schemas import (
     UsuarioRegistroRequest,
@@ -19,6 +22,11 @@ from src.schemas.auth_schemas import (
     LoginResponse,
     UserLoginData,
     VecinoLoginData,
+    PasswordResetRequest,
+    PasswordResetResponse,
+    VerifyResetCodeRequest,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
 )
 from src.schemas.user_schemas import JuntasList, ComunasList
 from src.core.security import create_access_token
@@ -405,4 +413,203 @@ async def login_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error interno del servidor", "detalle": str(e)},
+        )
+
+
+# ==================== ENDPOINTS DE RECUPERACIÓN DE CONTRASEÑA ====================
+
+
+@router.post(
+    "/password-reset/request",
+    response_model=PasswordResetResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Solicitar código de recuperación",
+    description="Envía un código de 6 dígitos al email del usuario para recuperar su contraseña"
+)
+async def request_password_reset(
+    request: PasswordResetRequest,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Solicita un código de recuperación de contraseña.
+    
+    - Verifica que el email exista
+    - Genera código de 6 dígitos
+    - Envía email con el código
+    - El código expira en 15 minutos
+    """
+    try:
+        logger.info(f"🔐 Solicitud de recuperación de contraseña para: {request.email}")
+        
+        # Crear servicio de autenticación
+        auth_service = AuthService(db)
+        
+        # Solicitar código de recuperación
+        success, code = await auth_service.request_password_reset(request.email)
+        
+        if not success:
+            raise ValueError("No se pudo generar el código")
+        
+        # Obtener nombre del usuario para personalizar email
+        result = await db.execute(
+            select(Usuario).options(
+                selectinload(Usuario.vecino),
+                selectinload(Usuario.directiva)
+            ).where(Usuario.email == request.email.lower())
+        )
+        usuario = result.scalar_one_or_none()
+        
+        user_name = "Usuario"
+        if usuario:
+            if usuario.vecino:
+                user_name = usuario.vecino.nombres
+            elif usuario.directiva:
+                user_name = usuario.directiva.nombres
+        
+        # Enviar email con código usando Resend
+        from src.core.config import settings
+        from src.services.email_service import EmailService
+        
+        if not settings.RESEND_API_KEY:
+            logger.error("❌ RESEND_API_KEY no está configurada")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": "Servicio de email no configurado", "detalle": "Contacta al administrador"}
+            )
+        
+        # Enviar email con Resend
+        email_service = EmailService(api_key=settings.RESEND_API_KEY)
+        
+        email_sent = email_service.send_password_reset_code(
+            to_email=request.email,
+            code=code,
+            user_name=user_name
+        )
+        
+        if not email_sent:
+            logger.error(f"❌ No se pudo enviar email a {request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": "No se pudo enviar el email", "detalle": "Error en el servicio de correo"}
+            )
+        
+        logger.info(f"✅ Código de recuperación enviado a {request.email}")
+        
+        return PasswordResetResponse(
+            message="Código de recuperación enviado a tu email",
+            email=request.email
+        )
+        
+    except ValueError as e:
+        logger.warning(f"⚠️ Error en solicitud de recuperación: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "Usuario no encontrado", "detalle": str(e)}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 Error inesperado en recuperación de contraseña: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
+        )
+
+
+@router.post(
+    "/password-reset/verify",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Verificar código de recuperación",
+    description="Verifica si un código de 6 dígitos es válido"
+)
+async def verify_reset_code(request: VerifyResetCodeRequest):
+    """
+    Verifica si un código de recuperación es válido.
+    
+    - Valida que el código sea correcto
+    - Verifica que no haya expirado
+    """
+    try:
+        logger.info(f"🔍 Verificando código para: {request.email}")
+        
+        is_valid = AuthService.verify_reset_code(request.email, request.code)
+        
+        if not is_valid:
+            logger.warning(f"⚠️ Código inválido o expirado para {request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "Código inválido", "detalle": "El código es incorrecto o ha expirado"}
+            )
+        
+        logger.info(f"✅ Código válido para {request.email}")
+        
+        return {
+            "message": "Código válido",
+            "valid": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"💥 Error verificando código: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
+        )
+
+
+@router.post(
+    "/password-reset/confirm",
+    response_model=ResetPasswordResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resetear contraseña",
+    description="Resetea la contraseña del usuario usando el código de verificación"
+)
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Resetea la contraseña del usuario.
+    
+    - Verifica el código
+    - Valida la nueva contraseña
+    - Actualiza la contraseña
+    - Invalida el código
+    """
+    try:
+        logger.info(f"🔒 Reseteando contraseña para: {request.email}")
+        
+        # Crear servicio de autenticación
+        auth_service = AuthService(db)
+        
+        # Resetear contraseña
+        success = await auth_service.reset_password(
+            email=request.email,
+            code=request.code,
+            new_password=request.new_password
+        )
+        
+        if not success:
+            raise ValueError("No se pudo actualizar la contraseña")
+        
+        logger.info(f"✅ Contraseña actualizada exitosamente para {request.email}")
+        
+        return ResetPasswordResponse(
+            message="Contraseña actualizada exitosamente",
+            success=True
+        )
+        
+    except ValueError as e:
+        logger.warning(f"⚠️ Error reseteando contraseña: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "Error al resetear contraseña", "detalle": str(e)}
+        )
+    except Exception as e:
+        logger.error(f"💥 Error inesperado reseteando contraseña: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
         )

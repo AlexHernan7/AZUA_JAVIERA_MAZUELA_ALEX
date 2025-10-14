@@ -27,8 +27,8 @@ export class AppComponent {
   constructor(public auth: AuthService, public router: Router) {}
 
   isLoginPage(): boolean {
-    // cubre '/login' con querystring o fragmentos
+    // Oculta menú en páginas de autenticación (login, registro, recuperación)
     const url = this.router.url.split('?')[0].split('#')[0];
-    return url === '/login';
+    return url === '/login' || url === '/forgot-password';
   }
 }

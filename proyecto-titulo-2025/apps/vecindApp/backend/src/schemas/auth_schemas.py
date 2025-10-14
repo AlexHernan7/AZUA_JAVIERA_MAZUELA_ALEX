@@ -502,3 +502,152 @@ class LoginError(BaseModel):
                 "detalle": "Email o contraseña incorrectos",
             }
         }
+
+
+# === SCHEMAS DE RECUPERACIÓN DE CONTRASEÑA ===
+
+
+class PasswordResetRequest(BaseModel):
+    """
+    Schema para solicitar recuperación de contraseña.
+    """
+
+    email: EmailStr = Field(..., description="Email del usuario")
+
+    @validator("email")
+    def validate_email_format(cls, v):
+        """Normaliza el email a minúsculas."""
+        if not v:
+            raise ValueError("Email es requerido")
+        return v.lower().strip()
+
+    class Config:
+        json_schema_extra = {
+            "example": {"email": "usuario@ejemplo.com"}
+        }
+
+
+class PasswordResetResponse(BaseModel):
+    """
+    Schema para respuesta de solicitud de código.
+    """
+
+    message: str = Field(..., description="Mensaje de confirmación")
+    email: str = Field(..., description="Email al que se envió el código")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Código de recuperación enviado a tu email",
+                "email": "usuario@ejemplo.com"
+            }
+        }
+
+
+class VerifyResetCodeRequest(BaseModel):
+    """
+    Schema para verificar código de recuperación.
+    """
+
+    email: EmailStr = Field(..., description="Email del usuario")
+    code: str = Field(..., min_length=6, max_length=6, description="Código de 6 dígitos")
+
+    @validator("email")
+    def validate_email_format(cls, v):
+        """Normaliza el email a minúsculas."""
+        if not v:
+            raise ValueError("Email es requerido")
+        return v.lower().strip()
+
+    @validator("code")
+    def validate_code_format(cls, v):
+        """Valida que el código sea numérico de 6 dígitos."""
+        if not v.isdigit():
+            raise ValueError("El código debe contener solo números")
+        if len(v) != 6:
+            raise ValueError("El código debe tener exactamente 6 dígitos")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "usuario@ejemplo.com",
+                "code": "123456"
+            }
+        }
+
+
+class ResetPasswordRequest(BaseModel):
+    """
+    Schema para resetear contraseña con código.
+    """
+
+    email: EmailStr = Field(..., description="Email del usuario")
+    code: str = Field(..., min_length=6, max_length=6, description="Código de 6 dígitos")
+    new_password: str = Field(..., min_length=8, max_length=12, description="Nueva contraseña")
+
+    @validator("email")
+    def validate_email_format(cls, v):
+        """Normaliza el email a minúsculas."""
+        if not v:
+            raise ValueError("Email es requerido")
+        return v.lower().strip()
+
+    @validator("code")
+    def validate_code_format(cls, v):
+        """Valida que el código sea numérico de 6 dígitos."""
+        if not v.isdigit():
+            raise ValueError("El código debe contener solo números")
+        if len(v) != 6:
+            raise ValueError("El código debe tener exactamente 6 dígitos")
+        return v
+
+    @validator("new_password")
+    def validate_password_complexity(cls, v):
+        """
+        Valida requisitos de seguridad de la nueva contraseña.
+        """
+        if not v:
+            raise ValueError("Contraseña es requerida")
+
+        if len(v) < 8 or len(v) > 12:
+            raise ValueError("La contraseña debe tener entre 8 y 12 caracteres")
+
+        if not re.search(r"[a-zA-Z]", v):
+            raise ValueError("La contraseña debe contener al menos una letra")
+
+        if not re.search(r"\d", v):
+            raise ValueError("La contraseña debe contener al menos un número")
+
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>/?]', v):
+            raise ValueError(
+                "La contraseña debe contener al menos un carácter especial (!@#$%^&*()_+-=[]{}|;:,.<>?)"
+            )
+
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "usuario@ejemplo.com",
+                "code": "123456",
+                "new_password": "NuevaPass123!"
+            }
+        }
+
+
+class ResetPasswordResponse(BaseModel):
+    """
+    Schema para respuesta de reset de contraseña exitoso.
+    """
+
+    message: str = Field(..., description="Mensaje de confirmación")
+    success: bool = Field(..., description="Indica si fue exitoso")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Contraseña actualizada exitosamente",
+                "success": True
+            }
+        }

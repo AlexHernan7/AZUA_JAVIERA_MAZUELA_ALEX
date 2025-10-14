@@ -1,0 +1,66 @@
+/* Estilos para el componente de trámites */
+
+.shadow-soft {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.list-group-item {
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Estilos para el icono de descarga */
+.bi-download {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.bi-download:hover {
+  transform: scale(1.2);
+  color: #0f766e !important;
+}
+
+/* Estilos para el spinner de carga */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Botón principal */
+.btn-teal-menu {
+  background-color: #0f766e;
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-teal-menu:hover {
+  background-color: #0d9488;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(15, 118, 110, 0.2);
+}
+
+.btn-teal-menu:active {
+  transform: translateY(0);
+}
+
+/* Animación para cuando no hay datos */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-group-item,
+.alert {
+  animation: fadeIn 0.3s ease;
+}
+

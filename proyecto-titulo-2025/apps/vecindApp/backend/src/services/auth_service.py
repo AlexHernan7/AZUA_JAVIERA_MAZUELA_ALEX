@@ -9,6 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from typing import Optional, Tuple
+import random
+import string
+from datetime import datetime, timedelta
 
 from src.database.models.usuario import Usuario
 from src.database.models.vecino import Vecino
@@ -22,6 +25,10 @@ from src.core.security import hash_password, validate_password_strength, verify_
 from src.schemas.auth_schemas import UsuarioRegistroRequest
 from src.schemas.user_schemas import VecinoCreate
 from src.utils import base64_to_binary, load_default_profile_image
+
+# Almacenamiento temporal de códigos de recuperación (en memoria)
+# Formato: {email: {"code": "123456", "expiry": datetime}}
+_password_reset_codes: dict[str, dict] = {}
 
 
 class AuthService:
@@ -321,3 +328,148 @@ class AuthService:
         roles = [row[0] for row in roles_result.fetchall()]
         
         return usuario, roles
+
+    # ==================== RECUPERACIÓN DE CONTRASEÑA ====================
+
+    @staticmethod
+    def generate_reset_code() -> str:
+        """
+        Genera un código de 6 dígitos para recuperación de contraseña.
+        
+        Returns:
+            Código de 6 dígitos como string
+        """
+        return ''.join(random.choices(string.digits, k=6))
+
+    async def request_password_reset(self, email: str) -> Tuple[bool, str]:
+        """
+        Solicita un código de recuperación de contraseña.
+        
+        Args:
+            email: Email del usuario
+            
+        Returns:
+            Tupla (éxito, código_generado) - Si el email existe, retorna True y el código
+            
+        Raises:
+            ValueError: Si el email no existe
+        """
+        # Buscar usuario por email
+        result = await self.db.execute(
+            select(Usuario).where(Usuario.email == email)
+        )
+        usuario = result.scalar_one_or_none()
+        
+        if not usuario:
+            raise ValueError("No existe un usuario con este email")
+        
+        if not usuario.activo:
+            raise ValueError("Usuario inactivo")
+        
+        # Generar código de 6 dígitos
+        code = self.generate_reset_code()
+        
+        # Almacenar código con expiración de 15 minutos
+        expiry = datetime.now() + timedelta(minutes=15)
+        _password_reset_codes[email.lower()] = {
+            "code": code,
+            "expiry": expiry,
+            "user_id": usuario.id_usuario
+        }
+        
+        return True, code
+
+    @staticmethod
+    def verify_reset_code(email: str, code: str) -> bool:
+        """
+        Verifica si un código de recuperación es válido.
+        
+        Args:
+            email: Email del usuario
+            code: Código de 6 dígitos a verificar
+            
+        Returns:
+            True si el código es válido y no ha expirado, False en caso contrario
+        """
+        email = email.lower()
+        
+        # Verificar si existe el código para este email
+        if email not in _password_reset_codes:
+            return False
+        
+        stored_data = _password_reset_codes[email]
+        
+        # Verificar si el código ha expirado
+        if datetime.now() > stored_data["expiry"]:
+            # Limpiar código expirado
+            del _password_reset_codes[email]
+            return False
+        
+        # Verificar si el código coincide
+        return stored_data["code"] == code
+
+    async def reset_password(self, email: str, code: str, new_password: str) -> bool:
+        """
+        Resetea la contraseña del usuario usando un código de verificación.
+        
+        Args:
+            email: Email del usuario
+            code: Código de verificación de 6 dígitos
+            new_password: Nueva contraseña
+            
+        Returns:
+            True si la contraseña se cambió exitosamente
+            
+        Raises:
+            ValueError: Si el código es inválido o la contraseña no cumple requisitos
+        """
+        email = email.lower()
+        
+        # Verificar código
+        if not self.verify_reset_code(email, code):
+            raise ValueError("Código inválido o expirado")
+        
+        # Validar fortaleza de la nueva contraseña
+        is_valid, error_msg = validate_password_strength(new_password)
+        if not is_valid:
+            raise ValueError(f"Contraseña inválida: {error_msg}")
+        
+        # Buscar usuario
+        result = await self.db.execute(
+            select(Usuario).where(Usuario.email == email)
+        )
+        usuario = result.scalar_one_or_none()
+        
+        if not usuario:
+            raise ValueError("Usuario no encontrado")
+        
+        try:
+            # Actualizar contraseña
+            usuario.pass_hash = hash_password(new_password)
+            await self.db.commit()
+            await self.db.refresh(usuario)
+            
+            # Limpiar código usado
+            if email in _password_reset_codes:
+                del _password_reset_codes[email]
+            
+            return True
+            
+        except Exception as e:
+            await self.db.rollback()
+            raise ValueError(f"Error al actualizar contraseña: {str(e)}")
+
+    @staticmethod
+    def clean_expired_codes():
+        """
+        Limpia códigos de recuperación expirados del almacenamiento.
+        Debe ser llamado periódicamente (ej: cada hora).
+        """
+        now = datetime.now()
+        expired_emails = [
+            email for email, data in _password_reset_codes.items()
+            if now > data["expiry"]
+        ]
+        
+        for email in expired_emails:
+            del _password_reset_codes[email]
