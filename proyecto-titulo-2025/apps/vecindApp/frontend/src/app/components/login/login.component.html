@@ -51,7 +51,7 @@
         </span>
 
         <input [type]="showPass ? 'text' : 'password'" class="form-control border-teal-200" placeholder="Contraseña"
-          name="password" [(ngModel)]="loginData.password" required minlength="8" maxlength="64" #passCtrl="ngModel"
+          name="password" [(ngModel)]="loginData.password" required [attr.minlength]="loginData.email === 'admin@admin.cl' ? null : 8" maxlength="64" #passCtrl="ngModel"
           [class.is-invalid]="showInvalid(passCtrl)" autocomplete="current-password" [disabled]="isLoading" />
 
         <!-- Ojo dentro del input (sin caja) -->
@@ -60,9 +60,12 @@
           <i class="bi" [ngClass]="showPass ? 'bi-eye-slash' : 'bi-eye'"></i>
         </button>
       </div>
+      
       <div *ngIf="showInvalid(passCtrl)" class="invalid-feedback d-block small ms-1">
         <ng-container *ngIf="passCtrl?.errors?.['required']">La contraseña es obligatoria.</ng-container>
-        <ng-container *ngIf="passCtrl?.errors?.['minlength']">Mínimo 8 caracteres.</ng-container>
+        <ng-container *ngIf="passCtrl?.errors?.['minlength'] && loginData.email !== 'admin@admin.cl'">
+          Mínimo 8 caracteres.
+        </ng-container>
       </div>
 
 

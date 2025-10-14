@@ -56,7 +56,9 @@
       <a routerLink="/directiva/nuevo" routerLinkActive="active"><i class="bi bi-person-plus" (click)="onNav()"></i> Crear directivo</a>
       <a routerLink="/juntas/nueva" routerLinkActive="active"><i class="bi bi-building-add" (click)="onNav()"></i> Crear Junta</a>
       <a routerLink="/espacios/crear" routerLinkActive="active" (click)="menuOpen = false" (click)="onNav()"><i class="bi bi-building-add"></i> Crear Espacio</a>
-      <a routerLink="/config" routerLinkActive="active"><i class="bi bi-gear" (click)="onNav()"></i> Configuración</a>
+      <a  routerLink="/list_user"  routerLinkActive="active"  (click)="menuOpen = false; onNav()">  <i class="bi bi-people-fill"></i> Gestión de Usuarios
+</a>
+
     </ng-container>
     
     <!-- Opciones solo para directiva -->

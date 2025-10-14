@@ -6,16 +6,14 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { RegisterRequest } from '../../interfaces/auth.interface';
 
-
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule,HttpClientModule, FormsModule], 
+  imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
 export class RegisterComponent implements OnInit {
-
   // Datos para regiones, comunas y juntas (desde BD)
   regiones: any[] = [];
   comunas: any[] = [];
@@ -36,9 +34,9 @@ export class RegisterComponent implements OnInit {
     telefono: '',
     direccion: '',
     foto_perfil: '',
-    id_region: 1, // Por defecto Región Metropolitana (ajustar según tu BD)
-    id_comuna: 1, // Ajustar según tu BD
-    id_junta: 1   // Ajustar según tu BD
+    id_region: 1,
+    id_comuna: 1,
+    id_junta: 1
   };
 
   // Estados del componente
@@ -48,19 +46,16 @@ export class RegisterComponent implements OnInit {
   photoPreview: string | null = null;
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private http: HttpClient,
     private authService: AuthService
   ) {}
 
-   ngOnInit(): void {
-    // Cargar regiones desde la BD
+  ngOnInit(): void {
     this.loadRegiones();
   }
 
-  /**
-   * Carga las regiones desde el backend
-   */
+  /** ===================== Cargas de datos ===================== */
   private loadRegiones(): void {
     this.authService.getRegiones().subscribe({
       next: (response) => {
@@ -73,21 +68,78 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-/**
-   * Maneja el cambio de archivo de foto de perfil
-   */
+  private loadComunasByRegion(regionId: number): void {
+    this.authService.getComunasByRegion(regionId).subscribe({
+      next: (response) => {
+        this.comunas = response.comunas;
+      },
+      error: (error) => {
+        console.error('Error cargando comunas:', error);
+        this.errorMessage = 'Error cargando comunas';
+      }
+    });
+  }
+
+  private loadJuntasByComuna(comunaId: number): void {
+    this.authService.getJuntasByComuna(comunaId).subscribe({
+      next: (response) => {
+        this.juntas = response.juntas;
+      },
+      error: (error) => {
+        console.error('Error cargando juntas:', error);
+        this.errorMessage = 'Error cargando juntas';
+      }
+    });
+  }
+
+  /** ===================== Handlers UI ===================== */
+  onRegionChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const regionId = parseInt(target.value);
+    this.regionSeleccionada = target.value;
+
+    this.comunaSeleccionada = '';
+    this.juntaSeleccionada = '';
+    this.comunas = [];
+    this.juntas = [];
+
+    if (regionId) this.loadComunasByRegion(regionId);
+  }
+
+  onComunaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const comunaId = parseInt(target.value);
+    this.comunaSeleccionada = target.value;
+
+    this.juntaSeleccionada = '';
+    this.juntas = [];
+
+    if (comunaId) this.loadJuntasByComuna(comunaId);
+  }
+
+  onJuntaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.juntaSeleccionada = target.value;
+
+    const regionId = parseInt(this.regionSeleccionada);
+    const comunaId = parseInt(this.comunaSeleccionada);
+    const juntaId = parseInt(this.juntaSeleccionada);
+
+    this.registerData.id_region = regionId;
+    this.registerData.id_comuna = comunaId;
+    this.registerData.id_junta = juntaId;
+  }
+
   onFileChange(evt: Event): void {
     const input = evt.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
       this.errorMessage = 'Por favor selecciona un archivo de imagen válido';
       return;
     }
 
-    // Validar tamaño (máximo 2MB)
     if (file.size > 2 * 1024 * 1024) {
       this.errorMessage = 'La imagen no puede ser mayor a 2MB';
       return;
@@ -101,234 +153,150 @@ export class RegisterComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
-  /**
-   * Maneja el cambio de región
-   */
-  onRegionChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const regionId = parseInt(target.value);
-    this.regionSeleccionada = target.value;
-    
-    // Limpiar selecciones dependientes
-    this.comunaSeleccionada = '';
-    this.juntaSeleccionada = '';
-    this.comunas = [];
-    this.juntas = [];
-    
-    if (regionId) {
-      this.loadComunasByRegion(regionId);
-    }
-  }
-
-  /**
-   * Maneja el cambio de comuna
-   */
-  onComunaChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const comunaId = parseInt(target.value);
-    this.comunaSeleccionada = target.value;
-    
-    // Limpiar selección de junta
-    this.juntaSeleccionada = '';
-    this.juntas = [];
-    
-    if (comunaId) {
-      this.loadJuntasByComuna(comunaId);
-    }
-  }
-
-  /**
-   * Maneja el cambio de junta
-   */
-  onJuntaChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.juntaSeleccionada = target.value;
-    
-    // Actualizar los IDs en registerData
-    const regionId = parseInt(this.regionSeleccionada);
-    const comunaId = parseInt(this.comunaSeleccionada);
-    const juntaId = parseInt(this.juntaSeleccionada);
-    
-    this.registerData.id_region = regionId;
-    this.registerData.id_comuna = comunaId;
-    this.registerData.id_junta = juntaId;
-  }
-
-  /**
-   * Carga las comunas de una región específica
-   */
-  private loadComunasByRegion(regionId: number): void {
-    this.authService.getComunasByRegion(regionId).subscribe({
-      next: (response) => {
-        this.comunas = response.comunas;
-      },
-      error: (error) => {
-        console.error('Error cargando comunas:', error);
-        this.errorMessage = 'Error cargando comunas';
-      }
-    });
-  }
-
-  /**
-   * Carga las juntas de una comuna específica
-   */
-  private loadJuntasByComuna(comunaId: number): void {
-    this.authService.getJuntasByComuna(comunaId).subscribe({
-      next: (response) => {
-        this.juntas = response.juntas;
-      },
-      error: (error) => {
-        console.error('Error cargando juntas:', error);
-        this.errorMessage = 'Error cargando juntas';
-      }
-    });
-  }
-
-  /**
-   * Maneja el envío del formulario de registro
-   */
+  /** ===================== Submit ===================== */
   onRegister(): void {
-    // Limpiar mensajes previos
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Validaciones básicas
-    if (!this.isFormValid()) {
-      return;
-    }
+    if (!this.isFormValid()) return;
 
     this.isLoading = true;
 
-    // Preparar datos para envío
-    const registerData = { ...this.registerData };
-    
-    // Limpiar y formatear datos según las expectativas del backend
-    registerData.rut = registerData.rut.replace(/[.\-\s]/g, '').toUpperCase();
-    
-    // Limpiar foto_perfil si está vacía
-    if (!registerData.foto_perfil || registerData.foto_perfil.trim() === '') {
-      registerData.foto_perfil = undefined;
+    const payload: RegisterRequest = { ...this.registerData };
+
+    // Normalizaciones mínimas
+    payload.rut = payload.rut.replace(/[.\-\s]/g, '').toUpperCase();
+    if (!payload.foto_perfil || payload.foto_perfil.trim() === '') {
+      // enviar undefined si no hay imagen
+      (payload as any).foto_perfil = undefined;
     }
-    
-    // Validar que la contraseña no sea muy larga (backend limita a 12 caracteres)
-    if (registerData.password.length > 12) {
+
+    if (payload.password.length > 12) {
       this.errorMessage = 'La contraseña no puede tener más de 12 caracteres';
       this.isLoading = false;
       return;
     }
 
-    this.authService.register(registerData).subscribe({
-      next: (response) => {
+    this.authService.register(payload).subscribe({
+      next: () => {
         this.isLoading = false;
         this.successMessage = '¡Registro exitoso! Redirigiendo al login...';
-        
-        // Redirigir al login después de 2 segundos
-        setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
+        setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (error) => {
         console.error('Error en registro:', error);
         this.isLoading = false;
-        this.errorMessage = error.message || 'Error al registrar usuario. Verifica los datos e intenta nuevamente.';
+        this.errorMessage =
+          error?.error?.detalle ||
+          error?.message ||
+          'Error al registrar usuario. Verifica los datos e intenta nuevamente.';
       }
     });
   }
 
-  /**
-   * Valida que el formulario esté completo
-   */
+  /** ===================== Validaciones FRONT ===================== */
   private isFormValid(): boolean {
-    const data = this.registerData;
+    const d = this.registerData;
 
-    if (!data.email || !data.password || !data.rut || !data.nombres || 
-        !data.apellido_paterno || !data.apellido_materno || !data.fecha_nacimiento ||
-        !data.telefono || !data.direccion) {
-      this.errorMessage = 'Por favor, completa todos los campos obligatorios';
+    // 1) Requeridos
+    if (
+      !d.email || !d.password || !d.rut || !d.nombres ||
+      !d.apellido_paterno || !d.apellido_materno ||
+      !d.fecha_nacimiento || !d.telefono || !d.direccion
+    ) {
+      this.errorMessage = 'Por favor completa todos los campos obligatorios.';
       return false;
     }
 
-    if (!this.isValidEmail(data.email)) {
-      this.errorMessage = 'Por favor, ingresa un email válido';
+    // 2) Email
+    if (!this.isValidEmail(d.email)) {
+      this.errorMessage = 'El correo ingresado no es válido.';
       return false;
     }
 
-    if (data.password.length < 8 || data.password.length > 12) {
-      this.errorMessage = 'La contraseña debe tener entre 8 y 12 caracteres';
+    // 3) Password 8–12
+    if (d.password.length < 8 || d.password.length > 12) {
+      this.errorMessage = 'La contraseña debe tener entre 8 y 12 caracteres.';
       return false;
     }
 
-    if (!this.isValidRut(data.rut)) {
-      this.errorMessage = 'Por favor, ingresa un RUT válido';
+    // 4) RUT con dígito verificador
+    if (!this.isValidRut(d.rut)) {
+      this.errorMessage = 'El RUT ingresado no es válido.';
       return false;
     }
 
-    if (!this.isValidPhone(data.telefono)) {
-      this.errorMessage = 'El teléfono debe tener formato +56XXXXXXXXX';
+    // 5) Teléfono +56 + 9 dígitos
+    if (!this.isValidPhone(d.telefono)) {
+      this.errorMessage = 'El teléfono debe tener formato +56XXXXXXXXX (9 dígitos).';
       return false;
     }
 
-    if (data.nombres.length < 2 || data.apellido_paterno.length < 2 || data.apellido_materno.length < 2) {
-      this.errorMessage = 'Los nombres y apellidos deben tener al menos 2 caracteres';
+    // 6) Mínimos de texto
+    if (
+      d.nombres.trim().length < 2 ||
+      d.apellido_paterno.trim().length < 2 ||
+      d.apellido_materno.trim().length < 2
+    ) {
+      this.errorMessage = 'Los nombres y apellidos deben tener al menos 2 caracteres.';
       return false;
     }
 
-    if (data.direccion.length < 5) {
-      this.errorMessage = 'La dirección debe tener al menos 5 caracteres';
+    if (d.direccion.trim().length < 5) {
+      this.errorMessage = 'La dirección debe tener al menos 5 caracteres.';
+      return false;
+    }
+
+    // 7) Selecciones
+    if (!this.registerData.id_region || !this.registerData.id_comuna || !this.registerData.id_junta) {
+      this.errorMessage = 'Selecciona región, comuna y junta de vecinos.';
       return false;
     }
 
     return true;
   }
 
-  /**
-   * Validación simple de email
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  public isValidEmail(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test((email || '').trim());
   }
 
-  /**
-   * Validación básica de RUT chileno
-   */
-  private isValidRut(rut: string): boolean {
-    // Remover puntos y guiones
-    const cleanRut = rut.replace(/[.-]/g, '');
-    
-    // Verificar que tenga al menos 8 caracteres
-    if (cleanRut.length < 8) {
-      return false;
+  public isValidPhone(phone: string): boolean {
+    // +56 seguido de 9 dígitos
+    return /^\+56\d{9}$/.test((phone || '').trim());
+  }
+
+  /** Valida RUT chileno con dígito verificador */
+  public isValidRut(rut: string): boolean {
+    if (!rut) return false;
+    const clean = rut.replace(/[.\-]/g, '').toUpperCase();
+    if (!/^[0-9]+[0-9K]$/.test(clean)) return false;
+
+    const body = clean.slice(0, -1);
+    const dv = clean.slice(-1);
+
+    let suma = 0;
+    let multiplo = 2;
+
+    for (let i = body.length - 1; i >= 0; i--) {
+      suma += parseInt(body[i], 10) * multiplo;
+      multiplo = multiplo < 7 ? multiplo + 1 : 2;
     }
 
-    // Verificar que tenga formato correcto (números + dígito verificador)
-    const rutRegex = /^\d{7,8}[0-9Kk]$/;
-    return rutRegex.test(cleanRut);
+    const resto = 11 - (suma % 11);
+    const dvEsperado = resto === 11 ? '0' : resto === 10 ? 'K' : resto.toString();
+
+    return dv === dvEsperado;
   }
 
-  /**
-   * Validación de teléfono chileno
-   */
-  private isValidPhone(phone: string): boolean {
-    // Formato esperado: +56XXXXXXXXX (9 dígitos después de +56)
-    const phoneRegex = /^\+56[0-9]{9}$/;
-    return phoneRegex.test(phone);
-  }
+  public declaraVeracidad = false;
 
-  /**
-   * Navegar de vuelta al home
-   */
+  /** ===================== Navegación ===================== */
   goBack(): void {
     this.router.navigate(['/']);
   }
 
-  /**
-   * Navegar al login
-   */
   goToLogin(): void {
     this.router.navigate(['/login']);
   }
 }
-  
-  
-

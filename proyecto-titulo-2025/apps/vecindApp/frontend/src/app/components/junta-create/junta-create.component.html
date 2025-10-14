@@ -28,31 +28,47 @@
 
             <div class="col-12">
               <label class="form-label fw-semibold">Nombre *</label>
-              <input class="form-control" formControlName="nombre" placeholder="Junta de Vecinos Barrio Oeste" autocomplete="organization">
+              <input class="form-control" formControlName="nombre" placeholder="Junta de Vecinos Barrio Oeste"
+                autocomplete="organization">
               <div class="invalid" *ngIf="g('nombre').touched && g('nombre').invalid">Obligatorio (mín. 3)</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">RUT (personalidad jurídica)</label>
-              <input class="form-control" formControlName="rut_personeria" placeholder="12.345.678-9" autocomplete="off">
-              <div class="invalid" *ngIf="g('rut_personeria').touched && g('rut_personeria').invalid">RUT inválido</div>
+              <input class="form-control" formControlName="rut_personeria" placeholder="12.345.678-9" autocomplete="off"
+                [class.is-invalid]="g('rut_personeria').touched && g('rut_personeria').invalid">
+
+              <div class="invalid" *ngIf="g('rut_personeria').touched && g('rut_personeria').invalid">
+                <ng-container *ngIf="g('rut_personeria').errors?.['required']">
+                  Campo obligatorio.
+                </ng-container>
+                <ng-container *ngIf="g('rut_personeria').errors?.['rut'] && !g('rut_personeria').errors?.['required']">
+                  RUT inválido (usa formato 12345678K o 12.345.678-9).
+                </ng-container>
+              </div>
+
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Correo de contacto *</label>
-              <input type="email" class="form-control" formControlName="email_contacto" placeholder="contacto@junta.cl" autocomplete="email">
-              <div class="invalid" *ngIf="g('email_contacto').touched && g('email_contacto').invalid">Email inválido</div>
+              <input type="email" class="form-control" formControlName="email_contacto" placeholder="contacto@junta.cl"
+                autocomplete="email">
+              <div class="invalid" *ngIf="g('email_contacto').touched && g('email_contacto').invalid">Email inválido
+              </div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Teléfono de contacto *</label>
-              <input class="form-control" formControlName="telefono_contacto" placeholder="+569XXXXXXXX" autocomplete="tel">
-              <div class="invalid" *ngIf="g('telefono_contacto').touched && g('telefono_contacto').invalid">Formato +56XXXXXXXXX</div>
+              <input class="form-control" formControlName="telefono_contacto" placeholder="+569XXXXXXXX"
+                autocomplete="tel">
+              <div class="invalid" *ngIf="g('telefono_contacto').touched && g('telefono_contacto').invalid">Formato
+                +56XXXXXXXXX</div>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label fw-semibold">Dirección de la sede *</label>
-              <input class="form-control" formControlName="direccion_sede" placeholder="Calle, número, depto" autocomplete="street-address">
+              <input class="form-control" formControlName="direccion_sede" placeholder="Calle, número, depto"
+                autocomplete="street-address">
               <div class="invalid" *ngIf="g('direccion_sede').touched && g('direccion_sede').invalid">Obligatorio</div>
             </div>
 
@@ -88,7 +104,8 @@
 
             <div class="col-12">
               <label class="form-label fw-semibold">Descripción</label>
-              <textarea rows="3" class="form-control" formControlName="descripcion" placeholder="Breve descripción, objetivos, etc."></textarea>
+              <textarea rows="3" class="form-control" formControlName="descripcion"
+                placeholder="Breve descripción, objetivos, etc."></textarea>
             </div>
 
           </div>
@@ -96,7 +113,8 @@
 
         <!-- Acciones -->
         <div class="col-12 d-flex gap-3 justify-content-end pt-2">
-          <button type="button" class="btn btn-outline-teal-menu" (click)="cancelUI()" [disabled]="isLoading">Cancelar</button>
+          <button type="button" class="btn btn-outline-teal-menu" [routerLink]="'/home'"
+            [disabled]="isLoading">Cancelar</button>
           <button type="submit" class="btn btn-teal-menu" [disabled]="isLoading">
             <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
             Crear Junta

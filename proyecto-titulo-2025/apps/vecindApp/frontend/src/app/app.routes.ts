@@ -20,6 +20,7 @@ import { CreateEspaciosComponent } from './components/create-espacios/create-esp
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { TramitesComponent } from './components/tramites/tramites.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ListUserComponent } from './components/list_user/list_user.component';
 
 
 
@@ -39,6 +40,8 @@ export const appRoutes: Routes = [
   { path: 'quienes-somos', component: QuienesSomosComponent },
   { path: 'reportes', component: ReportesComponent },
   { path: 'tramites', component: TramitesComponent },
+  {  path: 'list_user', loadComponent: () => import('./components/list_user/list_user.component').then(m => m.ListUserComponent)},
+
 
 
 
