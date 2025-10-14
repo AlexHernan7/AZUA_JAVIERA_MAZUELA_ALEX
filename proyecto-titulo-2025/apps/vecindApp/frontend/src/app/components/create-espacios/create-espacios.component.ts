@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule} from '@angular/router';
 import { EspacioService } from '../../services/espacio.service';
 import { AuthService } from '../../services/auth.service';
 import { JuntaService } from '../../services/junta.service';
@@ -12,7 +12,7 @@ import { JuntaListResponse } from '../../interfaces/junta.interface';
 @Component({
   selector: 'app-create-espacios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,RouterModule],
   templateUrl: './create-espacios.component.html',
   styleUrl: './create-espacios.component.css',
 })
@@ -160,14 +160,14 @@ export class CreateEspaciosComponent implements OnInit {
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
       nombre: 'Nombre',
-      tipo: 'Tipo',
+      id_tipo: 'Tipo de espacio',
       capacidad: 'Capacidad',
       valor: 'Valor',
       foto: 'Foto',
       permitido: 'Actividades permitidas',
       no_permitido: 'Actividades no permitidas',
       max_horas: 'Máximo de horas',
-      id_junta: 'Junta'
+      id_junta: 'Junta de vecinos'
     };
     return labels[fieldName] || fieldName;
   }

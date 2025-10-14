@@ -80,7 +80,7 @@ export class LoginComponent implements OnInit {
         } else if (/roles/i.test(raw)) {
           this.errorMessage = 'Tu cuenta no tiene roles asignados. Contacta a la directiva.';
         } else {
-          this.errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
+          this.errorMessage = 'Error al iniciar sesión. Credenciales invalidas. Intenta nuevamente.';
         }
       },
     });

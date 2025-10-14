@@ -1,0 +1,44 @@
+/* sombra suave como el resto del proyecto */
+.shadow-soft { box-shadow: 0 8px 24px rgba(16, 24, 40, .06); }
+
+.searchbox {
+  position: relative;
+  width: min(320px, 100%);
+}
+.searchbox i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: .6;
+}
+.searchbox input.form-control {
+  padding-left: 2.2rem;
+  border-radius: .75rem;
+}
+
+/* badge de estado */
+.status-badge {
+  display: inline-block;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 600;
+}
+.status-badge.on {
+  background: #e7f7ef;
+  color: #0b7a53;
+  border: 1px solid #a6e4c9;
+}
+.status-badge.off {
+  background: #fde8e8;
+  color: #b42318;
+  border: 1px solid #f5b1ad;
+}
+
+/* colores utilitarios (si ya los tienes definidos, puedes omitir) */
+.text-teal { color: #0f766e; }
+.bg-teal-soft { background: #e6f4f2; }
+.badge { border-radius: .75rem; }
+.card-header { border-top-left-radius: 1rem; border-top-right-radius: 1rem; }
+.card { border-radius: 1rem; }

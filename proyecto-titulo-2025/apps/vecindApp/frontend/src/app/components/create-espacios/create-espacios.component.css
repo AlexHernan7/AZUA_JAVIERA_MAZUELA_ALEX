@@ -1,9 +1,9 @@
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #0f766e 0%, #0b5f59 100%);
-  color: white;
+  
+  color: rgb(0, 0, 0);
   padding: 3rem 0;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .hero-content {
@@ -13,7 +13,7 @@
 .hero-title {
   font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
 }
 
 .hero-subtitle {
@@ -24,7 +24,7 @@
 
 /* Form Section */
 .form-section {
-  padding: 2rem 0;
+  padding: 0rem 0;
 }
 
 .form-card {
@@ -142,46 +142,7 @@
   border-top: 2px solid #f8f9fa;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
 
-.btn-primary {
-  background-color: #0f766e;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #0b5f59;
-  transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: #5a6268;
-  transform: translateY(-1px);
-}
-
-.btn-secondary:disabled {
-  background-color: #adb5bd;
-  cursor: not-allowed;
-}
 
 /* Spinner */
 .spinner-border-sm {

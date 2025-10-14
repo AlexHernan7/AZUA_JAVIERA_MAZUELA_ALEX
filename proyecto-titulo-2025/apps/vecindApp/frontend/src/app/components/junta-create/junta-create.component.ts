@@ -1,14 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder, Validators, ReactiveFormsModule,
-  AbstractControl, ValidationErrors, FormGroup
-} from '@angular/forms';
+import { FormBuilder, Validators, ReactiveFormsModule,  AbstractControl, ValidationErrors, FormGroup, } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { JuntaService } from '../../services/junta.service';
 import { AuthService } from '../../services/auth.service';
 import { JuntaCreateRequest } from '../../interfaces/junta.interface';
 import { forkJoin } from 'rxjs';
+import { RouterModule } from '@angular/router';
 
 /* Validadores simples */
 function phoneClValidator(ctrl: AbstractControl): ValidationErrors | null {
@@ -39,7 +37,7 @@ export type JuntaForm = {
 @Component({
   selector: 'app-junta-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule, RouterModule],
   templateUrl: './junta-create.component.html',
   styleUrls: ['./junta-create.component.css'],
 })
@@ -68,7 +66,7 @@ export class JuntaCreateComponent {
     this.form = this.fb.group({
       logo: [''],
       nombre: ['Junta de Vecinos Barrio Oeste', [Validators.required, Validators.minLength(3)]],
-      rut_personeria: ['', rutBasicoValidator], // opcional
+      rut_personeria: ['', [Validators.required, rutBasicoValidator]], // obligatorio + formato
       email_contacto: ['', [Validators.required, Validators.email]],
       telefono_contacto: ['', [Validators.required, phoneClValidator]],
       direccion_sede: ['', [Validators.required, Validators.minLength(5)]],
