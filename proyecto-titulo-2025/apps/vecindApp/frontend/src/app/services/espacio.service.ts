@@ -6,7 +6,9 @@ import {
   EspacioCreateRequest, 
   EspacioResponse, 
   EspacioListResponse,
-  ApiError 
+  ApiError,
+  EspacioDirectivaUpdateRequest,
+  EspacioDirectivaUpdateResponse 
 } from '../interfaces/espacio.interface';
 
 @Injectable({
@@ -102,6 +104,19 @@ export class EspacioService {
     const headers = this.getAuthHeaders();
     
     return this.http.put<EspacioResponse>(`${this.API_URL}/espacios/${id}`, espacioData, { headers })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Actualiza un espacio como directiva
+   * Solo permite editar: capacidad, valor, foto, permitido, no_permitido, max_horas
+   */
+  updateEspacioDirectiva(id: number, updateData: EspacioDirectivaUpdateRequest): Observable<EspacioDirectivaUpdateResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.patch<EspacioDirectivaUpdateResponse>(`${this.API_URL}/espacios/directiva/${id}`, updateData, { headers })
       .pipe(
         catchError(this.handleError)
       );

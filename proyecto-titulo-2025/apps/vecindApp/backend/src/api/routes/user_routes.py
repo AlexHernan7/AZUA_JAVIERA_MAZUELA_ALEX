@@ -4,7 +4,7 @@ Rutas relacionadas con usuarios y vecinos.
 
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from typing import Optional
 
 from src.database.session import get_db_session
@@ -102,6 +102,196 @@ async def verify_admin_user(
         )
 
     logger.info(f"[AUTH] Usuario {user_id} verificado como admin exitosamente")
+    return user_id
+
+
+async def verify_directiva_user(
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_db_session),
+) -> tuple[int, int]:
+    """
+    Verifica que el usuario tenga rol de directiva.
+    
+    Returns:
+        tuple: (user_id, junta_id) del usuario directiva verificado
+    """
+    from src.core.logging import get_logger
+    logger = get_logger(__name__)
+    
+    if not authorization:
+        logger.warning("[AUTH] Token de autorización no proporcionado")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de autorización requerido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extraer token del header
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise ValueError("Esquema inválido")
+    except ValueError:
+        logger.warning("[AUTH] Formato de autorización inválido")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Formato inválido. Use: Bearer <token>",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verificar token JWT
+    payload = verify_token(token)
+    if not payload:
+        logger.warning("[AUTH] Token inválido o expirado")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Obtener user_id
+    user_id = payload.get("sub")
+    if not user_id:
+        logger.warning("[AUTH] Token sin user_id")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        logger.warning(f"[AUTH] ID de usuario inválido: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ID de usuario inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info(f"[AUTH] Verificando rol de directiva para usuario ID: {user_id}")
+
+    # Verificar que el usuario tiene rol de directiva usando queries separadas
+    from src.database.models.usuario import Usuario
+    from src.database.models.directiva import Directiva
+    from src.database.models.usuario_rol import UsuarioRol
+    from src.database.models.rol import Rol
+    
+    # 1. Verificar que el usuario existe
+    result = await db.execute(
+        select(Usuario).where(Usuario.id_usuario == user_id)
+    )
+    usuario = result.scalar_one_or_none()
+    
+    if not usuario:
+        logger.warning(f"[AUTH] Usuario {user_id} no encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado",
+        )
+    
+    # 2. Verificar que tiene rol directiva usando JOIN con tabla Rol
+    rol_result = await db.execute(
+        select(UsuarioRol)
+        .join(Rol, UsuarioRol.id_rol == Rol.id_rol)
+        .where(
+            and_(
+                UsuarioRol.id_usuario == user_id,
+                Rol.codigo == "directiva"
+            )
+        )
+    )
+    tiene_rol_directiva = rol_result.scalar_one_or_none() is not None
+    
+    if not tiene_rol_directiva:
+        logger.warning(f"[AUTH] Usuario {user_id} no tiene rol de directiva")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren permisos de directiva",
+        )
+    
+    # 3. Verificar que tiene registro en tabla directiva y obtener id_junta
+    directiva_result = await db.execute(
+        select(Directiva).where(Directiva.id_usuario == user_id)
+    )
+    directiva = directiva_result.scalar_one_or_none()
+    
+    if not directiva:
+        logger.warning(f"[AUTH] Usuario {user_id} tiene rol directiva pero no registro en tabla directiva")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario sin perfil de directiva asociado",
+        )
+    
+    junta_id = directiva.id_junta
+    
+    logger.info(f"[AUTH] Usuario {user_id} verificado como directiva de junta {junta_id} exitosamente")
+    return (user_id, junta_id)
+
+
+async def verify_user_token(
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_db_session),
+) -> int:
+    """
+    Verifica que el token sea válido y retorna el user_id.
+    No valida roles específicos.
+    """
+    from src.core.logging import get_logger
+    logger = get_logger(__name__)
+    
+    if not authorization:
+        logger.warning("[AUTH] Token de autorización no proporcionado")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de autorización requerido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extraer token del header
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise ValueError("Esquema inválido")
+    except ValueError:
+        logger.warning("[AUTH] Formato de autorización inválido")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Formato inválido. Use: Bearer <token>",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verificar token JWT
+    payload = verify_token(token)
+    if not payload:
+        logger.warning("[AUTH] Token inválido o expirado")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Obtener user_id
+    user_id = payload.get("sub")
+    if not user_id:
+        logger.warning("[AUTH] Token sin user_id")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        logger.warning(f"[AUTH] ID de usuario inválido: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ID de usuario inválido",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info(f"[AUTH] Token verificado para usuario ID: {user_id}")
     return user_id
 
 

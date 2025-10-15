@@ -310,8 +310,8 @@ export class AuthService {
   /**
    * Obtiene las comunas de una región específica
    */
-  getComunasByRegion(regionNombre: string): Observable<any> {
-    return this.http.get(`${this.API_URL}/auth/comunas/region/${encodeURIComponent(regionNombre)}`)
+  getComunasByRegion(regionId: number): Observable<any> {
+    return this.http.get(`${this.API_URL}/auth/comunas/region/${regionId}`)
       .pipe(
         catchError(this.handleError)
       );

@@ -7,6 +7,8 @@ import {
   JuntaCreateResponse, 
   JuntaResponse, 
   JuntasList,
+  JuntaUpdateRequest,
+  JuntaUpdateResponse,
   RegionsList,
   ComunasList,
   ApiError 
@@ -76,6 +78,18 @@ export class JuntaService {
    */
   getJuntasByComuna(comunaId: number): Observable<JuntaResponse[]> {
     return this.http.get<JuntaResponse[]>(`${this.API_URL}/juntas/comuna/${comunaId}`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Actualiza los datos de una junta (solo para usuarios directiva)
+   */
+  updateJunta(juntaId: number, updateData: JuntaUpdateRequest): Observable<JuntaUpdateResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.patch<JuntaUpdateResponse>(`${this.API_URL}/juntas/${juntaId}`, updateData, { headers })
       .pipe(
         catchError(this.handleError)
       );

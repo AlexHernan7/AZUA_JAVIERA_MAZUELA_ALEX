@@ -280,16 +280,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.regionSeleccionada = this.currentUser.vecino.region;
       this.editForm.get('comuna')?.disable();
       
-      this.authService.getComunasByRegion(this.regionSeleccionada).subscribe({
-        next: (response: any) => {
-          this.comunas = response.comunas || [];
-          this.editForm.get('comuna')?.enable();
-        },
-        error: (error) => {
-          console.error('Error cargando comunas:', error);
-          this.editForm.get('comuna')?.enable();
-        }
-      });
+      // Buscar el ID de la región por su nombre
+      const regionEncontrada = this.regiones.find(r => r.nombre === this.regionSeleccionada);
+      if (regionEncontrada) {
+        this.authService.getComunasByRegion(regionEncontrada.id_region).subscribe({
+          next: (response: any) => {
+            this.comunas = response.comunas || [];
+            this.editForm.get('comuna')?.enable();
+          },
+          error: (error) => {
+            console.error('Error cargando comunas:', error);
+            this.editForm.get('comuna')?.enable();
+          }
+        });
+      } else {
+        this.editForm.get('comuna')?.enable();
+      }
     }
     
     // Limpiar mensajes

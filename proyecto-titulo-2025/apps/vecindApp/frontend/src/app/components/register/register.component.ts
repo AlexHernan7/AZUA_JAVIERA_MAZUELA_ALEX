@@ -68,8 +68,8 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  private loadComunasByRegion(regionNombre: string): void {
-    this.authService.getComunasByRegion(regionNombre).subscribe({
+  private loadComunasByRegion(regionId: number): void {
+    this.authService.getComunasByRegion(regionId).subscribe({
       next: (response) => {
         this.comunas = response.comunas;
       },
@@ -95,15 +95,22 @@ export class RegisterComponent implements OnInit {
   /** ===================== Handlers UI ===================== */
   onRegionChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const regionNombre = target.value;
-    this.regionSeleccionada = regionNombre;
+    const regionId = parseInt(target.value);
+    this.regionSeleccionada = target.value;
 
+    // Limpiar selecciones dependientes
     this.comunaSeleccionada = '';
     this.juntaSeleccionada = '';
     this.comunas = [];
     this.juntas = [];
 
-    if (regionNombre) this.loadComunasByRegion(regionNombre);
+    // Asignar ID de región al modelo
+    this.registerData.id_region = regionId;
+
+    // Cargar comunas si la región es válida
+    if (regionId && !isNaN(regionId)) {
+      this.loadComunasByRegion(regionId);
+    }
   }
 
   onComunaChange(event: Event): void {
@@ -111,22 +118,25 @@ export class RegisterComponent implements OnInit {
     const comunaId = parseInt(target.value);
     this.comunaSeleccionada = target.value;
 
+    // Limpiar selección de junta
     this.juntaSeleccionada = '';
     this.juntas = [];
 
-    if (comunaId) this.loadJuntasByComuna(comunaId);
+    // Asignar ID de comuna al modelo
+    this.registerData.id_comuna = comunaId;
+
+    // Cargar juntas si la comuna es válida
+    if (comunaId && !isNaN(comunaId)) {
+      this.loadJuntasByComuna(comunaId);
+    }
   }
 
   onJuntaChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
+    const juntaId = parseInt(target.value);
     this.juntaSeleccionada = target.value;
 
-    const regionId = parseInt(this.regionSeleccionada);
-    const comunaId = parseInt(this.comunaSeleccionada);
-    const juntaId = parseInt(this.juntaSeleccionada);
-
-    this.registerData.id_region = regionId;
-    this.registerData.id_comuna = comunaId;
+    // Asignar ID de junta al modelo
     this.registerData.id_junta = juntaId;
   }
 

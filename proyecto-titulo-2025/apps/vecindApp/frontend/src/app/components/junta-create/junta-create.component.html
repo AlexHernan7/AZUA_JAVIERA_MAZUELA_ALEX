@@ -77,7 +77,7 @@
               <label class="form-label fw-semibold">Región *</label>
               <select class="form-select" formControlName="region">
                 <option value="" disabled>Selecciona una región</option>
-                <option *ngFor="let region of regiones" [value]="region.nombre">{{ region.nombre }}</option>
+                <option *ngFor="let region of regiones" [value]="region.id_region">{{ region.nombre }}</option>
               </select>
               <div class="invalid" *ngIf="g('region').touched && g('region').invalid">Selecciona una región</div>
             </div>

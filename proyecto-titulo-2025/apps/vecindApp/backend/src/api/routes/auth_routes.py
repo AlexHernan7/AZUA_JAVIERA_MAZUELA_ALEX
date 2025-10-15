@@ -144,26 +144,35 @@ async def register_user(
 
 @router.get(
     "/regiones",
-    summary="Listar regiones (desde JSON)",
-    description="Obtiene la lista de todas las regiones disponibles desde el JSON estático",
+    summary="Listar regiones",
+    description="Obtiene la lista de todas las regiones disponibles desde la base de datos",
 )
-async def get_regiones():
+async def get_regiones(db: AsyncSession = Depends(get_db_session)):
     """
-    Obtiene la lista de todas las regiones disponibles desde el JSON.
-    Esto proporciona una alternativa más rápida sin consultar la base de datos.
+    Obtiene la lista de todas las regiones disponibles desde la base de datos.
     """
     try:
-        from src.utils.regiones_comunas_data import get_regiones
+        from src.database.models.region import Region
+        from sqlalchemy import select
         
-        regiones = get_regiones()
+        result = await db.execute(
+            select(Region).order_by(Region.nombre)
+        )
+        regiones = result.scalars().all()
         
         return {
-            "regiones": [{"nombre": region} for region in regiones],
+            "regiones": [
+                {
+                    "id_region": region.id_region,
+                    "nombre": region.nombre
+                } 
+                for region in regiones
+            ],
             "total": len(regiones)
         }
 
     except Exception as e:
-        logger.error(f"Error al obtener regiones desde JSON: {str(e)}")
+        logger.error(f"Error al obtener regiones: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener regiones", "detalle": str(e)},
@@ -198,36 +207,61 @@ async def get_comunas():
 
 
 @router.get(
-    "/comunas/region/{region_nombre}",
-    summary="Listar comunas por región (desde JSON)",
-    description="Obtiene la lista de comunas de una región específica desde el JSON estático",
+    "/comunas/region/{region_id}",
+    summary="Listar comunas por región",
+    description="Obtiene la lista de comunas de una región específica desde la base de datos",
 )
-async def get_comunas_by_region(region_nombre: str):
+async def get_comunas_by_region(region_id: int, db: AsyncSession = Depends(get_db_session)):
     """
-    Obtiene las comunas de una región específica desde el JSON.
+    Obtiene las comunas de una región específica desde la base de datos.
     
     Args:
-        region_nombre: Nombre de la región (ej: "Metropolitana de Santiago")
+        region_id: ID de la región
+        db: Sesión de base de datos
     """
     try:
-        from src.utils.regiones_comunas_data import get_comunas_by_region as get_comunas_json
+        from src.database.models.region import Region
+        from src.database.models.comuna import Comuna
+        from sqlalchemy import select
         
-        comunas = get_comunas_json(region_nombre)
+        # Verificar que la región existe
+        result = await db.execute(
+            select(Region).where(Region.id_region == region_id)
+        )
+        region = result.scalar_one_or_none()
+        
+        if not region:
+            logger.warning(f"Región no encontrada: ID {region_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": "Región no encontrada", "detalle": f"No existe la región con ID {region_id}"},
+            )
+        
+        # Obtener comunas de la región
+        result = await db.execute(
+            select(Comuna)
+            .where(Comuna.id_region == region_id)
+            .order_by(Comuna.nombre)
+        )
+        comunas = result.scalars().all()
         
         return {
-            "region": region_nombre,
-            "comunas": [{"nombre": comuna} for comuna in comunas],
+            "region_id": region_id,
+            "region_nombre": region.nombre,
+            "comunas": [
+                {
+                    "id_comuna": comuna.id_comuna,
+                    "nombre": comuna.nombre
+                } 
+                for comuna in comunas
+            ],
             "total": len(comunas)
         }
 
-    except ValueError as e:
-        logger.warning(f"Región no encontrada: {region_nombre}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": "Región no encontrada", "detalle": str(e)},
-        )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error al obtener comunas por región desde JSON: {str(e)}")
+        logger.error(f"Error al obtener comunas por región: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener comunas", "detalle": str(e)},

@@ -425,32 +425,24 @@ export class ReservasComponent implements OnInit, OnDestroy {
   }
 
   // Método para obtener la imagen del espacio
-  getEspacioImage(espacio: EspacioResponse): string {
+  getEspacioImage(espacio: EspacioResponse): string | null {
     if (espacio.foto) {
-      // Si la foto existe, construir la URL correcta
+      // Si la foto es base64, devolverla directamente
+      if (espacio.foto.startsWith('data:image/')) {
+        return espacio.foto;
+      }
+      // Si la foto existe como URL, construir la URL correcta
       if (espacio.foto.startsWith('uploads/')) {
-        // Las imágenes se sirven desde /uploads (configurado en main.py)
         return `http://localhost:8000/${espacio.foto}`;
       } else if (espacio.foto.startsWith('http')) {
-        // URL absoluta
         return espacio.foto;
       } else if (espacio.foto.startsWith('/')) {
-        // Ruta absoluta
         return `http://localhost:8000${espacio.foto}`;
       }
     }
     
-    // Imagen por defecto según el tipo de espacio
-    switch (espacio.tipo) {
-      case 'cancha':
-        return 'https://via.placeholder.com/400x225/0f766e/ffffff?text=Cancha';
-      case 'sala':
-        return 'https://via.placeholder.com/400x225/0d9488/ffffff?text=Sala+Multiuso';
-      case 'plaza':
-        return 'https://via.placeholder.com/400x225/14b8a6/ffffff?text=Plaza';
-      default:
-        return 'https://via.placeholder.com/400x225/6b7280/ffffff?text=Espacio+Comunitario';
-    }
+    // Si no hay foto, devolver null para que el HTML muestre un placeholder local
+    return null;
   }
 
   /**

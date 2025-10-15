@@ -37,3 +37,23 @@ export interface EspacioListResponse {
 export interface ApiError {
   detail: string;
 }
+
+export interface EspacioDirectivaUpdateRequest {
+  capacidad?: number;
+  valor?: number;
+  foto?: string; // base64 string
+  permitido?: string[];
+  no_permitido?: string[];
+  max_horas?: number;
+}
+
+export interface EspacioDirectivaUpdateResponse {
+  id_espacio: number;
+  capacidad: number;
+  valor: number;
+  foto?: string;
+  permitido?: string[];
+  no_permitido?: string[];
+  max_horas: number;
+  mensaje: string;
+}

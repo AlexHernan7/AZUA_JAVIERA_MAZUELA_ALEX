@@ -19,3 +19,357 @@
 2025-10-14 21:02 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
 2025-10-14 21:02 | INFO | [admin_routes.py:172] | src.api.routes.admin_routes - [ADMIN] Usuario 1 actualizando estado de usuario 47 a True
 2025-10-14 21:02 | INFO | [admin_routes.py:197] | src.api.routes.admin_routes - [ADMIN] Estado de usuario 47 actualizado exitosamente
+2025-10-15 18:43 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 18:43 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 18:43 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 18:43 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-15 18:43 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 51 usuarios
+2025-10-15 18:44 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 18:44 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 18:44 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:01 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 19:01 | ERROR | [session.py:68] | src.database.session - Error de base de datos: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+Traceback (most recent call last):
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\database\session.py", line 63, in get_db_session
+    yield session
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\dependencies\utils.py", line 638, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\api\routes\user_routes.py", line 197, in verify_directiva_user
+    tiene_rol_directiva = any(rol.rol == "directiva" for rol in usuario.roles)
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\api\routes\user_routes.py", line 197, in <genexpr>
+    tiene_rol_directiva = any(rol.rol == "directiva" for rol in usuario.roles)
+                              ^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 569, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 1096, in get
+    value = self._fire_loader_callables(state, key, passive)
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 1131, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\strategies.py", line 978, in _load_for_state
+    return self._emit_lazyload(
+           ~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<7 lines>...
+        execution_options,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\strategies.py", line 1079, in _emit_lazyload
+    return loading.load_on_pk_identity(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<3 lines>...
+        execution_options=execution_options,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\loading.py", line 695, in load_on_pk_identity
+    session.execute(
+    ~~~~~~~~~~~~~~~^
+        q,
+        ^^
+    ...<2 lines>...
+        bind_arguments=bind_arguments,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 2358, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 123, in await_only
+    raise exc.MissingGreenlet(
+    ...<2 lines>...
+    )
+sqlalchemy.exc.MissingGreenlet: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2025-10-15 19:03 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 19:03 | ERROR | [session.py:68] | src.database.session - Error de base de datos: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+Traceback (most recent call last):
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\database\session.py", line 63, in get_db_session
+    yield session
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\dependencies\utils.py", line 638, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\api\routes\user_routes.py", line 200, in verify_directiva_user
+    tiene_rol_directiva = any(rol.rol == "directiva" for rol in usuario.roles)
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\api\routes\user_routes.py", line 200, in <genexpr>
+    tiene_rol_directiva = any(rol.rol == "directiva" for rol in usuario.roles)
+                              ^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 569, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 1096, in get
+    value = self._fire_loader_callables(state, key, passive)
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 1131, in _fire_loader_callables
+    return self.callable_(state, passive)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\strategies.py", line 978, in _load_for_state
+    return self._emit_lazyload(
+           ~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<7 lines>...
+        execution_options,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\strategies.py", line 1079, in _emit_lazyload
+    return loading.load_on_pk_identity(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session,
+        ^^^^^^^^
+    ...<3 lines>...
+        execution_options=execution_options,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\loading.py", line 695, in load_on_pk_identity
+    session.execute(
+    ~~~~~~~~~~~~~~~^
+        q,
+        ^^
+    ...<2 lines>...
+        bind_arguments=bind_arguments,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 2358, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 123, in await_only
+    raise exc.MissingGreenlet(
+    ...<2 lines>...
+    )
+sqlalchemy.exc.MissingGreenlet: greenlet_spawn has not been called; can't call await_only() here. Was IO attempted in an unexpected place? (Background on this error at: https://sqlalche.me/e/20/xd2s)
+2025-10-15 19:07 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 19:07 | ERROR | [session.py:68] | src.database.session - Error de base de datos: Mapped instance expected for relationship comparison to object.   Classes, queries and other SQL elements are not accepted in this context; for comparison with a subquery, use UsuarioRol.rol.has(**criteria).
+Traceback (most recent call last):
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\database\session.py", line 63, in get_db_session
+    yield session
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\fastapi\dependencies\utils.py", line 638, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alexh\OneDrive\Escritorio\Proyecto_titulo\proyecto-titulo-2025\apps\vecindApp\backend\src\api\routes\user_routes.py", line 198, in verify_directiva_user
+    UsuarioRol.rol == "directiva"
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\sql\operators.py", line 584, in __eq__
+    return self.operate(eq, other)
+           ~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\attributes.py", line 453, in operate
+    return op(self.comparator, *other, **kwargs)  # type: ignore[no-any-return]  # noqa: E501
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\relationships.py", line 765, in __eq__
+    self.property._optimized_compare(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        other, adapt_source=self.adapter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\alexh\AppData\Local\pypoetry\Cache\virtualenvs\src-luDikQ5j-py3.13\Lib\site-packages\sqlalchemy\orm\relationships.py", line 1198, in _optimized_compare
+    raise sa_exc.ArgumentError(
+    ...<5 lines>...
+    )
+sqlalchemy.exc.ArgumentError: Mapped instance expected for relationship comparison to object.   Classes, queries and other SQL elements are not accepted in this context; for comparison with a subquery, use UsuarioRol.rol.has(**criteria).
+2025-10-15 19:09 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 19:09 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-15 19:16 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 19:16 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 19:16 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:16 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-15 19:16 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 52 usuarios
+2025-10-15 19:16 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 19:16 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 19:16 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:16 | INFO | [admin_routes.py:172] | src.api.routes.admin_routes - [ADMIN] Usuario 1 actualizando estado de usuario 54 a False
+2025-10-15 19:16 | INFO | [admin_routes.py:197] | src.api.routes.admin_routes - [ADMIN] Estado de usuario 54 actualizado exitosamente
+2025-10-15 19:18 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 19:18 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 19:18 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:18 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-15 19:18 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 52 usuarios
+2025-10-15 19:18 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 19:18 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 19:18 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:18 | INFO | [admin_routes.py:172] | src.api.routes.admin_routes - [ADMIN] Usuario 1 actualizando estado de usuario 54 a True
+2025-10-15 19:18 | INFO | [admin_routes.py:197] | src.api.routes.admin_routes - [ADMIN] Estado de usuario 54 actualizado exitosamente
+2025-10-15 19:19 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-15 19:19 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-15 19:19 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-15 19:19 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-15 19:19 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 52 usuarios
+2025-10-15 19:45 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 19:45 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-15 20:16 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 20:16 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-15 20:28 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 20:28 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-15 20:37 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 20:37 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-15 20:43 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-15 20:43 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente

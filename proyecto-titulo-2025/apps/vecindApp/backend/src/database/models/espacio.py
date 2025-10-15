@@ -10,6 +10,7 @@ from sqlalchemy import (
     CheckConstraint,
     Numeric,
     ARRAY,
+    LargeBinary,
 )
 from sqlalchemy.orm import relationship
 from src.database import Base
@@ -40,7 +41,7 @@ class Espacio(Base):
     nombre = Column(Text, nullable=False)
     capacidad = Column(Integer, nullable=False)
     valor = Column(Numeric(10, 2), nullable=False)  # Precio por hora en CLP
-    foto = Column(Text)  # Ruta a la imagen del espacio
+    foto = Column(LargeBinary)  # Foto del espacio en formato binario
     permitido = Column(ARRAY(Text))  # Array de actividades permitidas
     no_permitido = Column(ARRAY(Text))  # Array de actividades no permitidas
     max_horas = Column(Integer, nullable=False, default=4)  # Máximo de horas por reserva

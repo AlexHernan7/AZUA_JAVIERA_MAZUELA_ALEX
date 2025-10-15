@@ -16,9 +16,11 @@ from src.schemas.junta_schemas import (
     JuntaCreateResponse,
     JuntaResponse,
     JuntasList,
+    JuntaUpdateRequest,
+    JuntaUpdateResponse,
     ErrorResponse,
 )
-from src.api.routes.user_routes import verify_admin_user
+from src.api.routes.user_routes import verify_admin_user, verify_directiva_user
 
 # Crear router para rutas de juntas
 router = APIRouter(prefix="/juntas", tags=["Juntas"])
@@ -220,6 +222,84 @@ async def get_juntas_by_comuna(
         
     except Exception as e:
         logger.error(f"💥 Error obteniendo juntas de comuna {comuna_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
+        )
+
+
+@router.patch(
+    "/{junta_id}",
+    response_model=JuntaUpdateResponse,
+    summary="Actualizar junta (Solo Directiva)",
+    description="Actualiza los datos de una junta. Solo el usuario directiva de esa junta puede actualizarla. Campos editables: teléfono, email, descripción y logo.",
+    responses={
+        200: {"description": "Junta actualizada exitosamente"},
+        400: {"model": ErrorResponse, "description": "Error de validación"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"model": ErrorResponse, "description": "Se requieren permisos de directiva o no tiene permisos para editar esta junta"},
+        404: {"model": ErrorResponse, "description": "Junta no encontrada"},
+    },
+)
+async def update_junta(
+    junta_id: int,
+    update_data: JuntaUpdateRequest,
+    directiva_info: tuple[int, int] = Depends(verify_directiva_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Actualiza los datos de una junta de vecinos.
+    
+    Solo puede ser ejecutado por un usuario con rol directiva, y únicamente
+    puede actualizar su propia junta.
+    
+    Campos que se pueden actualizar:
+    - teléfono: Número de contacto de la junta
+    - email: Correo de contacto de la junta
+    - descripción: Descripción de la junta
+    - logo: Logo de la junta en formato base64
+    
+    Args:
+        junta_id: ID de la junta a actualizar
+        update_data: Datos a actualizar (al menos uno debe ser proporcionado)
+        directiva_info: Tupla (user_id, junta_id) del usuario directiva (validado automáticamente)
+        db: Sesión de base de datos
+    
+    Returns:
+        Datos actualizados de la junta
+    """
+    try:
+        user_id, directiva_junta_id = directiva_info
+        
+        logger.info(f"🔄 Directiva {user_id} iniciando actualización de junta {junta_id}")
+        
+        service = JuntaService(db)
+        junta_actualizada = await service.update_junta(
+            junta_id=junta_id,
+            update_data=update_data,
+            directiva_junta_id=directiva_junta_id
+        )
+        
+        logger.info(f"✅ Junta {junta_id} actualizada exitosamente por directiva {user_id}")
+        return junta_actualizada
+        
+    except ValueError as e:
+        logger.warning(f"❌ Error de validación actualizando junta {junta_id}: {str(e)}")
+        
+        # Determinar código de error apropiado
+        if "no encontrada" in str(e).lower():
+            status_code = status.HTTP_404_NOT_FOUND
+        elif "no tienes permisos" in str(e).lower():
+            status_code = status.HTTP_403_FORBIDDEN
+        else:
+            status_code = status.HTTP_400_BAD_REQUEST
+        
+        raise HTTPException(
+            status_code=status_code,
+            detail={"error": "Error de validación", "detalle": str(e)}
+        )
+    except Exception as e:
+        logger.error(f"💥 Error inesperado actualizando junta {junta_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error interno del servidor", "detalle": str(e)}

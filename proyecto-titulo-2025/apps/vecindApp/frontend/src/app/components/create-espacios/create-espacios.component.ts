@@ -81,10 +81,17 @@ export class CreateEspaciosComponent implements OnInit {
             this.success = true;
             console.log('Espacio creado exitosamente:', response);
             
-            // Redirigir después de 2 segundos
-            setTimeout(() => {
-              this.router.navigate(['/reservas']);
-            }, 2000);
+            // Si es directiva, NO redirigir, solo limpiar el formulario
+            if (this.isDirectiva()) {
+              setTimeout(() => {
+                this.resetForm();
+              }, 2000);
+            } else {
+              // Para vecinos, redirigir a reservas
+              setTimeout(() => {
+                this.router.navigate(['/reservas']);
+              }, 2000);
+            }
           },
           error: (error) => {
             this.loading = false;
@@ -100,10 +107,17 @@ export class CreateEspaciosComponent implements OnInit {
             this.success = true;
             console.log('Espacio creado exitosamente:', response);
             
-            // Redirigir después de 2 segundos
-            setTimeout(() => {
-              this.router.navigate(['/reservas']);
-            }, 2000);
+            // Si es directiva, NO redirigir, solo limpiar el formulario
+            if (this.isDirectiva()) {
+              setTimeout(() => {
+                this.resetForm();
+              }, 2000);
+            } else {
+              // Para vecinos, redirigir a reservas
+              setTimeout(() => {
+                this.router.navigate(['/reservas']);
+              }, 2000);
+            }
           },
           error: (error) => {
             this.loading = false;
@@ -254,5 +268,37 @@ export class CreateEspaciosComponent implements OnInit {
     if (fileInput) {
       fileInput.click();
     }
+  }
+
+  /**
+   * Verifica si el usuario actual es directiva
+   */
+  isDirectiva(): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser || !currentUser.roles) {
+      return false;
+    }
+    return currentUser.roles.includes('directiva');
+  }
+
+  /**
+   * Limpia el formulario y resetea los archivos
+   */
+  resetForm(): void {
+    this.espacioForm.reset({
+      max_horas: 4,
+      activo: true
+    });
+    this.selectedFile = null;
+    this.filePreview = null;
+    this.success = false;
+    this.error = null;
+    
+    // Resetear el estado touched de todos los campos
+    Object.keys(this.espacioForm.controls).forEach(key => {
+      const control = this.espacioForm.get(key);
+      control?.markAsUntouched();
+      control?.markAsPristine();
+    });
   }
 }

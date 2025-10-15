@@ -19,9 +19,11 @@ from src.schemas.espacio_schemas import (
     EspacioUpdateRequest,
     EspacioResponse,
     EspacioListResponse,
+    EspacioDirectivaUpdateRequest,
+    EspacioDirectivaUpdateResponse,
 )
 from src.schemas.auth_schemas import ErrorResponse
-from src.api.routes.user_routes import verify_user_token
+from src.api.routes.user_routes import verify_user_token, verify_directiva_user
 
 # Crear router para rutas de espacios
 router = APIRouter(prefix="/espacios", tags=["Espacios"])
@@ -82,10 +84,13 @@ async def create_espacio(
     try:
         logger.info(f"🔄 Usuario {user_id} creando espacio: {nombre}")
         
-        # Procesar archivo si existe
-        foto_path = None
+        # Procesar archivo si existe - convertir a binario
+        foto_binary = None
         if foto and foto.filename:
-            foto_path = await save_uploaded_file(foto)
+            # Leer el contenido del archivo
+            file_content = await foto.read()
+            foto_binary = file_content  # Ya es bytes, lo guardamos directamente
+            logger.info(f"📷 Foto procesada: {len(file_content)} bytes")
         
         # Crear objeto de datos del espacio
         espacio_data = EspacioCreateRequest(
@@ -98,7 +103,7 @@ async def create_espacio(
             id_junta=id_junta,
             permitido=permitido or [],
             no_permitido=no_permitido or [],
-            foto=foto_path
+            foto=foto_binary  # Ahora es binario
         )
         
         espacio_service = EspacioService(db)
@@ -276,6 +281,86 @@ async def update_espacio(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
+        )
+
+
+@router.patch(
+    "/directiva/{espacio_id}",
+    response_model=EspacioDirectivaUpdateResponse,
+    summary="Actualizar espacio (Solo Directiva)",
+    description="Actualiza los datos editables de un espacio. Solo el usuario directiva de esa junta puede actualizar. Campos editables: capacidad, valor, foto, permitido, no_permitido, max_horas.",
+    responses={
+        200: {"description": "Espacio actualizado exitosamente"},
+        400: {"model": ErrorResponse, "description": "Error de validación"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"model": ErrorResponse, "description": "Se requieren permisos de directiva o no tiene permisos para editar este espacio"},
+        404: {"model": ErrorResponse, "description": "Espacio no encontrado"},
+    },
+)
+async def update_espacio_directiva(
+    espacio_id: int,
+    update_data: EspacioDirectivaUpdateRequest,
+    directiva_info: tuple[int, int] = Depends(verify_directiva_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Actualiza los datos de un espacio comunitario (solo para directivas).
+    
+    Solo puede ser ejecutado por un usuario con rol directiva, y únicamente
+    puede actualizar espacios de su propia junta.
+    
+    Campos que se pueden actualizar:
+    - capacidad: Capacidad máxima de personas
+    - valor: Precio por hora en CLP
+    - foto: Foto del espacio en formato base64
+    - permitido: Lista de actividades permitidas
+    - no_permitido: Lista de actividades no permitidas
+    - max_horas: Máximo de horas por reserva
+    
+    Args:
+        espacio_id: ID del espacio a actualizar
+        update_data: Datos a actualizar (al menos uno debe ser proporcionado)
+        directiva_info: Tupla (user_id, junta_id) del usuario directiva (validado automáticamente)
+        db: Sesión de base de datos
+    
+    Returns:
+        Datos actualizados del espacio
+    """
+    try:
+        user_id, directiva_junta_id = directiva_info
+        
+        logger.info(f"🔄 Directiva {user_id} iniciando actualización de espacio {espacio_id}")
+        
+        service = EspacioService(db)
+        espacio_actualizado = await service.update_espacio_directiva(
+            espacio_id=espacio_id,
+            update_data=update_data,
+            directiva_junta_id=directiva_junta_id
+        )
+        
+        logger.info(f"✅ Espacio {espacio_id} actualizado exitosamente por directiva {user_id}")
+        return espacio_actualizado
+        
+    except ValueError as e:
+        logger.warning(f"❌ Error de validación actualizando espacio {espacio_id}: {str(e)}")
+        
+        # Determinar código de error apropiado
+        if "no encontrado" in str(e).lower():
+            status_code = status.HTTP_404_NOT_FOUND
+        elif "no tienes permisos" in str(e).lower():
+            status_code = status.HTTP_403_FORBIDDEN
+        else:
+            status_code = status.HTTP_400_BAD_REQUEST
+        
+        raise HTTPException(
+            status_code=status_code,
+            detail={"error": "Error de validación", "detalle": str(e)}
+        )
+    except Exception as e:
+        logger.error(f"💥 Error inesperado actualizando espacio {espacio_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
         )
 
 

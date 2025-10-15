@@ -240,6 +240,106 @@ class JuntasList(BaseModel):
     inactivas: int
 
 
+class JuntaUpdateRequest(BaseModel):
+    """
+    Schema para actualizar datos de una junta.
+    Solo permite editar: teléfono, correo, logo y descripción.
+    """
+    
+    telefono: Optional[str] = Field(None, description="Nuevo teléfono de contacto")
+    email: Optional[EmailStr] = Field(None, description="Nuevo correo de contacto")
+    descripcion: Optional[str] = Field(None, description="Nueva descripción de la junta", max_length=1000)
+    logo: Optional[str] = Field(None, description="Nuevo logo de la junta en base64")
+
+    @validator("telefono")
+    def validate_telefono(cls, v):
+        """Validar formato de teléfono chileno."""
+        if v is None:
+            return v
+            
+        # Limpiar caracteres especiales
+        telefono_limpio = re.sub(r"[^\d+]", "", v)
+        
+        # Normalizar formato chileno
+        if not telefono_limpio.startswith("+56"):
+            if telefono_limpio.startswith("56"):
+                telefono_limpio = f"+{telefono_limpio}"
+            elif telefono_limpio.startswith("9") and len(telefono_limpio) == 8:
+                telefono_limpio = f"+569{telefono_limpio[1:]}"
+            elif len(telefono_limpio) == 8:
+                telefono_limpio = f"+56{telefono_limpio}"
+            else:
+                raise ValueError("Formato de teléfono inválido. Use formato chileno (+56XXXXXXXXX)")
+        
+        # Validar longitud
+        if len(telefono_limpio) < 11 or len(telefono_limpio) > 12:
+            raise ValueError("Teléfono debe tener entre 11 y 12 dígitos incluyendo +56")
+        
+        return telefono_limpio
+
+    @validator("logo")
+    def validate_logo(cls, v):
+        """Validar formato de logo en base64."""
+        if v is None:
+            return v
+        
+        # Validar formato base64
+        if not v.startswith("data:image/"):
+            raise ValueError("El logo debe estar en formato base64 con prefijo data:image/")
+        
+        try:
+            # Extraer el tipo MIME y los datos
+            header, data = v.split(",", 1)
+            mime_type = header.split(";")[0].split(":")[1]
+            
+            # Validar tipos MIME permitidos
+            allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/svg+xml"]
+            if mime_type not in allowed_types:
+                raise ValueError(f"Tipo de imagen no permitido. Use: {', '.join(allowed_types)}")
+            
+            # Validar que los datos base64 sean válidos
+            import base64
+            decoded = base64.b64decode(data)
+            
+            # Validar tamaño (máximo 5MB para logos)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if len(decoded) > max_size:
+                raise ValueError("El logo es demasiado grande. Máximo 5MB permitido")
+            
+            return v
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error al validar logo: {str(e)}")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "telefono": "+56987654321",
+                "email": "nuevo.contacto@junta.cl",
+                "descripcion": "Nueva descripción actualizada de la junta",
+                "logo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD..."
+            }
+        }
+
+
+class JuntaUpdateResponse(BaseModel):
+    """
+    Schema para respuesta de actualización de junta.
+    """
+    
+    id_junta: int
+    telefono: Optional[str]
+    email: Optional[str]
+    descripcion: Optional[str]
+    logo: Optional[str] = None  # Logo en base64 si existe
+    mensaje: str = "Junta actualizada exitosamente"
+
+    class Config:
+        from_attributes = True
+
+
 class ErrorResponse(BaseModel):
     """
     Schema para respuestas de error.

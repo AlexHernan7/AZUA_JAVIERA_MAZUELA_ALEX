@@ -89,6 +89,22 @@ export interface ComunasList {
   total: number;
 }
 
+export interface JuntaUpdateRequest {
+  telefono?: string;
+  email?: string;
+  descripcion?: string;
+  logo?: string; // base64 string
+}
+
+export interface JuntaUpdateResponse {
+  id_junta: number;
+  telefono?: string;
+  email?: string;
+  descripcion?: string;
+  logo?: string;
+  mensaje: string;
+}
+
 export interface ApiError {
   error: string;
   detalle?: string;

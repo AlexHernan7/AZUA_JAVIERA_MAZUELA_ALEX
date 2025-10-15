@@ -131,20 +131,28 @@ export class JuntaCreateComponent {
   /**
    * Maneja el cambio de región
    */
-  private onRegionChange(regionNombre: string): void {
-    if (!regionNombre) {
+  private onRegionChange(regionIdStr: string): void {
+    if (!regionIdStr) {
       // Si no hay región seleccionada, deshabilitar comuna
       this.form.get('comuna')!.disable();
       return;
     }
     
-    this.regionSeleccionada = regionNombre;
+    // Convertir el valor a número (ahora es ID de región)
+    const regionId = parseInt(regionIdStr);
+    
+    if (isNaN(regionId)) {
+      this.form.get('comuna')!.disable();
+      return;
+    }
+    
+    this.regionSeleccionada = regionIdStr;
     this.comunaSeleccionada = '';
     this.comunas = [];
     this.form.get('comuna')!.reset('');
     this.form.get('comuna')!.disable(); // Deshabilitar mientras carga
     
-    this.authService.getComunasByRegion(regionNombre).subscribe({
+    this.authService.getComunasByRegion(regionId).subscribe({
       next: (response) => {
         this.comunas = response.comunas;
         this.form.get('comuna')!.enable(); // Habilitar cuando termine de cargar

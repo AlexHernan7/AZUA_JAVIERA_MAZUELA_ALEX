@@ -18,7 +18,9 @@ from src.schemas.espacio_schemas import (
     EspacioCreateRequest,
     EspacioUpdateRequest,
     EspacioResponse,
-    EspacioListResponse
+    EspacioListResponse,
+    EspacioDirectivaUpdateRequest,
+    EspacioDirectivaUpdateResponse
 )
 
 logger = logging.getLogger(__name__)
@@ -261,6 +263,108 @@ class EspacioService:
             await self.db.rollback()
             logger.error(f"Error al eliminar espacio {espacio_id}: {e}")
             raise
+
+    async def update_espacio_directiva(
+        self,
+        espacio_id: int,
+        update_data: EspacioDirectivaUpdateRequest,
+        directiva_junta_id: int
+    ) -> EspacioDirectivaUpdateResponse:
+        """
+        Actualiza un espacio por un usuario directiva.
+        Solo puede actualizar: capacidad, valor, foto, permitido, no_permitido, max_horas.
+        
+        Args:
+            espacio_id: ID del espacio a actualizar
+            update_data: Datos a actualizar
+            directiva_junta_id: ID de la junta del usuario directiva
+            
+        Returns:
+            EspacioDirectivaUpdateResponse: Datos actualizados del espacio
+            
+        Raises:
+            ValueError: Si el espacio no existe o no pertenece a la junta del directiva
+        """
+        try:
+            # Verificar que el espacio existe
+            espacio = await self._get_espacio_by_id(espacio_id)
+            
+            if not espacio:
+                raise ValueError(f"Espacio con ID {espacio_id} no encontrado")
+            
+            # Verificar que el espacio pertenece a la junta del directiva
+            if espacio.id_junta != directiva_junta_id:
+                raise ValueError("No tienes permisos para editar este espacio")
+            
+            # Actualizar solo los campos proporcionados
+            campos_actualizados = []
+            
+            if update_data.capacidad is not None:
+                espacio.capacidad = update_data.capacidad
+                campos_actualizados.append("capacidad")
+            
+            if update_data.valor is not None:
+                espacio.valor = update_data.valor
+                campos_actualizados.append("valor")
+            
+            if update_data.foto is not None:
+                try:
+                    from src.utils import base64_to_binary
+                    foto_binary = base64_to_binary(update_data.foto)
+                    espacio.foto = foto_binary
+                    campos_actualizados.append("foto")
+                except Exception as e:
+                    raise ValueError(f"Error procesando foto: {str(e)}")
+            
+            if update_data.permitido is not None:
+                espacio.permitido = update_data.permitido
+                campos_actualizados.append("actividades permitidas")
+            
+            if update_data.no_permitido is not None:
+                espacio.no_permitido = update_data.no_permitido
+                campos_actualizados.append("actividades no permitidas")
+            
+            if update_data.max_horas is not None:
+                espacio.max_horas = update_data.max_horas
+                campos_actualizados.append("máximo de horas")
+            
+            # Si no se proporcionó ningún campo para actualizar
+            if not campos_actualizados:
+                raise ValueError("No se proporcionaron campos para actualizar")
+            
+            # Guardar cambios
+            await self.db.commit()
+            await self.db.refresh(espacio)
+            
+            logger.info(f"✅ Espacio {espacio_id} actualizado exitosamente por directiva. Campos: {', '.join(campos_actualizados)}")
+            
+            # Convertir foto a base64 si existe
+            foto_base64 = None
+            if espacio.foto:
+                try:
+                    from src.utils import binary_to_base64
+                    foto_base64 = binary_to_base64(espacio.foto, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo foto a base64: {str(e)}")
+            
+            return EspacioDirectivaUpdateResponse(
+                id_espacio=espacio.id_espacio,
+                capacidad=espacio.capacidad,
+                valor=espacio.valor,
+                foto=foto_base64,
+                permitido=espacio.permitido,
+                no_permitido=espacio.no_permitido,
+                max_horas=espacio.max_horas,
+                mensaje=f"Espacio actualizado exitosamente. Campos modificados: {', '.join(campos_actualizados)}"
+            )
+        
+        except ValueError:
+            await self.db.rollback()
+            raise
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"❌ Error actualizando espacio {espacio_id}: {str(e)}")
+            raise Exception(f"Error interno al actualizar espacio: {str(e)}")
 
     async def _get_espacio_by_id(self, espacio_id: int) -> Optional[Espacio]:
         """Obtiene un espacio por ID (método privado)."""

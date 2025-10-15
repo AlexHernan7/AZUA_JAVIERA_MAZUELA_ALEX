@@ -33,7 +33,10 @@
   <div class="col-md-4" *ngFor="let e of espacios">
     <div class="card shadow-sm h-100">
       <div class="ratio ratio-16x9">
-        <img [src]="getEspacioImage(e)" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
+        <img *ngIf="getEspacioImage(e)" [src]="getEspacioImage(e)!" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
+        <div *ngIf="!getEspacioImage(e)" class="d-flex align-items-center justify-content-center bg-light text-muted">
+          <i class="bi bi-building" style="font-size: 3rem;"></i>
+        </div>
       </div>
       <div class="card-body d-flex flex-column gap-2">
         <h5 class="mb-1">{{ e.nombre }}</h5>
@@ -62,7 +65,10 @@
 <div class="card shadow-sm mb-5" *ngIf="panelAbierto()">
   <div class="card-header d-flex align-items-center justify-content-between">
     <div class="d-flex align-items-center gap-3">
-      <img [src]="getEspacioImage(seleccionado()!)" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
+      <img *ngIf="getEspacioImage(seleccionado()!)" [src]="getEspacioImage(seleccionado()!)!" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
+      <div *ngIf="!getEspacioImage(seleccionado()!)" class="d-flex align-items-center justify-content-center bg-light text-muted" style="width: 60px; height: 40px; border-radius: .375rem;">
+        <i class="bi bi-building"></i>
+      </div>
       <div>
         <div class="fw-semibold">{{ seleccionado()!.nombre }}</div>
         <div class="small text-secondary">

@@ -12,8 +12,15 @@ import base64
 from src.database.models.junta import Junta
 from src.database.models.comuna import Comuna
 from src.database.models.region import Region
-from src.schemas.junta_schemas import JuntaCreateRequest, JuntaCreateResponse, JuntaResponse, JuntaListResponse
-from src.utils.image_utils import base64_to_binary
+from src.schemas.junta_schemas import (
+    JuntaCreateRequest, 
+    JuntaCreateResponse, 
+    JuntaResponse, 
+    JuntaListResponse,
+    JuntaUpdateRequest,
+    JuntaUpdateResponse
+)
+from src.utils.image_utils import base64_to_binary, binary_to_base64
 
 logger = logging.getLogger(__name__)
 
@@ -311,3 +318,96 @@ class JuntaService:
         except Exception as e:
             logger.error(f"❌ Error obteniendo juntas de comuna {comuna_id}: {str(e)}")
             raise Exception(f"Error interno al obtener juntas de comuna: {str(e)}")
+
+    async def update_junta(
+        self, 
+        junta_id: int, 
+        update_data: JuntaUpdateRequest,
+        directiva_junta_id: int
+    ) -> JuntaUpdateResponse:
+        """
+        Actualiza los datos de una junta de vecinos.
+        Solo puede actualizar: teléfono, email, descripción y logo.
+        
+        Args:
+            junta_id: ID de la junta a actualizar
+            update_data: Datos a actualizar
+            directiva_junta_id: ID de la junta del usuario directiva (para verificar permisos)
+            
+        Returns:
+            Datos actualizados de la junta
+            
+        Raises:
+            ValueError: Si hay errores de validación o permisos
+            Exception: Si hay errores de base de datos
+        """
+        try:
+            # Verificar que la junta existe
+            query = select(Junta).where(Junta.id_junta == junta_id)
+            result = await self.db.execute(query)
+            junta = result.scalar_one_or_none()
+            
+            if not junta:
+                raise ValueError(f"Junta con ID {junta_id} no encontrada")
+            
+            # Verificar que el usuario directiva tiene permiso para editar esta junta
+            if junta.id_junta != directiva_junta_id:
+                raise ValueError("No tienes permisos para editar esta junta")
+            
+            # Actualizar solo los campos proporcionados
+            campos_actualizados = []
+            
+            if update_data.telefono is not None:
+                junta.telefono = update_data.telefono
+                campos_actualizados.append("teléfono")
+            
+            if update_data.email is not None:
+                junta.email = update_data.email
+                campos_actualizados.append("email")
+            
+            if update_data.descripcion is not None:
+                junta.descripcion = update_data.descripcion
+                campos_actualizados.append("descripción")
+            
+            if update_data.logo is not None:
+                try:
+                    logo_binary = base64_to_binary(update_data.logo)
+                    junta.logo = logo_binary
+                    campos_actualizados.append("logo")
+                except Exception as e:
+                    raise ValueError(f"Error procesando logo: {str(e)}")
+            
+            # Si no se proporcionó ningún campo para actualizar
+            if not campos_actualizados:
+                raise ValueError("No se proporcionaron campos para actualizar")
+            
+            # Guardar cambios
+            await self.db.commit()
+            await self.db.refresh(junta)
+            
+            logger.info(f"✅ Junta {junta_id} actualizada exitosamente. Campos actualizados: {', '.join(campos_actualizados)}")
+            
+            # Convertir logo a base64 si existe
+            logo_base64 = None
+            if junta.logo:
+                try:
+                    logo_base64 = binary_to_base64(junta.logo, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo logo a base64: {str(e)}")
+            
+            return JuntaUpdateResponse(
+                id_junta=junta.id_junta,
+                telefono=junta.telefono,
+                email=junta.email,
+                descripcion=junta.descripcion,
+                logo=logo_base64,
+                mensaje=f"Junta actualizada exitosamente. Campos modificados: {', '.join(campos_actualizados)}"
+            )
+        
+        except ValueError:
+            await self.db.rollback()
+            raise
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"❌ Error actualizando junta {junta_id}: {str(e)}")
+            raise Exception(f"Error interno al actualizar junta: {str(e)}")
