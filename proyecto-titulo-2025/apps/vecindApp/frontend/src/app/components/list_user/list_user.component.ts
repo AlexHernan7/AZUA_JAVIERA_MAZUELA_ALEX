@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 type RoleCode = 'admin' | 'vecino' | 'directiva';
@@ -42,11 +42,25 @@ export class ListUserComponent implements OnInit {
     this.fetchUsers();
   }
 
+  /**
+   * Obtiene los headers de autenticación con el token
+   */
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('vecindapp_token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
+
   fetchUsers(): void {
     this.loading = true;
     this.error = '';
+    
+    const headers = this.getAuthHeaders();
+    
     this.http
-      .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/usuarios?limit=1000`)
+      .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/usuarios?limit=1000`, { headers })
       .subscribe({
         next: (res) => {
           // excluir admins
@@ -103,9 +117,11 @@ export class ListUserComponent implements OnInit {
     if (this.rowBusy.has(u.id_usuario)) return;
     const nuevo = !u.activo;
 
+    const headers = this.getAuthHeaders();
+
     this.rowBusy.add(u.id_usuario);
     this.http
-      .patch(`${this.BASE_URL}/usuarios/${u.id_usuario}/estado`, { activo: nuevo })
+      .patch(`${this.BASE_URL}/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers })
       .subscribe({
         next: () => {
           u.activo = nuevo; // éxito optimista

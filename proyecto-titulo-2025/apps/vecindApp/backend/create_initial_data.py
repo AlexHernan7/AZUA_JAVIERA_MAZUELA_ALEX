@@ -1,6 +1,8 @@
 """Crea datos iniciales en la base de datos."""
 
 import asyncio
+import json
+from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from src.database.session import get_transaction_session
@@ -13,49 +15,79 @@ async def create_initial_data():
         try:
             print("Creando datos iniciales...")
             
-            # 1. Crear Región Metropolitana
-            # Verificar si ya existe
+            # 1. Cargar regiones y comunas desde JSON
+            json_path = Path(__file__).parent.parent / "frontend" / "public" / "data" / "regiones-comunas.json"
+            print(f"[INFO] Cargando regiones y comunas desde: {json_path}")
+            
+            with open(json_path, 'r', encoding='utf-8') as f:
+                regiones_data = json.load(f)
+            
+            print(f"[INFO] Total regiones a crear: {len(regiones_data)}")
+            total_comunas = sum(len(comunas) for comunas in regiones_data.values())
+            print(f"[INFO] Total comunas a crear: {total_comunas}")
+            
+            # Crear todas las regiones y comunas
+            for region_nombre, comunas_list in regiones_data.items():
+                
+                # Verificar si ya existe
+                result = await session.execute(text("""
+                    SELECT id_region FROM "vecindapp".region 
+                    WHERE nombre = :nombre
+                """), {"nombre": region_nombre})
+                existing_region = result.scalar()
+                
+                if not existing_region:
+                    await session.execute(text("""
+                        INSERT INTO "vecindapp".region (nombre) 
+                        VALUES (:nombre)
+                    """), {"nombre": region_nombre})
+                    print(f"[OK] Región creada: {region_nombre}")
+                else:
+                    print(f"[INFO] Región ya existe: {region_nombre}")
+                
+                # Obtener ID de la región
+                result = await session.execute(text("""
+                    SELECT id_region FROM "vecindapp".region 
+                    WHERE nombre = :nombre
+                """), {"nombre": region_nombre})
+                id_region = result.scalar()
+                
+                # Crear comunas de esta región
+                for comuna_nombre in comunas_list:
+                    result = await session.execute(text("""
+                        SELECT id_comuna FROM "vecindapp".comuna 
+                        WHERE nombre = :nombre AND id_region = :id_region
+                    """), {"nombre": comuna_nombre, "id_region": id_region})
+                    existing_comuna = result.scalar()
+                    
+                    if not existing_comuna:
+                        await session.execute(text("""
+                            INSERT INTO "vecindapp".comuna (id_region, nombre) 
+                            VALUES (:id_region, :nombre)
+                        """), {"id_region": id_region, "nombre": comuna_nombre})
+                        print(f"  [OK] Comuna creada: {comuna_nombre}")
+                    else:
+                        print(f"  [INFO] Comuna ya existe: {comuna_nombre}")
+            
+            print(f"\n[SUCCESS] Se procesaron todas las regiones y comunas")
+            
+            # 2. Obtener ID de Maipú para crear juntas de ejemplo (solo si existe)
             result = await session.execute(text("""
-                SELECT id_region FROM "vecindapp".region 
-                WHERE nombre = 'Región Metropolitana de Santiago'
+                SELECT c.id_comuna FROM "vecindapp".comuna c
+                JOIN "vecindapp".region r ON c.id_region = r.id_region
+                WHERE c.nombre = 'Maipú' 
+                AND r.nombre = 'Región Metropolitana de Santiago'
             """))
-            existing_region = result.scalar()
-            
-            if not existing_region:
-                await session.execute(text("""
-                    INSERT INTO "vecindapp".region (nombre) 
-                    VALUES ('Región Metropolitana de Santiago')
-                """))
-            
-            # Obtener ID de la región
-            result = await session.execute(text("""
-                SELECT id_region FROM "vecindapp".region 
-                WHERE nombre = 'Región Metropolitana de Santiago'
-            """))
-            id_region = result.scalar()
-            print(f"[OK] Region: Region Metropolitana (ID: {id_region})")
-            
-            # 2. Crear Comuna de Maipú
-            # Verificar si ya existe
-            result = await session.execute(text("""
-                SELECT id_comuna FROM "vecindapp".comuna 
-                WHERE nombre = 'Maipú' AND id_region = :id_region
-            """), {"id_region": id_region})
-            existing_comuna = result.scalar()
-            
-            if not existing_comuna:
-                await session.execute(text("""
-                    INSERT INTO "vecindapp".comuna (id_region, nombre) 
-                    VALUES (:id_region, 'Maipú')
-                """), {"id_region": id_region})
-            
-            # Obtener ID de la comuna
-            result = await session.execute(text("""
-                SELECT id_comuna FROM "vecindapp".comuna 
-                WHERE nombre = 'Maipú' AND id_region = :id_region
-            """), {"id_region": id_region})
             id_comuna = result.scalar()
-            print(f"[OK] Comuna: Maipu (ID: {id_comuna})")
+            
+            if not id_comuna:
+                print("[WARNING] No se encontró la comuna de Maipú, usando la primera comuna disponible")
+                result = await session.execute(text("""
+                    SELECT id_comuna FROM "vecindapp".comuna LIMIT 1
+                """))
+                id_comuna = result.scalar()
+            
+            print(f"[INFO] Comuna seleccionada para juntas de ejemplo (ID: {id_comuna})")
             
             # 3. Crear juntas de ejemplo
             juntas = [
@@ -306,10 +338,17 @@ async def create_initial_data():
             result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".motivo_solicitud"))
             total_motivos = result.scalar()
             
+            # Contar totales finales
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".region"))
+            total_regiones = result.scalar()
+            
+            result = await session.execute(text("SELECT COUNT(*) FROM \"vecindapp\".comuna"))
+            total_comunas_final = result.scalar()
+            
             print("\n[RESUMEN]:")
-            print(f"- 1 Region: Region Metropolitana (ID: {id_region})")
-            print(f"- 1 Comuna: Maipu (ID: {id_comuna})")
-            print(f"- {total_juntas} Juntas de vecinos en Maipu")
+            print(f"- {total_regiones} Regiones cargadas desde JSON")
+            print(f"- {total_comunas_final} Comunas cargadas desde JSON")
+            print(f"- {total_juntas} Juntas de vecinos de ejemplo")
             print(f"- 3 Roles: vecino, directiva, admin")
             print(f"- {total_estados_cert} Estados de certificado")
             print(f"- {total_estados_res} Estados de reserva")

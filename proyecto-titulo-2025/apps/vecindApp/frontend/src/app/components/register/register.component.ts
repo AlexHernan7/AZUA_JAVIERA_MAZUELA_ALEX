@@ -68,8 +68,8 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  private loadComunasByRegion(regionId: number): void {
-    this.authService.getComunasByRegion(regionId).subscribe({
+  private loadComunasByRegion(regionNombre: string): void {
+    this.authService.getComunasByRegion(regionNombre).subscribe({
       next: (response) => {
         this.comunas = response.comunas;
       },
@@ -95,15 +95,15 @@ export class RegisterComponent implements OnInit {
   /** ===================== Handlers UI ===================== */
   onRegionChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const regionId = parseInt(target.value);
-    this.regionSeleccionada = target.value;
+    const regionNombre = target.value;
+    this.regionSeleccionada = regionNombre;
 
     this.comunaSeleccionada = '';
     this.juntaSeleccionada = '';
     this.comunas = [];
     this.juntas = [];
 
-    if (regionId) this.loadComunasByRegion(regionId);
+    if (regionNombre) this.loadComunasByRegion(regionNombre);
   }
 
   onComunaChange(event: Event): void {

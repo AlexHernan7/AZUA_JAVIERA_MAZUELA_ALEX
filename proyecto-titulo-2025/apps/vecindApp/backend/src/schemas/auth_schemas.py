@@ -307,6 +307,31 @@ class VecinoResponse(BaseModel):
         from_attributes = True  # Para convertir desde modelos SQLAlchemy
 
 
+class VecinoListResponse(BaseModel):
+    """
+    Schema extendido para listar vecinos con estado del usuario.
+    """
+
+    id_vecino: int
+    id_usuario: int
+    rut: str
+    nombres: str
+    apellido_paterno: str
+    apellido_materno: Optional[str]
+    email: str
+    telefono: Optional[str]
+    direccion: Optional[str]
+    fecha_nacimiento: Optional[date]
+    foto_perfil: Optional[str] = None
+    activo: bool  # Estado activo/inactivo del usuario
+    junta_nombre: Optional[str] = None
+    comuna_nombre: Optional[str] = None
+    region_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class UsuarioRegistroResponse(BaseModel):
     """
     Schema para la respuesta exitosa de registro.

@@ -13,6 +13,7 @@ from src.api.routes.espacio_routes import router as espacio_router
 from src.api.routes.reserva_routes import router as reserva_router
 from src.api.routes.master_routes import router as master_router
 from src.api.routes.reporte_routes import router as reporte_router
+from src.api.routes.admin_routes import router as admin_router
 
 # Configurar logging
 configure_logging()
@@ -63,7 +64,7 @@ async def api_info():
     }
 
 
-# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos, juntas, espacios, reservas, pagos y tablas maestras
+# Incluir las rutas de autenticación, usuarios, noticias, certificados, directivos, juntas, espacios, reservas, pagos, administración y tablas maestras
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
 api_router.include_router(news_router)
@@ -73,6 +74,7 @@ api_router.include_router(junta_router)
 api_router.include_router(espacio_router)
 api_router.include_router(reserva_router)
 api_router.include_router(webpay_router)
+api_router.include_router(admin_router)
 api_router.include_router(master_router)
 api_router.include_router(reporte_router)
 

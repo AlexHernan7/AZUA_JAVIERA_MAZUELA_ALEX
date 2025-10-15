@@ -48,11 +48,16 @@
 
     <!-- Información personal -->
     <div class="card border-0 shadow-soft rounded-4 mt-4">
-      <div class="d-flex align-items-center justify-content-between p-3 p-md-4">
+      <div class="d-flex align-items-center justify-content-between p-3 p-md-4 flex-wrap gap-2">
         <h5 class="mb-0 fw-bold">Información personal</h5>
-        <button class="btn btn-outline-teal-menu px-3" (click)="editarPerfil()">
-          Editar perfil
-        </button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary px-3" (click)="cambiarContrasena()">
+            Cambiar contraseña
+          </button>
+          <button class="btn btn-outline-teal-menu px-3" (click)="editarPerfil()">
+            Editar perfil
+          </button>
+        </div>
       </div>
 
       <hr class="my-0">
@@ -199,48 +204,120 @@
             <div *ngIf="updateSuccess" class="alert alert-success" role="alert">
               {{ updateSuccess }}
             </div>
-            
-            <!-- Campo Email -->
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input 
-                type="email" 
-                class="form-control" 
-                id="email" 
-                formControlName="email"
-                [class.is-invalid]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
-              <div class="invalid-feedback" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
-                <div *ngIf="editForm.get('email')?.errors?.['required']">El email es requerido</div>
-                <div *ngIf="editForm.get('email')?.errors?.['email']">Ingrese un email válido</div>
+
+            <div class="row g-3">
+              <!-- Apellido Paterno -->
+              <div class="col-12 col-md-6">
+                <label for="apellido_paterno" class="form-label">Apellido Paterno *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellido_paterno" 
+                  formControlName="apellido_paterno"
+                  [class.is-invalid]="editForm.get('apellido_paterno')?.invalid && editForm.get('apellido_paterno')?.touched">
+                <div class="invalid-feedback" *ngIf="editForm.get('apellido_paterno')?.invalid && editForm.get('apellido_paterno')?.touched">
+                  <div *ngIf="editForm.get('apellido_paterno')?.errors?.['required']">El apellido paterno es requerido</div>
+                  <div *ngIf="editForm.get('apellido_paterno')?.errors?.['minlength']">Debe tener al menos 2 caracteres</div>
+                </div>
               </div>
-            </div>
-            
-            <!-- Campo Teléfono -->
-            <div class="mb-3">
-              <label for="telefono" class="form-label">Teléfono</label>
-              <input 
-                type="tel" 
-                class="form-control" 
-                id="telefono" 
-                formControlName="telefono"
-                placeholder="+56987654321"
-                [class.is-invalid]="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
-              <div class="form-text">Formato: +56XXXXXXXXX</div>
-              <div class="invalid-feedback" *ngIf="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
-                <div *ngIf="editForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido. Use +56XXXXXXXXX</div>
+
+              <!-- Apellido Materno -->
+              <div class="col-12 col-md-6">
+                <label for="apellido_materno" class="form-label">Apellido Materno</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="apellido_materno" 
+                  formControlName="apellido_materno"
+                  [class.is-invalid]="editForm.get('apellido_materno')?.invalid && editForm.get('apellido_materno')?.touched">
+                <div class="invalid-feedback" *ngIf="editForm.get('apellido_materno')?.invalid && editForm.get('apellido_materno')?.touched">
+                  <div *ngIf="editForm.get('apellido_materno')?.errors?.['minlength']">Debe tener al menos 2 caracteres</div>
+                </div>
               </div>
-            </div>
             
-            <!-- Campo Foto de perfil -->
-            <div class="mb-3">
-              <label for="foto_perfil" class="form-label">Foto de perfil</label>
-              <input 
-                type="file" 
-                class="form-control" 
-                id="foto_perfil" 
-                accept="image/jpeg,image/jpg,image/png"
-                (change)="onFileSelected($event)">
-              <div class="form-text">Formatos permitidos: JPEG, PNG. Tamaño máximo: 2MB</div>
+              <!-- Campo Email -->
+              <div class="col-12 col-md-6">
+                <label for="email" class="form-label">Email *</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="email" 
+                  formControlName="email"
+                  [class.is-invalid]="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+                <div class="invalid-feedback" *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+                  <div *ngIf="editForm.get('email')?.errors?.['required']">El email es requerido</div>
+                  <div *ngIf="editForm.get('email')?.errors?.['email']">Ingrese un email válido</div>
+                </div>
+              </div>
+            
+              <!-- Campo Teléfono -->
+              <div class="col-12 col-md-6">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="telefono" 
+                  formControlName="telefono"
+                  placeholder="+56987654321"
+                  [class.is-invalid]="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
+                <div class="form-text">Formato: +56XXXXXXXXX</div>
+                <div class="invalid-feedback" *ngIf="editForm.get('telefono')?.invalid && editForm.get('telefono')?.touched">
+                  <div *ngIf="editForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido</div>
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="col-12" *ngIf="!isDirectivo">
+                <label for="direccion" class="form-label">Dirección</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="direccion" 
+                  formControlName="direccion"
+                  placeholder="Calle, número, depto"
+                  [class.is-invalid]="editForm.get('direccion')?.invalid && editForm.get('direccion')?.touched">
+                <div class="invalid-feedback" *ngIf="editForm.get('direccion')?.invalid && editForm.get('direccion')?.touched">
+                  <div *ngIf="editForm.get('direccion')?.errors?.['minlength']">Debe tener al menos 5 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Región -->
+              <div class="col-12 col-md-6" *ngIf="!isDirectivo">
+                <label for="region" class="form-label">Región</label>
+                <select 
+                  class="form-select" 
+                  id="region" 
+                  formControlName="region"
+                  (change)="onRegionChange($event)">
+                  <option value="">Selecciona una región</option>
+                  <option *ngFor="let region of regiones" [value]="region.nombre">{{ region.nombre }}</option>
+                </select>
+              </div>
+
+              <!-- Comuna -->
+              <div class="col-12 col-md-6" *ngIf="!isDirectivo">
+                <label for="comuna" class="form-label">Comuna</label>
+                <select 
+                  class="form-select" 
+                  id="comuna" 
+                  formControlName="comuna">
+                  <option value="">Selecciona una comuna</option>
+                  <option *ngFor="let comuna of comunas" [value]="comuna.nombre">{{ comuna.nombre }}</option>
+                </select>
+                <div class="form-text" *ngIf="!regionSeleccionada">Primero selecciona una región</div>
+              </div>
+            
+              <!-- Campo Foto de perfil -->
+              <div class="col-12">
+                <label for="foto_perfil" class="form-label">Foto de perfil</label>
+                <input 
+                  type="file" 
+                  class="form-control" 
+                  id="foto_perfil" 
+                  accept="image/jpeg,image/jpg,image/png"
+                  (change)="onFileSelected($event)">
+                <div class="form-text">Formatos permitidos: JPEG, PNG. Tamaño máximo: 2MB</div>
+              </div>
             </div>
             
           </div>
@@ -260,8 +337,96 @@
     </div>
   </div>
 
-  <!-- Backdrop del modal -->
+  <!-- Backdrop del modal de edición -->
   <div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal" 
        (click)="closeEditModal()"></div>
+
+  <!-- Modal de cambio de contraseña -->
+  <div class="modal fade" [class.show]="showPasswordModal" [style.display]="showPasswordModal ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="changePasswordModal" *ngIf="showPasswordModal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cambiar contraseña</h5>
+          <button type="button" class="btn-close" (click)="closePasswordModal()" aria-label="Close"></button>
+        </div>
+        
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <div class="modal-body">
+            
+            <!-- Mensajes de error y éxito -->
+            <div *ngIf="passwordError" class="alert alert-danger" role="alert">
+              {{ passwordError }}
+            </div>
+            
+            <div *ngIf="passwordSuccess" class="alert alert-success" role="alert">
+              {{ passwordSuccess }}
+            </div>
+
+            <!-- Contraseña actual -->
+            <div class="mb-3">
+              <label for="current_password" class="form-label">Contraseña actual *</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="current_password" 
+                formControlName="current_password"
+                [class.is-invalid]="passwordForm.get('current_password')?.invalid && passwordForm.get('current_password')?.touched">
+              <div class="invalid-feedback" *ngIf="passwordForm.get('current_password')?.invalid && passwordForm.get('current_password')?.touched">
+                <div *ngIf="passwordForm.get('current_password')?.errors?.['required']">La contraseña actual es requerida</div>
+              </div>
+            </div>
+
+            <!-- Nueva contraseña -->
+            <div class="mb-3">
+              <label for="new_password" class="form-label">Nueva contraseña *</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="new_password" 
+                formControlName="new_password"
+                [class.is-invalid]="passwordForm.get('new_password')?.invalid && passwordForm.get('new_password')?.touched">
+              <div class="form-text">8-12 caracteres, al menos 1 letra, 1 número y 1 carácter especial</div>
+              <div class="invalid-feedback" *ngIf="passwordForm.get('new_password')?.invalid && passwordForm.get('new_password')?.touched">
+                <div *ngIf="passwordForm.get('new_password')?.errors?.['required']">La nueva contraseña es requerida</div>
+                <div *ngIf="passwordForm.get('new_password')?.errors?.['minlength']">Debe tener al menos 8 caracteres</div>
+                <div *ngIf="passwordForm.get('new_password')?.errors?.['maxlength']">No puede tener más de 12 caracteres</div>
+              </div>
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="mb-3">
+              <label for="confirm_password" class="form-label">Confirmar nueva contraseña *</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="confirm_password" 
+                formControlName="confirm_password"
+                [class.is-invalid]="passwordForm.get('confirm_password')?.invalid && passwordForm.get('confirm_password')?.touched">
+              <div class="invalid-feedback" *ngIf="passwordForm.get('confirm_password')?.invalid && passwordForm.get('confirm_password')?.touched">
+                <div *ngIf="passwordForm.get('confirm_password')?.errors?.['required']">Debe confirmar la contraseña</div>
+              </div>
+            </div>
+            
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closePasswordModal()" [disabled]="isChangingPassword">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || isChangingPassword">
+              <span *ngIf="isChangingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              {{ isChangingPassword ? 'Cambiando...' : 'Cambiar contraseña' }}
+            </button>
+          </div>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Backdrop del modal de contraseña -->
+  <div class="modal-backdrop fade" [class.show]="showPasswordModal" *ngIf="showPasswordModal" 
+       (click)="closePasswordModal()"></div>
 
 </div> <!-- Cierre del container principal -->

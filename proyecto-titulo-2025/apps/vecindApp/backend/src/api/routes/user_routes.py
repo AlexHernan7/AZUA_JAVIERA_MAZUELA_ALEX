@@ -4,16 +4,19 @@ Rutas relacionadas con usuarios y vecinos.
 
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import Optional
 
 from src.database.session import get_db_session
 from src.services.user_service import UserService
-from src.schemas.auth_schemas import VecinoResponse
+from src.schemas.auth_schemas import VecinoResponse, VecinoListResponse
 from src.schemas.user_schemas import (
     UsuariosList,
     UsuarioListResponse,
     VecinoUpdateRequest,
     VecinoUpdateResponse,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
 )
 from src.core.security import verify_token
 from src.utils.image_utils import binary_to_base64
@@ -29,7 +32,11 @@ async def verify_admin_user(
     """
     Verifica que el usuario sea admin.
     """
+    from src.core.logging import get_logger
+    logger = get_logger(__name__)
+    
     if not authorization:
+        logger.warning("[AUTH] Token de autorización no proporcionado")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token de autorización requerido",
@@ -42,6 +49,7 @@ async def verify_admin_user(
         if scheme.lower() != "bearer":
             raise ValueError("Esquema inválido")
     except ValueError:
+        logger.warning("[AUTH] Formato de autorización inválido")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Formato inválido. Use: Bearer <token>",
@@ -51,6 +59,7 @@ async def verify_admin_user(
     # Verificar token JWT
     payload = verify_token(token)
     if not payload:
+        logger.warning("[AUTH] Token inválido o expirado")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado",
@@ -60,6 +69,7 @@ async def verify_admin_user(
     # Obtener user_id
     user_id = payload.get("sub")
     if not user_id:
+        logger.warning("[AUTH] Token sin user_id")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido",
@@ -69,22 +79,29 @@ async def verify_admin_user(
     try:
         user_id = int(user_id)
     except ValueError:
+        logger.warning(f"[AUTH] ID de usuario inválido: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="ID de usuario inválido",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    logger.info(f"[AUTH] Verificando permisos de admin para usuario ID: {user_id}")
+
     # Verificar permisos de admin
     user_service = UserService(db)
     is_admin = await user_service.is_user_admin(user_id)
+    
+    logger.info(f"[AUTH] Usuario {user_id} es admin: {is_admin}")
 
     if not is_admin:
+        logger.warning(f"[AUTH] Usuario {user_id} no tiene permisos de admin")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Se requieren permisos de administrador",
         )
 
+    logger.info(f"[AUTH] Usuario {user_id} verificado como admin exitosamente")
     return user_id
 
 
@@ -258,8 +275,12 @@ async def update_vecino_profile(
         # Actualizar vecino
         updated_vecino = await user_service.update_vecino_profile(
             vecino_id=vecino_id,
+            apellido_paterno=update_data.apellido_paterno,
+            apellido_materno=update_data.apellido_materno,
             email=update_data.email,
             telefono=update_data.telefono,
+            direccion=update_data.direccion,
+            id_comuna=update_data.id_comuna,
             foto_perfil=update_data.foto_perfil,
         )
 
@@ -284,13 +305,39 @@ async def update_vecino_profile(
                     updated_vecino.foto_perfil, "image/jpeg"
                 )
 
+        # Obtener información de comuna y región para la respuesta
+        from src.database.models.vecino import Vecino
+        from src.database.models.comuna import Comuna
+        from src.database.models.region import Region
+        from sqlalchemy.orm import selectinload
+        
+        result = await db.execute(
+            select(Vecino)
+            .options(selectinload(Vecino.comuna).selectinload(Comuna.region))
+            .where(Vecino.id_vecino == updated_vecino.id_vecino)
+        )
+        vecino_with_relations = result.scalar_one_or_none()
+        
+        comuna_nombre = None
+        region_nombre = None
+        if vecino_with_relations and vecino_with_relations.comuna:
+            comuna_nombre = vecino_with_relations.comuna.nombre
+            if vecino_with_relations.comuna.region:
+                region_nombre = vecino_with_relations.comuna.region.nombre
+
         return VecinoUpdateResponse(
             id_vecino=updated_vecino.id_vecino,
             nombres=updated_vecino.nombres,
             apellido_paterno=updated_vecino.apellido_paterno,
             apellido_materno=updated_vecino.apellido_materno,
+            rut=updated_vecino.rut,
+            fecha_nacimiento=updated_vecino.fecha_nacimiento,
             email=updated_vecino.email or "",
             telefono=updated_vecino.telefono,
+            direccion=updated_vecino.direccion,
+            id_comuna=updated_vecino.id_comuna,
+            comuna=comuna_nombre,
+            region=region_nombre,
             foto_perfil=foto_perfil_base64,
             mensaje="Datos actualizados correctamente",
         )
@@ -334,8 +381,13 @@ async def update_my_profile(
         # Actualizar vecino
         updated_vecino = await user_service.update_vecino_profile(
             vecino_id=vecino.id_vecino,
+            apellido_paterno=update_data.apellido_paterno,
+            apellido_materno=update_data.apellido_materno,
             email=update_data.email,
             telefono=update_data.telefono,
+            direccion=update_data.direccion,
+            id_comuna=update_data.id_comuna,
+            comuna_nombre=update_data.comuna_nombre,
             foto_perfil=update_data.foto_perfil,
         )
 
@@ -361,13 +413,39 @@ async def update_my_profile(
                     updated_vecino.foto_perfil, "image/jpeg"
                 )
 
+        # Obtener información de comuna y región para la respuesta
+        from src.database.models.vecino import Vecino
+        from src.database.models.comuna import Comuna
+        from src.database.models.region import Region
+        from sqlalchemy.orm import selectinload
+        
+        result = await db.execute(
+            select(Vecino)
+            .options(selectinload(Vecino.comuna).selectinload(Comuna.region))
+            .where(Vecino.id_vecino == updated_vecino.id_vecino)
+        )
+        vecino_with_relations = result.scalar_one_or_none()
+        
+        comuna_nombre = None
+        region_nombre = None
+        if vecino_with_relations and vecino_with_relations.comuna:
+            comuna_nombre = vecino_with_relations.comuna.nombre
+            if vecino_with_relations.comuna.region:
+                region_nombre = vecino_with_relations.comuna.region.nombre
+
         return VecinoUpdateResponse(
             id_vecino=updated_vecino.id_vecino,
             nombres=updated_vecino.nombres,
             apellido_paterno=updated_vecino.apellido_paterno,
             apellido_materno=updated_vecino.apellido_materno,
+            rut=updated_vecino.rut,
+            fecha_nacimiento=updated_vecino.fecha_nacimiento,
             email=updated_vecino.email or "",
             telefono=updated_vecino.telefono,
+            direccion=updated_vecino.direccion,
+            id_comuna=updated_vecino.id_comuna,
+            comuna=comuna_nombre,
+            region=region_nombre,
             foto_perfil=foto_perfil_base64,
             mensaje="Perfil actualizado correctamente",
         )
@@ -382,4 +460,157 @@ async def update_my_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al actualizar perfil: {str(e)}",
+        )
+
+
+@router.post(
+    "/change-password",
+    response_model=ChangePasswordResponse,
+    summary="Cambiar contraseña",
+    description="Permite al usuario autenticado cambiar su contraseña.",
+)
+async def change_password(
+    password_data: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db_session),
+    current_user_id: int = Depends(verify_user_token),
+):
+    """
+    Cambia la contraseña del usuario autenticado.
+    
+    Requiere:
+    - Contraseña actual correcta
+    - Nueva contraseña que cumpla con los requisitos de seguridad
+    - Nueva contraseña diferente a la actual
+    """
+    try:
+        user_service = UserService(db)
+        
+        success = await user_service.change_password(
+            user_id=current_user_id,
+            current_password=password_data.current_password,
+            new_password=password_data.new_password,
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error al cambiar la contraseña",
+            )
+        
+        return ChangePasswordResponse(
+            success=True,
+            mensaje="Contraseña actualizada exitosamente",
+        )
+    
+    except ValueError as e:
+        # Errores de validación (contraseña incorrecta, validación fallida, etc.)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Errores internos
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al cambiar contraseña: {str(e)}",
+        )
+
+
+@router.get(
+    "/vecinos/mi-junta",
+    response_model=list[VecinoListResponse],
+    summary="Listar vecinos de mi junta",
+    description="Obtiene la lista de vecinos de la junta del usuario autenticado (vecino o directivo)",
+    responses={
+        200: {"description": "Lista de vecinos de la junta del usuario"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"description": "Usuario no tiene perfil de vecino ni de directivo"},
+        404: {"description": "Usuario no pertenece a ninguna junta"},
+    },
+)
+async def get_my_junta_vecinos(
+    activos_only: bool = False,
+    current_user_id: int = Depends(verify_user_token),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Obtiene los vecinos de la junta del usuario autenticado.
+    
+    Args:
+        activos_only: Si True, solo devuelve vecinos activos
+        current_user_id: ID del usuario autenticado (obtenido del token)
+        db: Sesión de base de datos
+    
+    Returns:
+        Lista de vecinos de la junta del usuario autenticado
+    """
+    try:
+        user_service = UserService(db)
+        
+        # Obtener vecinos de la junta del usuario
+        vecinos = await user_service.get_vecinos_by_user_junta(
+            current_user_id, activos_only
+        )
+        
+        # Convertir a response format
+        vecinos_response = []
+        for vecino in vecinos:
+            foto_perfil_base64 = None
+            if vecino.foto_perfil:
+                if (
+                    vecino.foto_perfil.startswith(b"<svg")
+                    or b"<svg" in vecino.foto_perfil[:100]
+                ):
+                    foto_perfil_base64 = binary_to_base64(
+                        vecino.foto_perfil, "image/svg+xml"
+                    )
+                else:
+                    foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/jpeg")
+
+            # Obtener estado activo del usuario
+            activo = vecino.usuario.activo if vecino.usuario else False
+            
+            # Obtener nombres de junta, comuna y región
+            junta_nombre = vecino.junta.nombre if vecino.junta else None
+            comuna_nombre = vecino.comuna.nombre if vecino.comuna else None
+            region_nombre = vecino.comuna.region.nombre if vecino.comuna and vecino.comuna.region else None
+
+            vecinos_response.append(VecinoListResponse(
+                id_vecino=vecino.id_vecino,
+                id_usuario=vecino.id_usuario,
+                rut=vecino.rut,
+                nombres=vecino.nombres,
+                apellido_paterno=vecino.apellido_paterno,
+                apellido_materno=vecino.apellido_materno,
+                email=vecino.email,
+                telefono=vecino.telefono,
+                direccion=vecino.direccion,
+                fecha_nacimiento=vecino.fecha_nacimiento,
+                foto_perfil=foto_perfil_base64,
+                activo=activo,
+                junta_nombre=junta_nombre,
+                comuna_nombre=comuna_nombre,
+                region_nombre=region_nombre,
+            ))
+
+        return vecinos_response
+
+    except ValueError as e:
+        # Errores de validación (usuario sin vecino, vecino sin junta, etc.)
+        if "perfil de vecino" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=str(e),
+            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        # Errores internos
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener vecinos: {str(e)}",
         )

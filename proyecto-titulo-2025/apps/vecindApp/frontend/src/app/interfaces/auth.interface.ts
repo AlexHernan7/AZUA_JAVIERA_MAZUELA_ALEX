@@ -86,8 +86,13 @@ export interface RegisterResponse {
 
 // Interfaces para actualización de perfil
 export interface UpdateProfileRequest {
+  apellido_paterno?: string;
+  apellido_materno?: string;
   email?: string;
   telefono?: string;
+  direccion?: string;
+  id_comuna?: number;
+  comuna_nombre?: string; // Nombre de la comuna (alternativa a id_comuna)
   foto_perfil?: string; // base64 opcional
 }
 
@@ -96,10 +101,61 @@ export interface UpdateProfileResponse {
   nombres: string;
   apellido_paterno: string;
   apellido_materno: string;
+  rut: string;
+  fecha_nacimiento?: string;
   email: string;
   telefono?: string;
+  direccion?: string;
+  id_comuna?: number;
+  comuna?: string;
+  region?: string;
   foto_perfil?: string;
   mensaje: string;
+}
+
+// Interfaces para cambio de contraseña
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  mensaje: string;
+}
+
+// Interfaces para listado de vecinos
+export interface VecinoListItem {
+  id_vecino: number;
+  id_usuario: number;
+  rut: string;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno?: string;
+  email: string;
+  telefono?: string;
+  direccion?: string;
+  fecha_nacimiento?: string;
+  foto_perfil?: string;
+  activo: boolean;
+  junta_nombre?: string;
+  comuna_nombre?: string;
+  region_nombre?: string;
+}
+
+// Interfaces para listado de directivos
+export interface DirectivaListItem {
+  id_directiva: number;
+  rut: string;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno?: string;
+  telefono?: string;
+  email: string;
+  cargo: string;
+  fecha_inicio_cargo: string;
+  fecha_termino_cargo?: string;
+  foto_perfil?: string;
 }
 
 // Interfaces para comunas y juntas

@@ -183,7 +183,7 @@
                 [disabled]="isLoading"
                 [ngClass]="{'is-invalid': (registerForm.submitted || regionCtrl.touched) && !regionSeleccionada}">
           <option value="" disabled>Selecciona una región</option>
-          <option *ngFor="let region of regiones" [value]="region.id_region">{{ region.nombre }}</option>
+          <option *ngFor="let region of regiones" [value]="region.nombre">{{ region.nombre }}</option>
         </select>
         <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || regionCtrl.touched) && !regionSeleccionada">
           Selecciona una región.

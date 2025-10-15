@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 //import { AuthService } from '../services/auth.service';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse, ComunasList, JuntasList } from '../interfaces/auth.interface';
+import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse, ComunasList, JuntasList, ChangePasswordRequest, ChangePasswordResponse, VecinoListItem, DirectivaListItem } from '../interfaces/auth.interface';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -185,8 +185,19 @@ export class AuthService {
       tap(response => {
         // Actualizar los datos del usuario en el storage y en los subjects
         if (currentUser && currentUser.vecino) {
+          // Actualizar todos los campos editables
+          currentUser.nombres = response.nombres;
+          currentUser.apellido_paterno = response.apellido_paterno;
+          currentUser.apellido_materno = response.apellido_materno || '';
           currentUser.email = response.email;
+          currentUser.vecino.apellido_paterno = response.apellido_paterno;
+          currentUser.vecino.apellido_materno = response.apellido_materno || '';
+          currentUser.vecino.rut = response.rut;
+          currentUser.vecino.fecha_nacimiento = response.fecha_nacimiento;
           currentUser.vecino.telefono = response.telefono;
+          currentUser.vecino.direccion = response.direccion;
+          currentUser.vecino.comuna = response.comuna;
+          currentUser.vecino.region = response.region;
           if (response.foto_perfil) {
             currentUser.vecino.foto_perfil = response.foto_perfil;
           }
@@ -195,6 +206,83 @@ export class AuthService {
           this.currentUserSubject.next(currentUser);
         }
       }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Cambia la contraseña del usuario
+   */
+  changePassword(passwordData: ChangePasswordRequest): Observable<ChangePasswordResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('Token no encontrado'));
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    return this.http.post<ChangePasswordResponse>(
+      `${this.API_URL}/users/change-password`,
+      passwordData,
+      { headers }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtiene la lista de vecinos de la junta del usuario autenticado
+   */
+  getVecinosMyJunta(activosOnly: boolean = false): Observable<VecinoListItem[]> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('Token no encontrado'));
+    }
+
+    const headers = { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+    
+    let params = new HttpParams();
+    if (activosOnly) {
+      params = params.set('activos_only', 'true');
+    }
+    
+    return this.http.get<VecinoListItem[]>(
+      `${this.API_URL}/users/vecinos/mi-junta`,
+      { headers, params }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtiene la lista de directivos de la junta del usuario autenticado
+   */
+  getDirectivosMyJunta(activosOnly: boolean = false): Observable<DirectivaListItem[]> {
+    const token = this.getToken();
+    if (!token) {
+      return throwError(() => new Error('Token no encontrado'));
+    }
+
+    const headers = { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+    
+    let params = new HttpParams();
+    if (activosOnly) {
+      params = params.set('activos_only', 'true');
+    }
+    
+    return this.http.get<DirectivaListItem[]>(
+      `${this.API_URL}/directiva/mi-junta`,
+      { headers, params }
+    ).pipe(
       catchError(this.handleError)
     );
   }
@@ -222,8 +310,8 @@ export class AuthService {
   /**
    * Obtiene las comunas de una región específica
    */
-  getComunasByRegion(regionId: number): Observable<ComunasList> {
-    return this.http.get<ComunasList>(`${this.API_URL}/auth/comunas/region/${regionId}`)
+  getComunasByRegion(regionNombre: string): Observable<any> {
+    return this.http.get(`${this.API_URL}/auth/comunas/region/${encodeURIComponent(regionNombre)}`)
       .pipe(
         catchError(this.handleError)
       );

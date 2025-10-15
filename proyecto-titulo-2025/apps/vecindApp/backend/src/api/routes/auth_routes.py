@@ -144,23 +144,26 @@ async def register_user(
 
 @router.get(
     "/regiones",
-    summary="Listar regiones",
-    description="Obtiene la lista de todas las regiones disponibles",
+    summary="Listar regiones (desde JSON)",
+    description="Obtiene la lista de todas las regiones disponibles desde el JSON estático",
 )
-async def get_regiones(db: AsyncSession = Depends(get_db_session)):
+async def get_regiones():
     """
-    Obtiene la lista de todas las regiones disponibles.
+    Obtiene la lista de todas las regiones disponibles desde el JSON.
+    Esto proporciona una alternativa más rápida sin consultar la base de datos.
     """
     try:
-        auth_service = AuthService(db)
-        regiones = await auth_service.get_all_regiones()
-
+        from src.utils.regiones_comunas_data import get_regiones
+        
+        regiones = get_regiones()
+        
         return {
-            "regiones": [{"id_region": r.id_region, "nombre": r.nombre, "codigo": r.codigo} for r in regiones],
+            "regiones": [{"nombre": region} for region in regiones],
             "total": len(regiones)
         }
 
     except Exception as e:
+        logger.error(f"Error al obtener regiones desde JSON: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener regiones", "detalle": str(e)},
@@ -169,24 +172,25 @@ async def get_regiones(db: AsyncSession = Depends(get_db_session)):
 
 @router.get(
     "/comunas",
-    response_model=ComunasList,
-    summary="Listar comunas",
-    description="Obtiene la lista de todas las comunas disponibles",
+    summary="Listar todas las comunas (desde JSON)",
+    description="Obtiene la lista de todas las comunas disponibles desde el JSON estático",
 )
-async def get_comunas(db: AsyncSession = Depends(get_db_session)):
+async def get_comunas():
     """
-    Obtiene la lista de todas las comunas disponibles.
+    Obtiene la lista de todas las comunas disponibles desde el JSON.
     """
     try:
-        auth_service = AuthService(db)
-        comunas = await auth_service.get_all_comunas()
-
-        return ComunasList(
-            comunas=[{"id_comuna": c.id_comuna, "nombre": c.nombre, "id_region": c.id_region} for c in comunas],
-            total=len(comunas),
-        )
+        from src.utils.regiones_comunas_data import get_all_comunas
+        
+        comunas = get_all_comunas()
+        
+        return {
+            "comunas": [{"nombre": comuna} for comuna in comunas],
+            "total": len(comunas)
+        }
 
     except Exception as e:
+        logger.error(f"Error al obtener comunas desde JSON: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error al obtener comunas", "detalle": str(e)},
@@ -194,28 +198,67 @@ async def get_comunas(db: AsyncSession = Depends(get_db_session)):
 
 
 @router.get(
-    "/comunas/region/{region_id}",
-    response_model=ComunasList,
-    summary="Listar comunas por región",
-    description="Obtiene la lista de comunas de una región específica",
+    "/comunas/region/{region_nombre}",
+    summary="Listar comunas por región (desde JSON)",
+    description="Obtiene la lista de comunas de una región específica desde el JSON estático",
 )
-async def get_comunas_by_region(region_id: int, db: AsyncSession = Depends(get_db_session)):
+async def get_comunas_by_region(region_nombre: str):
     """
-    Obtiene las comunas de una región específica.
+    Obtiene las comunas de una región específica desde el JSON.
+    
+    Args:
+        region_nombre: Nombre de la región (ej: "Metropolitana de Santiago")
     """
     try:
-        auth_service = AuthService(db)
-        comunas = await auth_service.get_comunas_by_region(region_id)
+        from src.utils.regiones_comunas_data import get_comunas_by_region as get_comunas_json
+        
+        comunas = get_comunas_json(region_nombre)
+        
+        return {
+            "region": region_nombre,
+            "comunas": [{"nombre": comuna} for comuna in comunas],
+            "total": len(comunas)
+        }
 
-        return ComunasList(
-            comunas=[{"id_comuna": c.id_comuna, "nombre": c.nombre, "id_region": c.id_region} for c in comunas],
-            total=len(comunas),
+    except ValueError as e:
+        logger.warning(f"Región no encontrada: {region_nombre}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "Región no encontrada", "detalle": str(e)},
         )
-
     except Exception as e:
+        logger.error(f"Error al obtener comunas por región desde JSON: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": "Error al obtener comunas por región", "detalle": str(e)},
+            detail={"error": "Error al obtener comunas", "detalle": str(e)},
+        )
+
+
+@router.get(
+    "/regiones-comunas/estructura",
+    summary="Obtener estructura completa de regiones y comunas",
+    description="Obtiene la estructura completa de regiones con sus comunas desde el JSON estático",
+)
+async def get_regiones_comunas_estructura():
+    """
+    Obtiene la estructura completa de regiones y comunas.
+    Útil para formularios que necesitan mostrar ambos selectores.
+    """
+    try:
+        from src.utils.regiones_comunas_data import get_regiones_comunas_structure
+        
+        estructura = get_regiones_comunas_structure()
+        
+        return {
+            "data": estructura,
+            "total_regiones": len(estructura)
+        }
+
+    except Exception as e:
+        logger.error(f"Error al obtener estructura de regiones-comunas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error al obtener estructura", "detalle": str(e)},
         )
 
 

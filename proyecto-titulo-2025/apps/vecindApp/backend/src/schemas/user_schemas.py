@@ -99,13 +99,39 @@ class UsuariosList(BaseModel):
 class VecinoUpdateRequest(BaseModel):
     """
     Schema para actualizar datos del perfil de vecino.
+    
+    Campos NO editables: nombres, rut, fecha_nacimiento (datos de identificación inmutables)
+    Campos editables: apellidos, email, telefono, direccion, id_comuna/comuna_nombre, foto_perfil
     """
 
+    apellido_paterno: Optional[str] = Field(
+        None, max_length=100, description="Nuevo apellido paterno"
+    )
+    apellido_materno: Optional[str] = Field(
+        None, max_length=100, description="Nuevo apellido materno"
+    )
     email: Optional[EmailStr] = Field(None, description="Nuevo email del vecino")
     telefono: Optional[str] = Field(None, description="Nuevo teléfono del vecino")
+    direccion: Optional[str] = Field(
+        None, max_length=200, description="Nueva dirección del vecino"
+    )
+    id_comuna: Optional[int] = Field(None, description="Nuevo ID de la comuna")
+    comuna_nombre: Optional[str] = Field(None, description="Nombre de la comuna (alternativa a id_comuna)")
     foto_perfil: Optional[str] = Field(
         None, description="Nueva foto de perfil en base64"
     )
+
+    @validator("apellido_paterno", "apellido_materno")
+    def validate_apellidos(cls, v):
+        if v is not None and len(v.strip()) < 2:
+            raise ValueError("Debe tener al menos 2 caracteres")
+        return v
+
+    @validator("direccion")
+    def validate_direccion(cls, v):
+        if v is not None and len(v.strip()) < 5:
+            raise ValueError("Debe tener al menos 5 caracteres")
+        return v
 
     @validator("telefono")
     def validate_telefono(cls, v):
@@ -177,8 +203,12 @@ class VecinoUpdateRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "apellido_paterno": "González",
+                "apellido_materno": "López",
                 "email": "nuevo@email.com",
                 "telefono": "+56987654321",
+                "direccion": "Avenida Principal 123, Depto 45",
+                "id_comuna": 5,
                 "foto_perfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
             }
         }
@@ -193,10 +223,47 @@ class VecinoUpdateResponse(BaseModel):
     nombres: str
     apellido_paterno: str
     apellido_materno: Optional[str]
+    rut: str
+    fecha_nacimiento: Optional[date]
     email: str
     telefono: Optional[str]
+    direccion: Optional[str]
+    id_comuna: Optional[int]
+    comuna: Optional[str]
+    region: Optional[str]
     foto_perfil: Optional[str] = None
     mensaje: str = "Datos actualizados correctamente"
 
     class Config:
         from_attributes = True
+
+
+class ChangePasswordRequest(BaseModel):
+    """
+    Schema para solicitud de cambio de contraseña.
+    """
+
+    current_password: str = Field(..., description="Contraseña actual")
+    new_password: str = Field(
+        ...,
+        min_length=8,
+        max_length=12,
+        description="Nueva contraseña (8-12 caracteres, alfanumérica + 1 especial)",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "current_password": "MiPass123!",
+                "new_password": "NuevoPass456@",
+            }
+        }
+
+
+class ChangePasswordResponse(BaseModel):
+    """
+    Schema para respuesta de cambio de contraseña.
+    """
+
+    success: bool
+    mensaje: str = "Contraseña actualizada exitosamente"

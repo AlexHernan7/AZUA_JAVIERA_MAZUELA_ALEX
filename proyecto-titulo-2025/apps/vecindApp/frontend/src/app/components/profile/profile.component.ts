@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { UserLoginData, UpdateProfileRequest } from '../../interfaces/auth.interface';
+import { UserLoginData, UpdateProfileRequest, ChangePasswordRequest } from '../../interfaces/auth.interface';
 
 @Component({
   selector: 'app-profile',
@@ -24,6 +24,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
   isUpdating: boolean = false;
   updateError: string | null = null;
   updateSuccess: string | null = null;
+
+  // Variables para el modal de cambio de contraseña
+  showPasswordModal: boolean = false;
+  passwordForm: FormGroup;
+  isChangingPassword: boolean = false;
+  passwordError: string | null = null;
+  passwordSuccess: string | null = null;
+  
+  // Variables para selección de región/comuna
+  regiones: any[] = [];
+  comunas: any[] = [];
+  regionSeleccionada: string = '';
   
   private subscription: Subscription = new Subscription();
 
@@ -156,14 +168,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ) {
     // Inicializar el formulario de edición
     this.editForm = this.formBuilder.group({
+      apellido_paterno: ['', [Validators.required, Validators.minLength(2)]],
+      apellido_materno: ['', [Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       telefono: ['', [Validators.pattern(/^\+56\d{8,9}$/)]],
+      direccion: ['', [Validators.minLength(5)]],
+      region: [{value: '', disabled: false}],
+      comuna: [{value: '', disabled: true}],
       foto_perfil: ['']
+    });
+
+    // Inicializar el formulario de cambio de contraseña
+    this.passwordForm = this.formBuilder.group({
+      current_password: ['', [Validators.required]],
+      new_password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(12)]],
+      confirm_password: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadRegiones();
   }
 
   ngOnDestroy(): void {
@@ -198,15 +223,74 @@ export class ProfileComponent implements OnInit, OnDestroy {
     );
   }
 
+  loadRegiones(): void {
+    this.authService.getRegiones().subscribe({
+      next: (response) => {
+        this.regiones = response.regiones || [];
+      },
+      error: (error) => {
+        console.error('Error al cargar regiones:', error);
+      }
+    });
+  }
+
+  onRegionChange(event: any): void {
+    const regionNombre = event.target.value;
+    if (!regionNombre) {
+      this.comunas = [];
+      this.editForm.get('comuna')?.setValue('');
+      this.editForm.get('comuna')?.disable();
+      return;
+    }
+
+    this.regionSeleccionada = regionNombre;
+    this.editForm.get('comuna')?.setValue('');
+    this.editForm.get('comuna')?.disable();
+    
+    this.authService.getComunasByRegion(regionNombre).subscribe({
+      next: (response: any) => {
+        this.comunas = response.comunas || [];
+        this.editForm.get('comuna')?.enable();
+      },
+      error: (error) => {
+        console.error('Error al cargar comunas:', error);
+        this.comunas = [];
+        this.editForm.get('comuna')?.enable();
+      }
+    });
+  }
+
   editarPerfil(): void {
     if (!this.currentUser) return;
-    
+
     // Rellenar el formulario con los datos actuales
     this.editForm.patchValue({
+      apellido_paterno: this.currentUser.apellido_paterno,
+      apellido_materno: this.currentUser.apellido_materno || '',
       email: this.currentUser.email,
       telefono: this.currentUser.vecino?.telefono || '',
+      direccion: this.currentUser.vecino?.direccion || '',
+      region: this.currentUser.vecino?.region || '',
+      comuna: this.currentUser.vecino?.comuna || '',
       foto_perfil: ''
     });
+    
+    // Si hay región seleccionada, cargar las comunas
+    if (this.currentUser.vecino?.region) {
+      this.regionSeleccionada = this.currentUser.vecino.region;
+      this.editForm.get('comuna')?.disable();
+      
+      this.authService.getComunasByRegion(this.regionSeleccionada).subscribe({
+        next: (response: any) => {
+          this.comunas = response.comunas || [];
+          this.editForm.get('comuna')?.enable();
+        },
+        error: (error) => {
+          console.error('Error cargando comunas:', error);
+          this.editForm.get('comuna')?.enable();
+        }
+      });
+    }
     
     // Limpiar mensajes
     this.updateError = null;
@@ -259,16 +343,34 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.updateError = null;
     this.updateSuccess = null;
 
-    const formData = this.editForm.value;
+    // Obtener todos los valores del formulario (incluyendo disabled)
+    const formData = this.editForm.getRawValue();
     const updateData: UpdateProfileRequest = {};
 
-    // Solo incluir campos que han cambiado
+    // Incluir campos que han cambiado (verificar solo si son diferentes, no si están vacíos)
+    if (formData.apellido_paterno !== this.currentUser?.apellido_paterno) {
+      updateData.apellido_paterno = formData.apellido_paterno;
+    }
+
+    if (formData.apellido_materno !== (this.currentUser?.apellido_materno || '')) {
+      updateData.apellido_materno = formData.apellido_materno || '';
+    }
+
     if (formData.email !== this.currentUser?.email) {
       updateData.email = formData.email;
     }
 
-    if (formData.telefono !== this.currentUser?.vecino?.telefono) {
-      updateData.telefono = formData.telefono || undefined;
+    if (formData.telefono !== (this.currentUser?.vecino?.telefono || '')) {
+      updateData.telefono = formData.telefono || '';
+    }
+
+    if (formData.direccion !== (this.currentUser?.vecino?.direccion || '')) {
+      updateData.direccion = formData.direccion || '';
+    }
+
+    // Manejar cambio de comuna - enviar el nombre para que el backend busque el ID
+    if (formData.comuna && formData.comuna !== (this.currentUser?.vecino?.comuna || '')) {
+      updateData.comuna_nombre = formData.comuna;
     }
 
     if (formData.foto_perfil) {
@@ -297,6 +399,61 @@ export class ProfileComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.updateError = error.message || 'Error al actualizar el perfil';
           this.isUpdating = false;
+        }
+      })
+    );
+  }
+
+  cambiarContrasena(): void {
+    // Limpiar formulario y mensajes
+    this.passwordForm.reset();
+    this.passwordError = null;
+    this.passwordSuccess = null;
+    
+    // Mostrar modal
+    this.showPasswordModal = true;
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal = false;
+    this.passwordForm.reset();
+    this.passwordError = null;
+    this.passwordSuccess = null;
+  }
+
+  changePassword(): void {
+    if (this.passwordForm.invalid || this.isChangingPassword) return;
+
+    // Verificar que las contraseñas coincidan
+    const formData = this.passwordForm.value;
+    if (formData.new_password !== formData.confirm_password) {
+      this.passwordError = 'Las contraseñas nuevas no coinciden';
+      return;
+    }
+
+    this.isChangingPassword = true;
+    this.passwordError = null;
+    this.passwordSuccess = null;
+
+    const passwordData: ChangePasswordRequest = {
+      current_password: formData.current_password,
+      new_password: formData.new_password
+    };
+
+    this.subscription.add(
+      this.authService.changePassword(passwordData).subscribe({
+        next: (response) => {
+          this.passwordSuccess = response.mensaje || 'Contraseña actualizada exitosamente';
+          this.isChangingPassword = false;
+          
+          // Cerrar modal después de un momento
+          setTimeout(() => {
+            this.closePasswordModal();
+          }, 1500);
+        },
+        error: (error) => {
+          this.passwordError = error.message || 'Error al cambiar la contraseña';
+          this.isChangingPassword = false;
         }
       })
     );
