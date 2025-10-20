@@ -373,3 +373,40 @@ sqlalchemy.exc.ArgumentError: Mapped instance expected for relationship comparis
 2025-10-15 20:37 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
 2025-10-15 20:43 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
 2025-10-15 20:43 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-19 19:42 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-19 19:42 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-19 19:43 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-19 19:43 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-19 19:44 | INFO | [user_routes.py:172] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
+2025-10-19 19:44 | INFO | [user_routes.py:228] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-19 19:46 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-19 19:46 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-19 19:46 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-19 19:46 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-19 19:46 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 53 usuarios
+2025-10-19 19:48 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-19 19:48 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-19 19:48 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-19 19:48 | INFO | [admin_routes.py:172] | src.api.routes.admin_routes - [ADMIN] Usuario 1 actualizando estado de usuario 54 a False
+2025-10-19 19:48 | INFO | [admin_routes.py:197] | src.api.routes.admin_routes - [ADMIN] Estado de usuario 54 actualizado exitosamente
+2025-10-19 19:48 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-19 19:48 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-19 19:48 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-19 19:48 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-19 19:48 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 53 usuarios
+2025-10-19 19:48 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-19 19:48 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-19 19:48 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-19 19:48 | INFO | [admin_routes.py:172] | src.api.routes.admin_routes - [ADMIN] Usuario 1 actualizando estado de usuario 54 a True
+2025-10-19 19:48 | INFO | [admin_routes.py:197] | src.api.routes.admin_routes - [ADMIN] Estado de usuario 54 actualizado exitosamente
+2025-10-19 19:49 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-19 19:49 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-19 19:49 | INFO | [user_routes.py:104] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-19 19:49 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-19 19:49 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 53 usuarios
+2025-10-19 19:50 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 55
+2025-10-19 19:50 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 55 es admin: False
+2025-10-19 19:50 | WARNING | [user_routes.py:98] | src.api.routes.user_routes - [AUTH] Usuario 55 no tiene permisos de admin
+2025-10-19 19:58 | INFO | [user_routes.py:89] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 55
+2025-10-19 19:58 | INFO | [user_routes.py:95] | src.api.routes.user_routes - [AUTH] Usuario 55 es admin: False
+2025-10-19 19:58 | WARNING | [user_routes.py:98] | src.api.routes.user_routes - [AUTH] Usuario 55 no tiene permisos de admin

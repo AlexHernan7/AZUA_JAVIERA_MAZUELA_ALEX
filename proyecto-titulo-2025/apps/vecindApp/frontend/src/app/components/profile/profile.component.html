@@ -169,14 +169,13 @@
     </div>
 
     <!-- Actividad -->
-    <div class="card border-0 shadow-soft rounded-4 mt-4">
+    <div class="card border-0 shadow-soft rounded-4 mt-4" ngif>
       <div class="p-3 p-md-4">
         <h5 class="mb-3 fw-bold">Actividad</h5>
 
         <ul class="list-group list-group-flush rounded-4 overflow-hidden">
-          <li class="list-group-item py-3 py-md-3 hover-row">Mis trámites</li>
-          <li class="list-group-item py-3 py-md-3 hover-row">Mis proyectos</li>
-          <li class="list-group-item py-3 py-md-3 hover-row">Mis noticias guardadas</li>
+          <li class="list-group-item py-3 py-md-3 hover-row" routerLink="/tramites" routerLinkActive="active">Mis trámites</li>
+
         </ul>
       </div>
     </div>
@@ -326,7 +325,7 @@
             <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isUpdating">
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || isUpdating">
+            <button type="submit" class="btn btn-teal" [disabled]="editForm.invalid || isUpdating">
               <span *ngIf="isUpdating" class="spinner-border spinner-border-sm me-2" role="status"></span>
               {{ isUpdating ? 'Actualizando...' : 'Guardar cambios' }}
             </button>
@@ -414,7 +413,7 @@
             <button type="button" class="btn btn-secondary" (click)="closePasswordModal()" [disabled]="isChangingPassword">
               Cancelar
             </button>
-            <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || isChangingPassword">
+            <button type="submit" class="btn btn-teal" [disabled]="passwordForm.invalid || isChangingPassword">
               <span *ngIf="isChangingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
               {{ isChangingPassword ? 'Cambiando...' : 'Cambiar contraseña' }}
             </button>
