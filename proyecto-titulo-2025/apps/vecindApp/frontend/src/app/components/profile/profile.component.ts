@@ -1,15 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { UserLoginData, UpdateProfileRequest, ChangePasswordRequest } from '../../interfaces/auth.interface';
+import { UserLoginData, UpdateProfileRequest, ChangePasswordRequest} from '../../interfaces/auth.interface';
+import { TramitesComponent } from '../tramites/tramites.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
@@ -56,6 +57,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   get isAdmin(): boolean {
     return this.currentUser?.roles?.includes('admin') || false;
   }
+
+  go(path: string) { this.router.navigate([path]); }
 
   get avatarUrl(): string {
     const foto = this.currentUser?.vecino?.foto_perfil;
@@ -475,4 +478,5 @@ export class ProfileComponent implements OnInit, OnDestroy {
     console.warn('Error al cargar la imagen de perfil, usando imagen por defecto');
     event.target.src = 'images/avatar-placeholder2.svg';
   }
+
 }
