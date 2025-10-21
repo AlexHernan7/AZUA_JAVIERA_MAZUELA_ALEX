@@ -350,6 +350,14 @@
                     <i class="bi bi-pencil me-1"></i>
                     Editar Espacio
                   </button>
+                  <!-- Botón de eliminar (solo directiva) -->
+                  <button
+                    class="btn btn-outline-danger btn-sm w-100 mt-2"
+                    (click)="eliminarEspacio(espacio)"
+                    [disabled]="isEditingEspacio">
+                    <i class="bi bi-trash me-1"></i>
+                    Eliminar Espacio
+                  </button>
                 </div>
               </div>
             </div>

@@ -264,6 +264,33 @@ class EspacioService:
             logger.error(f"Error al eliminar espacio {espacio_id}: {e}")
             raise
 
+    async def delete_espacio_directiva(self, espacio_id: int, directiva_junta_id: int) -> bool:
+        """
+        Elimina (soft delete) un espacio si pertenece a la junta del usuario directiva.
+        """
+        try:
+            espacio = await self._get_espacio_by_id(espacio_id)
+            if not espacio:
+                return False
+            if espacio.id_junta != directiva_junta_id:
+                raise ValueError("No tienes permisos para eliminar este espacio")
+
+            await self.db.execute(
+                update(Espacio)
+                .where(Espacio.id_espacio == espacio_id)
+                .values(activo=False)
+            )
+            await self.db.commit()
+            logger.info(f"Espacio {espacio_id} eliminado por directiva (soft delete)")
+            return True
+        except ValueError:
+            await self.db.rollback()
+            raise
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error al eliminar espacio {espacio_id} por directiva: {e}")
+            raise
+
     async def update_espacio_directiva(
         self,
         espacio_id: int,

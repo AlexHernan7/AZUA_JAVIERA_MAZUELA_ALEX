@@ -156,6 +156,7 @@ export interface DirectivaListItem {
   fecha_inicio_cargo: string;
   fecha_termino_cargo?: string;
   foto_perfil?: string;
+  junta_nombre?: string;
 }
 
 // Interfaces para comunas y juntas

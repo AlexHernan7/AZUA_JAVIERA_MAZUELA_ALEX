@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
+import { VecinoListItem, DirectivaListItem } from '../../interfaces/auth.interface';
+import { forkJoin } from 'rxjs';
 
 type RoleCode = 'admin' | 'vecino' | 'directiva';
 
@@ -35,8 +38,11 @@ export class ListUserComponent implements OnInit {
   allUsers: SystemUser[] = [];
   // estados de carga por fila
   rowBusy = new Set<number>();
+  // estados de colapsado por sección
+  showDirectiva = false;
+  showVecinos = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.fetchUsers();
@@ -57,17 +63,62 @@ export class ListUserComponent implements OnInit {
     this.loading = true;
     this.error = '';
     
-    const headers = this.getAuthHeaders();
-    
-    this.http
-      .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/usuarios?limit=1000`, { headers })
-      .subscribe({
-        next: (res) => {
-          // excluir admins
-          this.allUsers = (res.usuarios || []).filter(
-            u => !(u.roles || []).includes('admin')
-          );
-          // orden alfabético por apellido/nombre
+    if (this.isAdmin) {
+      const headers = this.getAuthHeaders();
+      this.http
+        .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/usuarios?limit=1000`, { headers })
+        .subscribe({
+          next: (res) => {
+            // excluir admins
+            this.allUsers = (res.usuarios || []).filter(
+              u => !(u.roles || []).includes('admin')
+            );
+            // orden alfabético por apellido/nombre
+            this.allUsers.sort((a, b) =>
+              (this.displayName(a)).localeCompare(this.displayName(b), 'es')
+            );
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error(err);
+            this.error = 'No se pudieron cargar los usuarios.';
+            this.loading = false;
+          },
+        });
+    } else {
+      // Directiva/vecino: cargar solo usuarios de mi junta
+      forkJoin({
+        vecinos: this.auth.getVecinosMyJunta(false),
+        directivos: this.auth.getDirectivosMyJunta(false)
+      }).subscribe({
+        next: ({ vecinos, directivos }) => {
+          const vecinosArr = vecinos as VecinoListItem[];
+          const mappedVecinos: SystemUser[] = vecinosArr.map(v => ({
+            id_usuario: v.id_usuario,
+            email: v.email,
+            activo: v.activo,
+            roles: ['vecino'],
+            nombres: v.nombres,
+            apellido_paterno: v.apellido_paterno,
+            apellido_materno: v.apellido_materno ?? null,
+            junta_nombre: v.junta_nombre
+          }));
+          const juntaNombre = vecinosArr.find(v => !!v.junta_nombre)?.junta_nombre
+            || this.auth.getCurrentUser()?.vecino?.junta
+            || undefined;
+          const mappedDirectivos: SystemUser[] = (directivos as DirectivaListItem[]).map((d) => ({
+            // usar id_usuario real si viene del backend; si no, omitir acciones sobre él
+            id_usuario: (d as any).id_usuario ?? -d.id_directiva,
+            email: d.email,
+            activo: true,
+            roles: ['directiva'],
+            nombres: d.nombres,
+            apellido_paterno: d.apellido_paterno,
+            apellido_materno: d.apellido_materno ?? null,
+            junta_nombre: juntaNombre
+          }));
+
+          this.allUsers = [...mappedDirectivos, ...mappedVecinos];
           this.allUsers.sort((a, b) =>
             (this.displayName(a)).localeCompare(this.displayName(b), 'es')
           );
@@ -75,10 +126,11 @@ export class ListUserComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.error = 'No se pudieron cargar los usuarios.';
+          this.error = 'No se pudieron cargar los usuarios de tu junta.';
           this.loading = false;
-        },
+        }
       });
+    }
   }
 
   // Helpers de UI
@@ -114,14 +166,18 @@ export class ListUserComponent implements OnInit {
 
   // Toggle estado
   toggleActive(u: SystemUser): void {
+    // Admin usa endpoint de admin; directiva usa endpoint de directiva para su junta
     if (this.rowBusy.has(u.id_usuario)) return;
     const nuevo = !u.activo;
 
     const headers = this.getAuthHeaders();
 
     this.rowBusy.add(u.id_usuario);
-    this.http
-      .patch(`${this.BASE_URL}/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers })
+    const req$ = this.isAdmin
+      ? this.http.patch(`${this.BASE_URL}/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers })
+      : this.http.patch(`/api/users/directiva/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers });
+
+    req$
       .subscribe({
         next: () => {
           u.activo = nuevo; // éxito optimista
@@ -133,5 +189,13 @@ export class ListUserComponent implements OnInit {
           alert('No se pudo actualizar el estado del usuario.');
         },
       });
+  }
+
+  // Roles helpers
+  private currentRoles(): string[] {
+    return this.auth.getCurrentUser()?.roles || [];
+  }
+  get isAdmin(): boolean {
+    return this.currentRoles().includes('admin');
   }
 }

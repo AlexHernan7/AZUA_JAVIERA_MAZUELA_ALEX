@@ -442,6 +442,31 @@ export class JuntaProfileComponent implements OnInit {
   }
 
   /**
+   * Elimina un espacio (solo directiva). Pide confirmación y refresca la lista.
+   */
+  eliminarEspacio(espacio: EspacioResponse): void {
+    if (!espacio || !this.isDirectiva) return;
+    const confirmado = confirm(`¿Seguro que deseas eliminar el espacio "${espacio.nombre}"?`);
+    if (!confirmado) return;
+
+    this.isLoadingEspacios = true;
+    this.espaciosError = null;
+
+    this.espacioService.deleteEspacioDirectiva(espacio.id_espacio).subscribe({
+      next: () => {
+        // Quitar de la lista local
+        this.espacios = this.espacios.filter(e => e.id_espacio !== espacio.id_espacio);
+        this.isLoadingEspacios = false;
+      },
+      error: (error) => {
+        console.error('Error eliminando espacio:', error);
+        this.espaciosError = error.message || 'Error al eliminar el espacio';
+        this.isLoadingEspacios = false;
+      }
+    });
+  }
+
+  /**
    * Cancela la edición de un espacio
    */
   cancelarEditarEspacio(): void {

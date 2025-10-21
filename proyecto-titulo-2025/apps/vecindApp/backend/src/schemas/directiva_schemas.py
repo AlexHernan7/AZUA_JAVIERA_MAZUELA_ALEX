@@ -111,6 +111,7 @@ class DirectivaRegistroRequest(BaseModel):
 class DirectivaResponse(BaseModel):
     """Schema para respuesta de datos de directivo."""
     
+    id_usuario: int
     id_directiva: int
     rut: str
     nombres: str

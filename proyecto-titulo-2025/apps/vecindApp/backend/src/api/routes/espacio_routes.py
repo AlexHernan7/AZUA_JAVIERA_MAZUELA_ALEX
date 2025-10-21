@@ -415,6 +415,51 @@ async def delete_espacio(
         )
 
 
+@router.delete(
+    "/directiva/{espacio_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar espacio (Solo Directiva)",
+    description="Elimina (soft delete) un espacio si pertenece a la junta del usuario directiva.",
+    responses={
+        204: {"description": "Espacio eliminado exitosamente"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"model": ErrorResponse, "description": "No tienes permisos para eliminar este espacio"},
+        404: {"model": ErrorResponse, "description": "Espacio no encontrado"},
+    },
+)
+async def delete_espacio_directiva(
+    espacio_id: int,
+    directiva_info: tuple[int, int] = Depends(verify_directiva_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Elimina (soft delete) un espacio si pertenece a la junta del usuario directiva.
+    """
+    try:
+        user_id, directiva_junta_id = directiva_info
+        logger.info(f"🔄 Directiva {user_id} eliminando espacio {espacio_id}")
+
+        servicio = EspacioService(db)
+        eliminado = await servicio.delete_espacio_directiva(espacio_id, directiva_junta_id)
+        if not eliminado:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": "No encontrado", "detalle": f"Espacio {espacio_id} no existe"}
+            )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": "Acceso denegado", "detalle": str(e)}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error eliminando espacio {espacio_id} por directiva: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
+        )
+
 async def save_uploaded_file(file: UploadFile) -> str:
     """
     Guarda un archivo subido y retorna la ruta relativa.

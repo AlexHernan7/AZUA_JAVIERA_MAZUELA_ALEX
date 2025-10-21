@@ -54,6 +54,12 @@ export class CreateEspaciosComponent implements OnInit {
       activo: [true],
       id_junta: ['', Validators.required] // Ahora es un selector
     });
+
+    // Si es directiva, prefijar su id_junta cuando esté disponible
+    const myJuntaId = this.authService.getCurrentUser()?.vecino?.id_junta;
+    if (this.isDirectiva() && myJuntaId) {
+      this.espacioForm.patchValue({ id_junta: String(myJuntaId) });
+    }
   }
 
   onSubmit(): void {
@@ -198,7 +204,29 @@ export class CreateEspaciosComponent implements OnInit {
   private loadJuntas(): void {
     this.juntaService.listJuntas({ limit: 100 }).subscribe({
       next: (response) => {
-        this.juntas = response.juntas || [];
+        const all = response.juntas || [];
+
+        if (this.isDirectiva()) {
+          const currentUser = this.authService.getCurrentUser();
+          const myJuntaId = currentUser?.vecino?.id_junta ?? null;
+          const myJuntaName = (currentUser?.vecino?.junta || '').toLowerCase();
+
+          let filtered = all;
+          if (myJuntaId) {
+            filtered = all.filter(j => j.id_junta === myJuntaId);
+          } else if (myJuntaName) {
+            filtered = all.filter(j => j.nombre.toLowerCase() === myJuntaName);
+          }
+
+          this.juntas = filtered.length ? filtered : all;
+
+          // Si hay exactamente una junta, fijarla en el formulario
+          if (this.juntas.length === 1) {
+            this.espacioForm.patchValue({ id_junta: String(this.juntas[0].id_junta) });
+          }
+        } else {
+          this.juntas = all;
+        }
         console.log('Juntas cargadas:', this.juntas);
       },
       error: (error) => {

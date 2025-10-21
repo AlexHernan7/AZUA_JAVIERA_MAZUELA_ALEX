@@ -135,6 +135,17 @@ export class EspacioService {
   }
 
   /**
+   * Elimina un espacio como directiva (soft delete, validando pertenencia a su junta)
+   */
+  deleteEspacioDirectiva(id: number): Observable<void> {
+    const headers = this.getAuthHeaders();
+    return this.http.delete<void>(`${this.API_URL}/espacios/directiva/${id}`, { headers })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Obtiene los headers de autenticación
    */
   private getAuthHeaders(): HttpHeaders {

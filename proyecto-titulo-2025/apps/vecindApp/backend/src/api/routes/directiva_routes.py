@@ -179,6 +179,7 @@ async def get_directivos_by_junta(
                     foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
 
             directivos_response.append(DirectivaResponse(
+                id_usuario=directiva.id_usuario,
                 id_directiva=directiva.id_directiva,
                 rut=directiva.rut,
                 nombres=directiva.nombres,
@@ -257,6 +258,7 @@ async def get_my_junta_directivos(
                     foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
 
             directivos_response.append(DirectivaResponse(
+                id_usuario=directiva.id_usuario,
                 id_directiva=directiva.id_directiva,
                 rut=directiva.rut,
                 nombres=directiva.nombres,

@@ -2,7 +2,6 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
       <h1 class="h3 mb-0">Usuarios del sistema</h1>
-      <small class="text-muted">Listados por rol (excluye administradores)</small>
     </div>
 
     <div class="searchbox">
@@ -32,9 +31,12 @@
       <span class="badge bg-primary-subtle text-primary px-3 py-2">
         {{ directiva.length }} usuarios
       </span>
+      <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="showDirectiva = !showDirectiva">
+        <i class="bi" [ngClass]="showDirectiva ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive" *ngIf="showDirectiva">
       <table class="table align-middle mb-0">
         <thead class="table-light">
           <tr>
@@ -53,7 +55,7 @@
               <div class="small text-muted d-lg-none">{{ u.junta_nombre }}</div>
             </td>
             <td class="d-none d-md-table-cell">{{ u.email }}</td>
-            <td class="d-none d-lg-table-cell">{{ u.junta_nombre || '—' }}</td>
+            <td class="d-none d-lg-table-cell">{{ u.junta_nombre }}</td>
             <td>
               <span class="status-badge" [class.on]="u.activo" [class.off]="!u.activo">
                 {{ u.activo ? 'Activo' : 'Inactivo' }}
@@ -89,9 +91,12 @@
       <span class="badge bg-teal-soft text-teal px-3 py-2">
         {{ vecinos.length }} usuarios
       </span>
+      <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="showVecinos = !showVecinos">
+        <i class="bi" [ngClass]="showVecinos ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive" *ngIf="showVecinos">
       <table class="table align-middle mb-0">
         <thead class="table-light">
           <tr>

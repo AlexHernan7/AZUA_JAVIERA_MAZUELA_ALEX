@@ -6,6 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from typing import Optional
+from pydantic import BaseModel
+from src.database.models.usuario import Usuario
+from src.database.models.usuario_rol import UsuarioRol
+from src.database.models.rol import Rol
 
 from src.database.session import get_db_session
 from src.services.user_service import UserService
@@ -798,9 +802,67 @@ async def get_my_junta_vecinos(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
+
+
+class UpdateEstadoRequest(BaseModel):
+    activo: bool
+
+
+@router.patch(
+    "/directiva/usuarios/{usuario_id}/estado",
+    summary="Actualizar estado de usuario (Directiva)",
+    description=(
+        "Permite a un usuario con rol directiva activar/desactivar usuarios de su misma junta. "
+        "No permite modificar usuarios admin ni desactivar al propio usuario."
+    ),
+)
+async def update_user_estado_directiva(
+    usuario_id: int,
+    estado_request: UpdateEstadoRequest,
+    directiva_info: tuple[int, int] = Depends(verify_directiva_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    try:
+        user_id, junta_id = directiva_info
+
+        # Verificar que el usuario objetivo existe
+        result = await db.execute(select(Usuario).where(Usuario.id_usuario == usuario_id))
+        usuario = result.scalar_one_or_none()
+        if not usuario:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+        # Verificar que pertenece a la misma junta
+        if usuario.id_junta != junta_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos sobre este usuario")
+
+        # No permitir desactivar al propio usuario
+        if usuario_id == user_id and not estado_request.activo:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes desactivar tu propio usuario")
+
+        # Verificar que no sea admin
+        roles_result = await db.execute(
+            select(Rol.codigo)
+            .join(UsuarioRol, Rol.id_rol == UsuarioRol.id_rol)
+            .where(UsuarioRol.id_usuario == usuario_id)
+        )
+        codigos = [r for r in roles_result.scalars().all()]
+        if "admin" in codigos:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No puedes modificar usuarios admin")
+
+        # Actualizar estado
+        usuario.activo = estado_request.activo
+        await db.commit()
+
+        return {
+            "success": True,
+            "mensaje": f"Usuario {'activado' if estado_request.activo else 'desactivado'} exitosamente",
+            "id_usuario": usuario_id,
+            "activo": estado_request.activo,
+        }
+    except HTTPException:
+        raise
     except Exception as e:
-        # Errores internos
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener vecinos: {str(e)}",
+            detail=f"Error al actualizar estado: {str(e)}",
         )
