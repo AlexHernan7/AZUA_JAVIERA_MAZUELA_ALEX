@@ -114,13 +114,10 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
    * Carga los motivos de solicitud desde el backend
    */
   cargarMotivos(): void {
-    console.log('🔄 Cargando motivos desde el backend...');
     this.sub.add(
       this.masterService.getMotivosSolicitudAgrupados()
         .subscribe({
           next: (response) => {
-            console.log('✅ Respuesta del backend:', response);
-            
             // Convertir array de grupos a objeto con claves
             this.motivosAgrupados = {};
             response.grupos.forEach((grupo: MotivoGrupoResponse) => {
@@ -129,13 +126,8 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
             
             // Crear lista plana de motivos para búsqueda
             this.motivos = response.grupos.flatMap((grupo: MotivoGrupoResponse) => grupo.items);
-            
-            console.log('✅ Motivos cargados:', this.motivos);
-            console.log('✅ Motivos agrupados:', this.motivosAgrupados);
           },
           error: (error) => {
-            console.error('❌ Error cargando motivos:', error);
-            console.error('❌ Error completo:', error);
             this.errorMessage = 'Error al cargar los motivos de solicitud: ' + error.message;
           }
         })
@@ -162,7 +154,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
       this.certificadoService.solicitarCertificadoConWebpay(request)
         .subscribe({
           next: (response) => {
-            console.log('✅ Certificado con Webpay creado:', response);
             this.certificadoConPago = response;
             this.successMessage = `Solicitud creada. Redirigiendo al pago con Webpay de $${response.payment_intent.amount} CLP...`;
             this.isLoading = false;
@@ -173,7 +164,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
               if (response.webpay_token) {
                 this.redirectToWebpay(response.payment_url, response.webpay_token);
               } else {
-                console.error('❌ Token de Webpay no encontrado en la respuesta');
                 this.errorMessage = 'Error: No se pudo obtener el token de pago';
                 this.isLoading = false;
                 this.checkFormState();
@@ -181,7 +171,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
             }, 2000);
           },
           error: (error) => {
-            console.error('❌ Error creando certificado con Webpay:', error);
             this.errorMessage = error.message || 'Error al crear la solicitud de certificado';
             this.isLoading = false;
             this.checkFormState();
@@ -209,8 +198,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
 
     form.appendChild(tokenInput);
     document.body.appendChild(form);
-
-    console.log('🔄 Enviando token a Webpay:', token.substring(0, 20) + '...');
     
     // Enviar el formulario
     form.submit();
@@ -229,7 +216,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
       this.certificadoService.descargarCertificadoPDF(this.certificadoGenerado.id_certificado)
         .subscribe({
           next: (blob) => {
-            console.log('✅ PDF descargado');
             const filename = `certificado_residencia_${this.certificadoGenerado!.numero}.pdf`;
             this.certificadoService.downloadBlob(blob, filename);
             this.successMessage = 'PDF descargado exitosamente';
@@ -237,7 +223,6 @@ export class CertificadoCreateComponent implements OnInit, OnDestroy {
             this.checkFormState();
           },
           error: (error) => {
-            console.error('❌ Error descargando PDF:', error);
             this.errorMessage = error.message || 'Error al descargar el PDF';
             this.isLoading = false;
             this.checkFormState();

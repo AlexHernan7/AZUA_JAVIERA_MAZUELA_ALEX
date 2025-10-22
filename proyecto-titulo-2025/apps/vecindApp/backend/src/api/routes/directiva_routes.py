@@ -6,6 +6,7 @@ Contiene endpoints para registro y gestión de directivos.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 import logging
 
 from src.database.session import get_db_session
@@ -84,8 +85,14 @@ async def register_directivo(
             else:
                 foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
 
+        # Logging para debugging
+        logger.info(f"📋 usuario.id_usuario: {usuario.id_usuario}")
+        logger.info(f"📋 directiva.id_usuario: {directiva.id_usuario}")
+        logger.info(f"📋 directiva.id_directiva: {directiva.id_directiva}")
+
         # Preparar respuesta
         directiva_response = DirectivaResponse(
+            id_usuario=directiva.id_usuario,  # Usar el id_usuario de directiva, no de usuario
             id_directiva=directiva.id_directiva,
             rut=directiva.rut,
             nombres=directiva.nombres,
@@ -98,15 +105,31 @@ async def register_directivo(
             fecha_termino_cargo=directiva.fecha_termino_cargo,
             foto_perfil=foto_perfil_base64,
         )
+        
+        logger.info(f"✅ DirectivaResponse creado correctamente")
 
         return DirectivaRegistroResponse(
             id_usuario=usuario.id_usuario, 
             directiva=directiva_response
         )
 
+    except ValidationError as e:
+        # Errores de validación de Pydantic
+        logger.error(f"❌ Error de validación de Pydantic: {str(e)}")
+        logger.error(f"❌ Detalles: {e.errors()}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "Error de validación del schema",
+                "detalle": str(e),
+                "errores": e.errors(),
+                "codigo": "SCHEMA_VALIDATION_ERROR",
+            },
+        )
+
     except ValueError as e:
         # Errores de validación de negocio
-        logger.error(f"❌ Error de validación: {str(e)}")
+        logger.error(f"❌ Error de validación de negocio: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={

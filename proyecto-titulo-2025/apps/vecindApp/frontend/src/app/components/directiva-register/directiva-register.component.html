@@ -91,7 +91,9 @@
               <label class="form-label fw-semibold">Junta de vecinos *</label>
               <select class="form-select" formControlName="juntaSeleccionada">
                 <option value="" disabled>Selecciona una junta</option>
-                <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
+                <option *ngFor="let junta of juntas" [value]="junta.id_junta">
+                  {{ junta.nombre }}{{ junta.comuna_nombre ? ' - ' + junta.comuna_nombre : '' }}
+                </option>
               </select>
               <div class="invalid" *ngIf="g('juntaSeleccionada').touched && g('juntaSeleccionada').invalid">Selecciona
                 una junta</div>

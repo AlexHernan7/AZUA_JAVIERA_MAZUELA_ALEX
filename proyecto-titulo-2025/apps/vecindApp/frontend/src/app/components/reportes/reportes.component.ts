@@ -91,7 +91,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('✅ Dashboard cargado exitosamente:', data);
           this.dashboardData.set(data);
           this.loading.set(false);
           // Crear gráficos después de cargar los datos
@@ -99,9 +98,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
           this.crearGraficosSiDisponibles();
         },
         error: (error) => {
-          console.error('❌ Error cargando dashboard:', error);
-          console.error('❌ Error status:', error.status);
-          console.error('❌ Error msage:', error.msage);
           console.error('❌ Error details:', error.error);
           this.error.set(`Error al cargar los report: ${error.msage || error.status || 'Error dconocido'}`);
           this.loading.set(false);

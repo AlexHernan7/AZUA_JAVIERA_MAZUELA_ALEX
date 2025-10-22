@@ -318,6 +318,16 @@ export class AuthService {
   }
 
   /**
+   * Obtiene todas las juntas disponibles (sin filtro de comuna)
+   */
+  getAllJuntas(limit: number = 100): Observable<JuntasList> {
+    return this.http.get<JuntasList>(`${this.API_URL}/juntas?limit=${limit}`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Obtiene las juntas de una comuna específica
    */
   getJuntasByComuna(comunaId: number): Observable<JuntasList> {
@@ -335,10 +345,6 @@ export class AuthService {
       errorMessage = `Error: ${error.error.message}`;
     } else {
       // Error del servidor
-      console.error('Error completo del servidor:', error);
-      console.error('Status:', error.status);
-      console.error('Error body:', error.error);
-      
       if (error.error && typeof error.error === 'object') {
         const apiError = error.error as any;
         
@@ -377,7 +383,6 @@ export class AuthService {
       }
     }
 
-    console.error('Error en AuthService:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
 }

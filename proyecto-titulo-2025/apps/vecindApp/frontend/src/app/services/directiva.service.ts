@@ -102,10 +102,6 @@ export class DirectivaService {
       errorMessage = `Error: ${error.error.message}`;
     } else {
       // Error del servidor
-      console.error('Error completo del servidor:', error);
-      console.error('Status:', error.status);
-      console.error('Error body:', error.error);
-      
       if (error.error && typeof error.error === 'object') {
         const apiError = error.error as any;
         
@@ -152,7 +148,6 @@ export class DirectivaService {
       }
     }
 
-    console.error('Error en DirectivaService:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
 

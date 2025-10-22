@@ -524,3 +524,26 @@ sqlalchemy.exc.ArgumentError: Mapped instance expected for relationship comparis
 2025-10-20 21:02 | INFO | [user_routes.py:232] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
 2025-10-20 21:11 | INFO | [user_routes.py:176] | src.api.routes.user_routes - [AUTH] Verificando rol de directiva para usuario ID: 54
 2025-10-20 21:11 | INFO | [user_routes.py:232] | src.api.routes.user_routes - [AUTH] Usuario 54 verificado como directiva de junta 1 exitosamente
+2025-10-21 21:03 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:03 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:03 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:03 | INFO | [admin_routes.py:77] | src.api.routes.admin_routes - [ADMIN] Usuario 1 solicitando lista de todos los usuarios
+2025-10-21 21:03 | INFO | [admin_routes.py:135] | src.api.routes.admin_routes - [ADMIN] Se encontraron 53 usuarios
+2025-10-21 21:06 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:06 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:06 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:18 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:18 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:18 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:20 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:20 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:20 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:21 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:21 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:21 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:24 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:24 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:24 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-21 21:28 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-21 21:28 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-21 21:28 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente

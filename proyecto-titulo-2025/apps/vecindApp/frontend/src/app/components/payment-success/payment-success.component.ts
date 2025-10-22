@@ -134,8 +134,8 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
               <div class="actions-section">
                 <div class="action-buttons">
                   <button class="btn-secondary-action" (click)="isReserva ? irAReservas() : irACertificados()">
-                    <i class="bi" [class.bi-calendar-check]="isReserva" [class.bi-collection]="!isReserva"></i>
-                    <span>{{ isReserva ? 'Mis Reservas' : 'Mis Certificados' }}</span>
+                    <i class="bi" [class.bi-files]="isReserva" [class.bi-collection]="!isReserva"></i>
+                    <span>{{ isReserva ? 'Mis Trámites' : 'Mis Certificados' }}</span>
                   </button>
                   <button class="btn-primary-action" (click)="irAInicio()">
                     <i class="bi bi-house-door"></i>
@@ -450,7 +450,6 @@ export class PaymentSuccessComponent implements OnInit {
       this.reservaInfo = JSON.parse(reservaPendiente);
       this.isReserva = true;
       this.paymentAmount = this.reservaInfo.valor;
-      console.log('🏟️ Información de reserva encontrada:', this.reservaInfo);
       
       // Limpiar localStorage
       localStorage.removeItem('reserva_pendiente');
@@ -461,8 +460,6 @@ export class PaymentSuccessComponent implements OnInit {
       this.paymentId = params['payment_id'] || null;
       this.preferenceId = params['preference_id'] || null;
       this.status = params['status'] || null;
-      
-      console.log('🎉 Parámetros de éxito de pago:', params);
       
       // Verificar estado del pago
       this.verificarEstado();
@@ -502,7 +499,6 @@ export class PaymentSuccessComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error obteniendo certificados:', error);
         // No mostrar error, el certificado puede estar procesándose
       }
     });
@@ -523,7 +519,6 @@ export class PaymentSuccessComponent implements OnInit {
         window.URL.revokeObjectURL(url);
       },
       error: (error) => {
-        console.error('Error descargando certificado:', error);
         this.errorMessage = 'Error descargando el certificado. Inténtalo más tarde.';
       }
     });
@@ -538,7 +533,7 @@ export class PaymentSuccessComponent implements OnInit {
   }
 
   irAReservas() {
-    this.router.navigate(['/reservas']);
+    this.router.navigate(['/tramites']);
   }
 
   irAInicio() {
