@@ -85,7 +85,6 @@ export class TramitesComponent implements OnInit, OnDestroy {
           }));
         },
         error: (error) => {
-          console.error('Error al cargar certificados:', error);
           this.errorMessage = 'Error al cargar certificados';
         }
       });
@@ -101,13 +100,12 @@ export class TramitesComponent implements OnInit, OnDestroy {
           // Tomar las primeras 3 (ya vienen ordenadas por fecha descendente)
           this.reservas = reservas.slice(0, 3).map(reserva => ({
             espacio: reserva.espacio_nombre || 'Espacio',
-            fecha: this.formatearFechaReserva(reserva.inicio),
+            fecha: this.formatearFechaReserva(reserva.inicio, reserva.fin),
             id: reserva.id_reserva
           }));
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error al cargar reservas:', error);
           this.errorMessage = 'Error al cargar reservas';
           this.isLoading = false;
         }
@@ -127,17 +125,32 @@ export class TramitesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Formatea una fecha de reserva (inicio)
+   * Formatea una fecha de reserva con rango de horarios (inicio - fin)
+   * Extrae la hora directamente del string ISO sin conversión de zona horaria
    */
-  formatearFechaReserva(fechaISO: string): string {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-CL', {
+  formatearFechaReserva(inicioISO: string, finISO: string): string {
+    // Parsear manualmente el string ISO para evitar conversión de zona horaria
+    // Formato esperado: "2025-10-30T11:00:00+00:00" o "2025-10-30T11:00:00.000000+00:00"
+    
+    // Extraer fecha y hora de inicio
+    const [fechaInicio, horaCompletaInicio] = inicioISO.split('T');
+    const horaInicio = horaCompletaInicio.split(':').slice(0, 2).join(':'); // HH:MM
+    
+    // Extraer hora de fin (solo necesitamos la hora, la fecha es la misma)
+    const horaCompletaFin = finISO.split('T')[1];
+    const horaFin = horaCompletaFin.split(':').slice(0, 2).join(':'); // HH:MM
+    
+    // Formatear la fecha usando Date para obtener el formato legible
+    const [year, month, day] = fechaInicio.split('-');
+    const fecha = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    const fechaFormateada = fecha.toLocaleDateString('es-CL', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
+
+    return `${fechaFormateada}, ${horaInicio} - ${horaFin}`;
   }
 
   /**
@@ -156,7 +169,6 @@ export class TramitesComponent implements OnInit, OnDestroy {
           this.certificadoService.downloadBlob(blob, `certificado_${cert.id}.pdf`);
         },
         error: (error) => {
-          console.error('Error al descargar certificado:', error);
           alert('Error al descargar el certificado');
         }
       });

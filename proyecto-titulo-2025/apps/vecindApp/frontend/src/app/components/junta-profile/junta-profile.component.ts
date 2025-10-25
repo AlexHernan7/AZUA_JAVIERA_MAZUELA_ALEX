@@ -158,7 +158,6 @@ export class JuntaProfileComponent implements OnInit {
         this.loadDirectivos();
       },
       error: (error: any) => {
-        console.error('Error al cargar información de la junta:', error);
         this.error = error.message || 'Error al cargar la información de la junta.';
         this.isLoading = false;
       }
@@ -190,7 +189,6 @@ export class JuntaProfileComponent implements OnInit {
         }
       },
       error: (error: any) => {
-        console.error('Error al cargar directivos:', error);
         this.error = error.message || 'Error al cargar los directivos de la junta.';
         this.isLoading = false;
       }
@@ -386,7 +384,6 @@ export class JuntaProfileComponent implements OnInit {
         }, 2000);
       },
       error: (error: any) => {
-        console.error('Error actualizando junta:', error);
         this.editError = error.message || 'Error al actualizar la junta';
         this.isSaving = false;
       }
@@ -408,7 +405,6 @@ export class JuntaProfileComponent implements OnInit {
         this.isLoadingEspacios = false;
       },
       error: (error) => {
-        console.error('Error cargando espacios:', error);
         this.espaciosError = 'Error al cargar espacios';
         this.isLoadingEspacios = false;
       }
@@ -459,7 +455,6 @@ export class JuntaProfileComponent implements OnInit {
         this.isLoadingEspacios = false;
       },
       error: (error) => {
-        console.error('Error eliminando espacio:', error);
         this.espaciosError = error.message || 'Error al eliminar el espacio';
         this.isLoadingEspacios = false;
       }
@@ -647,7 +642,6 @@ export class JuntaProfileComponent implements OnInit {
         }, 2000);
       },
       error: (error: any) => {
-        console.error('Error actualizando espacio:', error);
         this.espacioEditError = error.message || 'Error al actualizar el espacio';
         this.isSavingEspacio = false;
       }

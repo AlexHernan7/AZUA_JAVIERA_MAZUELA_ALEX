@@ -52,8 +52,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    console.log('🔍 ngAfterViewInit - Inicializado');
-    
     // Si ya tenemos datos, crear los gráficos
     if (this.dashboardData()) {
       this.crearGraficosSiDisponibles();
@@ -72,11 +70,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    // Debug: Verificar token
-    const token = localStorage.getItem('vecindapp_token');
-    console.log('🔍 Token encontrado:', token ? 'Sí' : 'No');
-    console.log('🔍 Token value:', token);
-
     // Usar los últimos 6 meses para mostrar más datos
     const ahora = new Date();
     const fechaDesde = new Date(ahora.getFullYear(), ahora.getMonth() - 6, 1); // 6 meses atrás
@@ -84,8 +77,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const fechaDesdeStr = fechaDesde.toISOString().split('T')[0];
     const fechaHastaStr = fechaHasta.toISOString().split('T')[0];
-
-    console.log('🔍 Fechas:', { fechaDesdeStr, fechaHastaStr });
 
     this.reporteService.getDashboard(fechaDesdeStr, fechaHastaStr)
       .pipe(takeUntil(this.destroy$))
@@ -98,8 +89,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
           this.crearGraficosSiDisponibles();
         },
         error: (error) => {
-          console.error('❌ Error details:', error.error);
-          this.error.set(`Error al cargar los report: ${error.msage || error.status || 'Error dconocido'}`);
+          this.error.set(`Error al cargar los reportes: ${error.message || error.status || 'Error desconocido'}`);
           this.loading.set(false);
         }
       });
@@ -117,7 +107,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
         this.makePie();
         this.makeLine();
       } catch (error) {
-        console.error('❌ Error creando gráficos:', error);
         // Intentar crear gráficos individualmente para identificar cuál falla
         this.crearGraficosIndividualmente();
       }
@@ -128,24 +117,23 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.makeBar();
     } catch (error) {
-      console.error('❌ Error creando gráfico de barras:', error);
+      // Error creando gráfico de barras
     }
     
     try {
       this.makePie();
     } catch (error) {
-      console.error('❌ Error creando gráfico de torta:', error);
+      // Error creando gráfico de torta
     }
     
     try {
       this.makeLine();
     } catch (error) {
-      console.error('❌ Error creando gráfico de línea:', error);
+      // Error creando gráfico de línea
     }
   }
 
   public resetFilter(): void {
-    console.log('🔄 Reseteando filtro');
     this.selectedMonths = [];
     
     // Recargar datos del dashboard sin filtros
@@ -167,19 +155,10 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     // Usar selectedMonths (array de meses seleccionados)
     const meses = this.selectedMonths.length > 0 ? this.selectedMonths : undefined;
 
-    console.log('🔍 Cargando dashboard con filtros:', {
-      fechaDesde: fechaDesdeStr,
-      fechaHasta: fechaHastaStr,
-      meses: this.selectedMonths
-    });
-
     this.reporteService.getDashboard(fechaDesdeStr, fechaHastaStr, meses)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('✅ Dashboard cargado con filtros:', data);
-          console.log('🔍 Debug - KPIs recibidos:', data.kpis);
-          console.log('🔍 Debug - KPI Espacios Arrendados:', data.kpis[0]);
           this.dashboardData.set(data);
           this.loading.set(false);
           // Crear gráficos después de cargar los datos
@@ -190,7 +169,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
           }, 100);
         },
         error: (error) => {
-          console.error('❌ Error cargando dashboard con filtros:', error);
           this.error.set(`Error al cargar los reportes: ${error.message || 'Error desconocido'}`);
           this.loading.set(false);
         }
@@ -326,11 +304,8 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private makeLine() {
-    console.log('🔍 makeLine - Iniciando creación del gráfico de línea');
-    
     const data = this.dashboardData();
     if (!data) {
-      console.log('❌ makeLine - No hay datos del dashboard');
       return;
     }
 
@@ -340,20 +315,13 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     // Buscar el canvas en el DOM
     const canvas = document.querySelector('canvas[data-chart="line"]') as HTMLCanvasElement;
     if (!canvas) {
-      console.log('❌ makeLine - Canvas no encontrado en el DOM');
       return;
     }
-    
-    console.log('✅ makeLine - Canvas encontrado:', canvas);
 
     // Los datos ya vienen filtrados del backend
     const labels = data.ingresos_mensuales.map(item => 
       this.formatearFecha(item.mes)
     );
-
-    console.log('🔍 makeLine - Labels:', labels);
-    console.log('🔍 makeLine - Ingresos mensuales:', data.ingresos_mensuales);
-    console.log('🔍 makeLine - Certificados mensuales:', data.certificados_mensuales);
 
     // Para el gráfico de línea, usaremos datos reales de certificados vs reservas
     // Sincronizar datos de certificados con los meses de ingresos
@@ -369,9 +337,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       // Si no hay datos de reservas específicos, usar un valor basado en ingresos
       return Math.floor(item.ingresos / 1000); // Convertir ingresos a miles para mejor visualización
     });
-
-    console.log('🔍 makeLine - Certificados data:', certificadosData);
-    console.log('🔍 makeLine - Reservas data:', reservasData);
 
     const cfg: ChartConfiguration<'line'> = {
       type: 'line',
@@ -489,9 +454,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     };
     
-    console.log('🔍 makeLine - Configuración del gráfico:', cfg);
     this.lineChart = new Chart(canvas, cfg);
-    console.log('✅ makeLine - Gráfico de línea creado:', this.lineChart);
   }
 
   // Métodos utilitarios para formateo
@@ -506,7 +469,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       const fecha = new Date(mes + '-01');
       return fecha.toLocaleDateString(this.LOCALE, { month: 'short', year: 'numeric' });
     } catch (error) {
-      console.error('Error formateando fecha:', error);
       return mes;
     }
   }
@@ -537,7 +499,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public toggleMes(mes: string): void {
-    console.log('🔍 Toggleando mes:', mes);
     const index = this.selectedMonths.indexOf(mes);
     if (index > -1) {
       this.selectedMonths.splice(index, 1);
@@ -548,24 +509,20 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public seleccionarTodosLosMeses(): void {
-    console.log('🔍 Seleccionando todos los meses');
     this.selectedMonths = [...this.getMesesDisponibles()];
     // No cargar automáticamente, solo actualizar la selección
   }
 
   public deseleccionarTodosLosMeses(): void {
-    console.log('🔍 Deseleccionando todos los meses');
     this.selectedMonths = [];
     // No cargar automáticamente, solo actualizar la selección
   }
 
   public aplicarFiltros(): void {
-    console.log('🔍 Aplicando filtros para meses:', this.selectedMonths);
     this.cargarDashboardConFiltros();
   }
 
   public verTodosLosMeses(): void {
-    console.log('🔍 Viendo todos los meses');
     this.selectedMonths = [];
     this.cargarDashboardConFiltros();
   }
@@ -574,7 +531,6 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       return n.toLocaleString(this.LOCALE);
     } catch (error) {
-      console.error('Error formateando número:', error);
       return n.toString();
     }
   }

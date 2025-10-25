@@ -103,7 +103,6 @@ export class JuntaCreateComponent {
         this.setFormLoadingState(false);
       },
       error: (error) => {
-        console.error('Error cargando regiones:', error);
         this.errorMessage = 'Error cargando regiones';
         this.setFormLoadingState(false);
       }
@@ -158,7 +157,6 @@ export class JuntaCreateComponent {
         this.form.get('comuna')!.enable(); // Habilitar cuando termine de cargar
       },
       error: (error) => {
-        console.error('Error cargando comunas:', error);
         this.errorMessage = 'Error cargando comunas';
         this.form.get('comuna')!.enable(); // Habilitar aunque haya error
       }
@@ -256,7 +254,6 @@ export class JuntaCreateComponent {
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Error creando junta:', error);
         this.errorMessage = error.message || 'Error al crear la junta. Inténtalo nuevamente.';
       }
     });

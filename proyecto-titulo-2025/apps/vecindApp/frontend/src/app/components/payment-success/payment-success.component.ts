@@ -133,9 +133,9 @@ import { CertificadoResponse } from '../../interfaces/certificado.interface';
               <!-- Acciones principales -->
               <div class="actions-section">
                 <div class="action-buttons">
-                  <button class="btn-secondary-action" (click)="isReserva ? irAReservas() : irACertificados()">
-                    <i class="bi" [class.bi-files]="isReserva" [class.bi-collection]="!isReserva"></i>
-                    <span>{{ isReserva ? 'Mis Trámites' : 'Mis Certificados' }}</span>
+                  <button class="btn-secondary-action" (click)="irAReservas()">
+                    <i class="bi bi-files"></i>
+                    <span>Mis Trámites</span>
                   </button>
                   <button class="btn-primary-action" (click)="irAInicio()">
                     <i class="bi bi-house-door"></i>
@@ -529,7 +529,7 @@ export class PaymentSuccessComponent implements OnInit {
   }
 
   irACertificados() {
-    this.router.navigate(['/certificados']);
+    this.router.navigate(['/tramites']);
   }
 
   irAReservas() {

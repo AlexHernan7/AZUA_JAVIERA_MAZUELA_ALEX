@@ -148,7 +148,6 @@ export class ReporteService {
    * Maneja errores HTTP
    */
   private handleError(error: any): Observable<never> {
-    console.error('Error en ReporteService:', error);
     return throwError(() => error);
   }
 }

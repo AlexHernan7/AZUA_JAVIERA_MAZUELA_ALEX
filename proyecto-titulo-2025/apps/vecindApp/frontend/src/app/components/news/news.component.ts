@@ -61,7 +61,6 @@ export class NewsComponent implements OnInit, OnDestroy {
         error: (error: Error) => {
           this.error = error.message;
           this.loading = false;
-          console.error('Error cargando noticias:', error);
         }
       });
   }

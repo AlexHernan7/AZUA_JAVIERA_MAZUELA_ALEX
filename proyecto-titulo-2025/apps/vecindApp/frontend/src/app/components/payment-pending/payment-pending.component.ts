@@ -113,7 +113,6 @@ export class PaymentPendingComponent implements OnInit {
       this.preferenceId = params['preference_id'] || null;
       this.status = params['status'] || null;
       
-      console.log('⏳ Parámetros de pago pendiente:', params);
     });
     
     // Iniciar verificación automática
@@ -161,7 +160,6 @@ export class PaymentPendingComponent implements OnInit {
       // Si el pago se completó, redirigir a success
       // Si falló, redirigir a failure
       
-      console.log('🔄 Verificación de estado completada');
     }, 2000);
   }
 

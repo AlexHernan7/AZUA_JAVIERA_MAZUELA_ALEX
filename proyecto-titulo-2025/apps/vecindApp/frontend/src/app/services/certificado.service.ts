@@ -108,9 +108,6 @@ export class CertificadoService {
       errorMessage = `Error: ${error.error.message}`;
     } else {
       // Error del servidor
-      console.error('Error completo del servidor:', error);
-      console.error('Status:', error.status);
-      console.error('Error body:', error.error);
       
       if (error.error && typeof error.error === 'object') {
         const apiError = error.error as any;
@@ -152,7 +149,6 @@ export class CertificadoService {
       }
     }
     
-    console.error('Error procesado:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
 

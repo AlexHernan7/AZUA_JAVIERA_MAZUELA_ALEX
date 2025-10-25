@@ -62,7 +62,6 @@ export class RegisterComponent implements OnInit {
         this.regiones = response.regiones;
       },
       error: (error) => {
-        console.error('Error cargando regiones:', error);
         this.errorMessage = 'Error cargando regiones';
       }
     });
@@ -74,7 +73,6 @@ export class RegisterComponent implements OnInit {
         this.comunas = response.comunas;
       },
       error: (error) => {
-        console.error('Error cargando comunas:', error);
         this.errorMessage = 'Error cargando comunas';
       }
     });
@@ -86,7 +84,6 @@ export class RegisterComponent implements OnInit {
         this.juntas = response.juntas;
       },
       error: (error) => {
-        console.error('Error cargando juntas:', error);
         this.errorMessage = 'Error cargando juntas';
       }
     });
@@ -194,7 +191,6 @@ export class RegisterComponent implements OnInit {
         setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (error) => {
-        console.error('Error en registro:', error);
         this.isLoading = false;
         this.errorMessage =
           error?.error?.detalle ||

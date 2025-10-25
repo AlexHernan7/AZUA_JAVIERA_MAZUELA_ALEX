@@ -92,7 +92,6 @@ export class PaymentFailureComponent implements OnInit {
       this.preferenceId = params['preference_id'] || null;
       this.status = params['status'] || null;
       
-      console.log('❌ Parámetros de fallo de pago:', params);
       
       // Determinar motivo del error
       this.determinarMotivo(params);

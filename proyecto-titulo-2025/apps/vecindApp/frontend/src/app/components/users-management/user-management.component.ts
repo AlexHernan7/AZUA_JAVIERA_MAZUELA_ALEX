@@ -52,7 +52,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.aplicarFiltros();
         },
         error: (err) => {
-          console.error('Error al cargar vecinos:', err);
           this.error = 'Error al cargar la lista de vecinos';
           this.isLoading = false;
         }
@@ -68,7 +67,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
         error: (err) => {
-          console.error('Error al cargar directivos:', err);
           this.error = 'Error al cargar la lista de directivos';
           this.isLoading = false;
         }

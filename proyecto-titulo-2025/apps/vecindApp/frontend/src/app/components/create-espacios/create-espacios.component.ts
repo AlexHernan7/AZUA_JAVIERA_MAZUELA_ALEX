@@ -85,7 +85,6 @@ export class CreateEspaciosComponent implements OnInit {
           next: (response) => {
             this.loading = false;
             this.success = true;
-            console.log('Espacio creado exitosamente:', response);
             
             // Si es directiva, NO redirigir, solo limpiar el formulario
             if (this.isDirectiva()) {
@@ -102,7 +101,6 @@ export class CreateEspaciosComponent implements OnInit {
           error: (error) => {
             this.loading = false;
             this.error = error.message || 'Error al crear el espacio';
-            console.error('Error al crear espacio:', error);
           }
         });
       } else {
@@ -111,7 +109,6 @@ export class CreateEspaciosComponent implements OnInit {
           next: (response) => {
             this.loading = false;
             this.success = true;
-            console.log('Espacio creado exitosamente:', response);
             
             // Si es directiva, NO redirigir, solo limpiar el formulario
             if (this.isDirectiva()) {
@@ -128,7 +125,6 @@ export class CreateEspaciosComponent implements OnInit {
           error: (error) => {
             this.loading = false;
             this.error = error.message || 'Error al crear el espacio';
-            console.error('Error al crear espacio:', error);
           }
         });
       }
@@ -227,10 +223,8 @@ export class CreateEspaciosComponent implements OnInit {
         } else {
           this.juntas = all;
         }
-        console.log('Juntas cargadas:', this.juntas);
       },
       error: (error) => {
-        console.error('Error al cargar juntas:', error);
         this.error = 'Error al cargar la lista de juntas';
       }
     });
@@ -240,10 +234,8 @@ export class CreateEspaciosComponent implements OnInit {
     this.masterService.getTiposEspacio(true).subscribe({
       next: (response) => {
         this.tiposEspacio = response;
-        console.log('Tipos de espacio cargados:', this.tiposEspacio);
       },
       error: (error) => {
-        console.error('Error al cargar tipos de espacio:', error);
         this.error = 'Error al cargar los tipos de espacio';
       }
     });

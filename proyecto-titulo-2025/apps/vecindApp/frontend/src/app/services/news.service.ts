@@ -45,9 +45,6 @@ export class NewsService {
       errorMessage = `Error de conexión: ${error.error.message}`;
     } else {
       // Error del servidor
-      console.error('Error completo del servidor:', error);
-      console.error('Status:', error.status);
-      console.error('Error body:', error.error);
       
       if (error.error && typeof error.error === 'object') {
         const apiError = error.error as any;
@@ -66,7 +63,6 @@ export class NewsService {
       }
     }
 
-    console.error('Error en NewsService:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
 }

@@ -112,7 +112,6 @@ export class ReservasComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('Error cargando espacios:', error);
           this.error.set('Error al cargar los espacios disponibles');
           this.loading.set(false);
         }
@@ -197,7 +196,6 @@ export class ReservasComponent implements OnInit, OnDestroy {
           this.verificandoDisponibilidad.set(false);
         },
         error: (error) => {
-          console.error('Error verificando disponibilidad:', error);
           this.disponibilidad = {
             disponible: false,
             mensaje: 'Error al verificar disponibilidad'
@@ -241,8 +239,6 @@ export class ReservasComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: ReservaWebpayResponse) => {
-          console.log('Reserva con pago creada exitosamente:', response);
-          
           // Redirigir a Webpay para completar el pago
           if (response.payment_url && response.webpay_token) {
             // Guardar información de la reserva en localStorage para después del pago
@@ -263,7 +259,6 @@ export class ReservasComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error creando reserva con pago:', error);
           alert('Error al crear la reserva: ' + (error.error?.detail || error.message));
           this.creandoReserva.set(false);
         }
@@ -380,22 +375,7 @@ export class ReservasComponent implements OnInit, OnDestroy {
 
   // Función de depuración para diagnosticar problemas de fecha/hora
   debugFechaHora(fecha: string, hora: string): void {
-    const hoy = new Date();
-    const [año, mes, dia] = fecha.split('-').map(Number);
-    const fechaReserva = new Date(año, mes - 1, dia);
-    const [horaH, horaM] = hora.split(':').map(Number);
-    const horarioReserva = new Date();
-    horarioReserva.setHours(horaH, horaM, 0, 0);
-    
-    console.log('=== DEBUG FECHA/HORA ===');
-    console.log('Fecha seleccionada:', fecha);
-    console.log('Hora seleccionada:', hora);
-    console.log('Hoy:', hoy.toISOString());
-    console.log('Fecha reserva:', fechaReserva.toISOString());
-    console.log('Horario reserva:', horarioReserva.toISOString());
-    console.log('Es fecha pasada:', this.esFechaPasada(fecha));
-    console.log('Es horario pasado:', this.esHorarioPasado(fecha, hora));
-    console.log('========================');
+    // Función de debug - no hace nada en producción
   }
 
   // Método helper para convertir string a number
@@ -463,8 +443,6 @@ export class ReservasComponent implements OnInit, OnDestroy {
 
     form.appendChild(tokenInput);
     document.body.appendChild(form);
-
-    console.log('🔄 Enviando token a Webpay:', token.substring(0, 20) + '...');
     
     // Enviar el formulario
     form.submit();

@@ -184,7 +184,6 @@ export class EspacioService {
       }
     }
     
-    console.error('Error en EspacioService:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
 }

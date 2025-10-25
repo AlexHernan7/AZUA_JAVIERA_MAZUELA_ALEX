@@ -218,7 +218,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error al cargar datos del usuario:', error);
           this.error = 'Error al cargar los datos del usuario';
           this.isLoading = false;
         }
@@ -232,7 +231,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.regiones = response.regiones || [];
       },
       error: (error) => {
-        console.error('Error al cargar regiones:', error);
       }
     });
   }
@@ -256,7 +254,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.editForm.get('comuna')?.enable();
       },
       error: (error) => {
-        console.error('Error al cargar comunas:', error);
         this.comunas = [];
         this.editForm.get('comuna')?.enable();
       }
@@ -292,7 +289,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.editForm.get('comuna')?.enable();
           },
           error: (error) => {
-            console.error('Error cargando comunas:', error);
             this.editForm.get('comuna')?.enable();
           }
         });
@@ -475,7 +471,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     // Si la imagen falla al cargar, usar la imagen por defecto
-    console.warn('Error al cargar la imagen de perfil, usando imagen por defecto');
     event.target.src = 'images/avatar-placeholder2.svg';
   }
 

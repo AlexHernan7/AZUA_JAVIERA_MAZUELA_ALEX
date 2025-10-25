@@ -181,14 +181,6 @@ export class JuntaService {
         }
       }
     }
-
-    console.error('Error en JuntaService:', {
-      status: error.status,
-      message: errorMessage,
-      details: errorDetails,
-      fullError: error
-    });
-
     return throwError(() => ({
       message: errorMessage,
       details: errorDetails,

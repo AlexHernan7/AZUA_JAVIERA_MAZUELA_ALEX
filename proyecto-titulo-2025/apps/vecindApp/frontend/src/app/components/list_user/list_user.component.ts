@@ -80,7 +80,6 @@ export class ListUserComponent implements OnInit {
             this.loading = false;
           },
           error: (err) => {
-            console.error(err);
             this.error = 'No se pudieron cargar los usuarios.';
             this.loading = false;
           },
@@ -125,7 +124,6 @@ export class ListUserComponent implements OnInit {
           this.loading = false;
         },
         error: (err) => {
-          console.error(err);
           this.error = 'No se pudieron cargar los usuarios de tu junta.';
           this.loading = false;
         }
@@ -184,7 +182,6 @@ export class ListUserComponent implements OnInit {
           this.rowBusy.delete(u.id_usuario);
         },
         error: (err) => {
-          console.error(err);
           this.rowBusy.delete(u.id_usuario);
           alert('No se pudo actualizar el estado del usuario.');
         },

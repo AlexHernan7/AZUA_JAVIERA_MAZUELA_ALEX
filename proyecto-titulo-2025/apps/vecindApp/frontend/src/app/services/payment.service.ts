@@ -73,7 +73,6 @@ export class PaymentService {
    * Manejo de errores HTTP
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
-    console.error('Error en PaymentService:', error);
     
     let errorMessage = 'Error desconocido en el sistema de pagos';
     
