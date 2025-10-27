@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api'
+  // Temporalmente apuntando a Railway para desarrollo
+  apiUrl: 'https://azuajavieramazuelaalex-production.up.railway.app/api'
 };
