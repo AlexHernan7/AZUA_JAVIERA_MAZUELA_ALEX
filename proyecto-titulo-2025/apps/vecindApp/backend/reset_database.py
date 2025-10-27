@@ -8,39 +8,41 @@ import sys
 import os
 from pathlib import Path
 
-# Agregar el directorio src al path para importar módulos
-sys.path.append(str(Path(__file__).parent / "src"))
+# Agregar el directorio actual y src al path
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+sys.path.insert(0, str(current_dir / "src"))
 
+# Importar funciones de otros scripts
 from reset_schema import reset_schema
-from create_initial_data import create_initial_data
 
 
 async def reset_database():
     """Función principal que ejecuta todo el proceso de reset."""
-    print("Iniciando reset completo de la base de datos...")
-    print("ADVERTENCIA: Este proceso eliminará TODOS los datos existentes!")
-    print()
+    print("=" * 60)
+    print("RESET COMPLETO DE BASE DE DATOS - VECINDAPP")
+    print("=" * 60)
+    print("\n⚠️  ADVERTENCIA: Este proceso eliminará TODOS los datos existentes!\n")
     
     try:
-        # Paso 1: Resetear esquema y crear tablas
+        # Paso 1: Resetear esquema (borra todo)
+        print("[1/2] Eliminando esquema y tablas existentes...")
         await reset_schema()
-        print()
+        print("✅ Esquema eliminado\n")
         
-        # Paso 2: Cargar datos iniciales
-        print("Cargando datos iniciales...")
-        await create_initial_data()
-        print()
+        # Paso 2: Inicializar desde cero ejecutando el script init_database
+        print("[2/2] Inicializando base de datos desde cero...\n")
         
-        print("Reset de base de datos completado exitosamente!")
-        print()
-        print("Credenciales de acceso:")
-        print("   Email: admin@admin.cl")
-        print("   Contraseña: admin")
-        print()
-        print("El sistema está listo para usar!")
+        # Importar e ejecutar la función de init_database
+        from init_database import init_database
+        await init_database()
+        
+        print("\n" + "=" * 60)
+        print("✅ RESET COMPLETADO EXITOSAMENTE")
+        print("=" * 60)
         
     except Exception as e:
-        print(f"Error durante el reset de la base de datos: {e}")
+        print(f"\n❌ Error durante el reset de la base de datos: {e}")
         raise
 
 
@@ -57,16 +59,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("RESET COMPLETO DE BASE DE DATOS - VECINDAPP")
-    print("=" * 60)
-    print()
-    
     # Verificar que estamos en el directorio correcto
     if not os.path.exists("src"):
-        print("Error: Este script debe ejecutarse desde el directorio backend/")
-        print("Directorio actual:", os.getcwd())
-        print("Ejecuta: cd apps/vecindApp/backend && python reset_database.py")
+        print("❌ Error: Este script debe ejecutarse desde el directorio backend/")
+        print(f"   Directorio actual: {os.getcwd()}")
+        print("   Ejecuta: cd apps/vecindApp/backend && poetry run python reset_database.py")
         sys.exit(1)
     
     asyncio.run(main())

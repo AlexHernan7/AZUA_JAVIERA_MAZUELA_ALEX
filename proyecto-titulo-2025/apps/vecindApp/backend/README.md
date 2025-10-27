@@ -17,15 +17,14 @@ Sistema de gestión de juntas de vecinos con integración de pagos Webpay Plus.
 # Instalar dependencias
 poetry install
 
-# Configurar base de datos
-poetry run alembic upgrade head
-
-# Crear datos iniciales
-poetry run python create_initial_data.py
+# Inicializar base de datos (crea tablas y datos iniciales)
+poetry run python init_database.py
 
 # Iniciar servidor
 poetry run uvicorn src.main:app --reload
 ```
+
+> **Nota:** `init_database.py` crea automáticamente todas las tablas, roles, estados, tipos de espacio, motivos de solicitud y el usuario administrador. Las juntas de vecinos se crean desde el frontend.
 
 ## ⚙️ Configuración
 

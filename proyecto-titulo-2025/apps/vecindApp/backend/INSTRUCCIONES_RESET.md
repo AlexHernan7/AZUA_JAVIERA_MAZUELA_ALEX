@@ -1,62 +1,68 @@
-# INSTRUCCIONES PARA RESET DE BASE DE DATOS
+# INSTRUCCIONES PARA INICIALIZAR/RESETEAR BASE DE DATOS
 
 ## Descripción
-Scripts para resetear completamente la base de datos del proyecto VecindApp.
+Scripts para inicializar o resetear completamente la base de datos del proyecto VecindApp.
 
 ## ADVERTENCIA
-**ESTE PROCESO ELIMINARÁ TODOS LOS DATOS EXISTENTES**
+**EL RESET ELIMINARÁ TODOS LOS DATOS EXISTENTES**
 
-## Archivos Disponibles
+## 🚀 Primera Instalación
 
-- `reset_database.py` - Script completo (recomendado)
-- `reset_schema.py` - Solo borra esquema y recrea tablas
-- `create_initial_data.py` - Solo carga datos iniciales
-
-## Opción 1: Reset Completo (RECOMENDADO)
+Si es la primera vez que instalas el sistema:
 
 ```bash
 cd apps/vecindApp/backend
-python reset_database.py
+poetry run python init_database.py
+```
+
+**¿Qué hace?**
+- Crea el esquema `vecindapp`
+- Crea todas las tablas del sistema
+- Carga regiones y comunas desde JSON (todas las de Chile)
+- Carga roles, estados, tipos de espacio y motivos de solicitud
+- Crea usuario administrador
+- **NO crea juntas de vecinos** (se crean desde el frontend)
+
+## 🔄 Reset Completo (cuando necesites borrar todo)
+
+```bash
+cd apps/vecindApp/backend
+poetry run python reset_database.py
 ```
 
 **¿Qué hace?**
 - Elimina el esquema `vecindapp` completo
-- Recrea el esquema y todas las tablas
-- Carga datos iniciales (regiones, comunas, juntas, roles, etc.)
-- Crea usuario administrador
+- Ejecuta automáticamente `init_database.py`
+- Recrea todo desde cero
 
-## Opción 2: Solo Resetear Esquema
+## 📊 Datos Iniciales Creados
 
-```bash
-cd apps/vecindApp/backend
-python reset_schema.py
-python create_initial_data.py
-```
+Después de ejecutar `init_database.py` tendrás:
 
-**¿Qué hace?**
-- Solo elimina y recrea el esquema
-- Luego carga datos iniciales por separado
+- ✅ **16 Regiones** de Chile (todas)
+- ✅ **346 Comunas** de Chile (todas)
+- ✅ **3 Roles**: vecino, directiva, admin
+- ✅ **3 Estados de Certificado**: pendiente_pago, generado, entregado
+- ✅ **6 Estados de Reserva**: pendiente, pagada, aprobada, rechazada, cancelada, confirmada
+- ✅ **4 Tipos de Espacio**: cancha, sala, plaza, otro
+- ✅ **12 Motivos de Solicitud** agrupados por categorías
+- ✅ **Usuario Admin**: admin@admin.cl (contraseña: admin)
+- ❌ **0 Juntas de Vecinos** (se crean desde el frontend por el admin)
 
-## Datos Iniciales Creados
+## 🔐 Credenciales de Acceso
 
-Después del reset tendrás:
+Después de ejecutar `init_database.py`:
 
-- 1 Región: Región Metropolitana de Santiago
-- 1 Comuna: Maipú
-- 3 Juntas de Vecinos de ejemplo
-- 3 Roles: vecino, directiva, admin
-- Estados de Certificado: pendiente_pago, generado, entregado
-- Estados de Reserva: pendiente, pagada, aprobada, rechazada, cancelada, confirmada
-- Tipos de Espacio: cancha, sala, plaza, otro
-- 12 Motivos de Solicitud agrupados por categorías
-- Usuario Admin: admin@admin.cl (contraseña: admin)
+- **Email**: admin@admin.cl
+- **Contraseña**: admin
 
-## Credenciales de Acceso
+## 💡 Próximos Pasos
 
-- Email: admin@admin.cl
-- Contraseña: admin
+1. **Crear Juntas de Vecinos**: Iniciar sesión como admin y crear juntas desde el frontend
+2. **Registrar Vecinos**: Los vecinos se registran desde el formulario público
+3. **Crear Espacios**: Las directivas crean espacios desde su panel
 
-## Solución de Problemas
+## ⚠️ Solución de Problemas
 
 ### Error: "Este script debe ejecutarse desde el directorio backend/"
 ```bash
@@ -68,8 +74,27 @@ pwd  # Debe mostrar: .../backend
 Verifica que:
 1. PostgreSQL esté ejecutándose
 2. La base de datos `vecindapp` exista
-3. Las variables de entorno estén configuradas
+3. Las variables de entorno (.env) estén configuradas
+
+### Error: "No se encontró el archivo JSON de regiones"
+Verifica que exista el archivo:
+```
+frontend/public/data/regiones-comunas.json
+```
+
+### Las regiones/comunas no se muestran en el frontend
+Ejecuta el script completo nuevamente:
+```bash
+poetry run python init_database.py
+```
+
+## 🆚 Diferencias con versiones anteriores
+
+- ✅ Ahora hay **UN SOLO SCRIPT** (`init_database.py`)
+- ✅ Carga **TODAS las regiones y comunas de Chile** desde JSON
+- ✅ **NO crea juntas** de ejemplo (se crean desde el frontend)
+- ✅ Más ordenado y con mejor output visual
 
 ---
 
-**¡Listo! Con estos scripts puedes resetear la base de datos fácilmente.**
+**¡Listo! Tu base de datos estará lista para usar en minutos.**
