@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">vecindApp</string>
+    <string name="title_activity_main">vecindApp</string>
+    <string name="package_name">com.vecindapp</string>
+    <string name="custom_url_scheme">com.vecindapp</string>
+</resources>

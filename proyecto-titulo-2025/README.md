@@ -180,6 +180,154 @@ npx nx generate @nx/angular:module modules/nombre-modulo --project=vecindApp
 
 > **Tip:** Usa `--dry-run` para ver qué archivos se crearán sin ejecutar el comando.
 
+## 📱 Aplicación Móvil (Android con Capacitor)
+
+El proyecto está configurado para ejecutarse como aplicación móvil en Android usando Capacitor.
+
+### **Inicio Rápido - Android**
+
+```bash
+# 1. Construir la aplicación Angular
+npm run build:mobile
+
+# 2. Abrir en Android Studio
+npm run android:dev
+```
+
+### **Documentación Completa**
+
+Para información detallada sobre cómo configurar y ejecutar en Android:
+
+- 📖 **[Guía Completa de Android](CAPACITOR_ANDROID_GUIDE.md)** - Configuración, requisitos, troubleshooting
+- 🚀 **[Próximos Pasos](PROXIMOS_PASOS_ANDROID.md)** - Checklist rápido para empezar
+
+### **Requisitos para Android**
+
+- ☕ Java Development Kit (JDK) 17+
+- 🤖 Android Studio con Android SDK
+- 📱 Emulador Android o dispositivo físico
+
+### **Scripts para Desarrollo Móvil**
+
+| Comando | Descripción |
+|---------|-------------|
+| `npm run build:mobile` | Construir app para móvil |
+| `npm run cap:sync:android` | Sincronizar con Android |
+| `npm run cap:open:android` | Abrir Android Studio |
+| `npm run cap:run:android` | Ejecutar en dispositivo |
+| `npm run android:dev` | Build + Sync + Open (recomendado) |
+
+### **Plugins de Capacitor Instalados**
+
+- 📱 App - Ciclo de vida de la aplicación
+- 📸 Camera - Cámara y galería
+- 💾 Filesystem - Sistema de archivos
+- ⌨️ Keyboard - Control del teclado
+- 🌐 Network - Estado de la red
+- 🎨 Splash Screen - Pantalla de inicio
+- 📊 Status Bar - Barra de estado
+
+### **Servicio de Ejemplo**
+
+Un servicio de ejemplo está disponible en:
+`apps/vecindApp/frontend/src/app/services/capacitor-example.service.ts`
+
+Este servicio muestra cómo usar los plugins de Capacitor en tu código Angular.
+
+---
+
+## 🚀 Deployment y Producción
+
+### **Backend en Railway**
+
+El backend está preparado para ser desplegado en Railway con soporte para PostgreSQL.
+
+**Inicio Rápido**:
+```bash
+# 1. Crear cuenta en Railway (https://railway.app)
+# 2. Conectar repositorio GitHub
+# 3. Configurar Root Directory: apps/vecindApp/backend
+# 4. Agregar PostgreSQL
+# 5. Configurar variables de entorno
+```
+
+📖 **Guía Completa**: [DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md)
+
+**Archivos de configuración incluidos**:
+- ✅ `requirements.txt` - Dependencias
+- ✅ `Procfile` - Comando de inicio
+- ✅ `railway.json` - Config Railway
+- ✅ `nixpacks.toml` - Builder
+- ✅ `ENV_VARIABLES_RAILWAY.md` - Variables requeridas
+
+### **Conectar Frontend al Backend en Railway**
+
+Una vez desplegado el backend:
+
+1. **Actualizar URL de producción**:
+   - Edita `apps/vecindApp/frontend/src/environments/environment.prod.ts`
+   - Agrega la URL de Railway: `https://tu-backend.up.railway.app/api`
+
+2. **Reconstruir la app**:
+   ```bash
+   npm run build:mobile
+   npm run cap:sync:android
+   ```
+
+📖 **Guía Completa**: [CONFIGURAR_API_URL.md](CONFIGURAR_API_URL.md)
+
+### **Generar APK para Android**
+
+Para distribuir tu app en dispositivos Android:
+
+**APK Debug (Testing)**:
+```bash
+cd android
+./gradlew assembleDebug
+# APK en: android/app/build/outputs/apk/debug/
+```
+
+**APK Release (Producción)**:
+```bash
+# 1. Crear keystore (una sola vez)
+keytool -genkey -v -keystore vecindapp-release-key.keystore -alias vecindapp -keyalg RSA -keysize 2048 -validity 10000
+
+# 2. Configurar firma en android/app/build.gradle
+
+# 3. Generar APK firmado
+cd android
+./gradlew assembleRelease
+# APK en: android/app/build/outputs/apk/release/
+```
+
+📖 **Guía Completa**: [GENERAR_APK.md](GENERAR_APK.md)
+
+### **Publicar en Google Play Store**
+
+Para subir tu app a Play Store:
+
+1. Crea cuenta de desarrollador ($25 USD)
+2. Genera AAB en lugar de APK:
+   ```bash
+   cd android
+   ./gradlew bundleRelease
+   ```
+3. Sigue los pasos en Play Console
+
+📖 **Ver guía completa en**: [GENERAR_APK.md](GENERAR_APK.md) (sección "Subir a Google Play Store")
+
+### **Documentación Completa de Deployment**
+
+| Guía | Descripción |
+|------|-------------|
+| 📄 [RESUMEN_DEPLOYMENT.md](RESUMEN_DEPLOYMENT.md) | Resumen ejecutivo de todo el proceso |
+| 🚀 [DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md) | Deployment del backend en Railway |
+| 🔗 [CONFIGURAR_API_URL.md](CONFIGURAR_API_URL.md) | Configurar URLs de producción |
+| 📦 [GENERAR_APK.md](GENERAR_APK.md) | Empaquetado y distribución Android |
+| ⚙️ [ENV_VARIABLES_RAILWAY.md](apps/vecindApp/backend/ENV_VARIABLES_RAILWAY.md) | Variables de entorno necesarias |
+
+---
+
 ## Comandos Útiles
 
 **Base de Datos:**

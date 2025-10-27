@@ -550,3 +550,6 @@ sqlalchemy.exc.ArgumentError: Mapped instance expected for relationship comparis
 2025-10-24 10:14 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
 2025-10-24 10:14 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
 2025-10-24 10:14 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente
+2025-10-27 18:38 | INFO | [user_routes.py:93] | src.api.routes.user_routes - [AUTH] Verificando permisos de admin para usuario ID: 1
+2025-10-27 18:38 | INFO | [user_routes.py:99] | src.api.routes.user_routes - [AUTH] Usuario 1 es admin: True
+2025-10-27 18:38 | INFO | [user_routes.py:108] | src.api.routes.user_routes - [AUTH] Usuario 1 verificado como admin exitosamente

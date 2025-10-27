@@ -45,3 +45,15 @@ Thumbs.db
 
 .angular
 .env
+
+# Capacitor
+android/app/build/
+android/app/release/
+android/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+ios/App/build/
+ios/App/Pods/

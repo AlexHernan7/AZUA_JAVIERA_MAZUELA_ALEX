@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -28,13 +29,30 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
-# Configurar CORS para permitir requests desde el frontend
+# Configurar CORS para permitir requests desde el frontend y app móvil
+# Se obtienen los orígenes permitidos desde variables de entorno
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:4200")
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
+
+# Agregar orígenes por defecto para desarrollo y Capacitor
+default_origins = [
+    "http://localhost:4200",
+    "http://localhost:8100",  # Ionic/Capacitor dev
+    "capacitor://localhost",  # Capacitor Android
+    "ionic://localhost",      # Capacitor iOS
+    "http://localhost",       # Web local
+]
+
+# Combinar todos los orígenes sin duplicados
+all_origins = list(set(allowed_origins + default_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],  # URL del frontend Angular
+    allow_origins=all_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Crear un router para las rutas de la API
