@@ -13,12 +13,13 @@ import {
   ApiError 
 } from '../interfaces/reserva.interface';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReservaService {
-  private readonly API_URL = 'http://localhost:8000/api';
+  private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

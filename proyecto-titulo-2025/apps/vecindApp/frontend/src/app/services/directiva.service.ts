@@ -10,12 +10,13 @@ import {
   DirectivaApiError 
 } from '../interfaces/directiva.interface';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DirectivaService {
-  private readonly API_URL = 'http://localhost:8000/api'; // URL base del backend
+  private readonly API_URL = environment.apiUrl; // URL del backend desde environment
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

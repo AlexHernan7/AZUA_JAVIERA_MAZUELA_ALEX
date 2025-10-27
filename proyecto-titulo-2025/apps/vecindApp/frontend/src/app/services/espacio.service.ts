@@ -10,12 +10,13 @@ import {
   EspacioDirectivaUpdateRequest,
   EspacioDirectivaUpdateResponse 
 } from '../interfaces/espacio.interface';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EspacioService {
-  private readonly API_URL = 'http://localhost:8000/api'; // URL base del backend
+  private readonly API_URL = environment.apiUrl; // URL del backend desde environment
 
   constructor(private http: HttpClient) {}
 

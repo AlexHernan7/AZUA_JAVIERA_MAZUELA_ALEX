@@ -3,12 +3,13 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NewsResponse, NewsErrorResponse, NewsHealthCheck } from '../interfaces/news.interface';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NewsService {
-  private readonly API_URL = 'http://localhost:8000/api'; // URL base del backend
+  private readonly API_URL = environment.apiUrl; // URL del backend desde environment
 
   constructor(private http: HttpClient) {}
 

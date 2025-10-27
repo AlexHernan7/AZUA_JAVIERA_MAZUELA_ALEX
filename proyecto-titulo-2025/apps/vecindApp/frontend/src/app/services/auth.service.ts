@@ -6,6 +6,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse, ComunasList, JuntasList, ChangePasswordRequest, ChangePasswordResponse, VecinoListItem, DirectivaListItem } from '../interfaces/auth.interface';
+import { environment } from '../../environments/environment';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -34,7 +35,7 @@ export const directivaGuard: CanActivateFn = () => {
 
 
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8000/api'; // URL base del backend con prefijo /api
+  private readonly API_URL = environment.apiUrl; // URL del backend desde environment
   private readonly TOKEN_KEY = 'vecindapp_token';
   private readonly USER_KEY = 'vecindapp_user';
 
