@@ -57,8 +57,12 @@ async def init_database():
             # ========== 3. CARGAR REGIONES Y COMUNAS DESDE JSON ==========
             print("\n[3/7] Cargando regiones y comunas desde JSON...")
             
-            # Buscar el archivo JSON
-            json_path = Path(__file__).parent.parent / "frontend" / "public" / "data" / "regiones-comunas.json"
+            # Buscar el archivo JSON (primero en backend/data, luego en frontend)
+            json_path = Path(__file__).parent / "data" / "regiones-comunas.json"
+            
+            # Si no existe en backend, intentar con frontend (para desarrollo local)
+            if not json_path.exists():
+                json_path = Path(__file__).parent.parent / "frontend" / "public" / "data" / "regiones-comunas.json"
             
             if not json_path.exists():
                 print(f"⚠️  Archivo JSON no encontrado en: {json_path}")
