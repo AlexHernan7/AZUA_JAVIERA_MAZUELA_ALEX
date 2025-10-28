@@ -357,6 +357,14 @@ async def get_all_users_admin(db: AsyncSession = Depends(get_db_session)):
 
         usuarios_response = []
         for usuario, vecino, junta in users_data:
+            # Obtener roles del usuario
+            roles_result = await db.execute(
+                select(Rol.codigo)
+                .join(UsuarioRol, Rol.id_rol == UsuarioRol.id_rol)
+                .where(UsuarioRol.id_usuario == usuario.id_usuario)
+            )
+            roles = [r for r in roles_result.scalars().all()]
+            
             usuario_response = UsuarioListResponse(
                 id_usuario=usuario.id_usuario,
                 nombres=vecino.nombres,
@@ -367,6 +375,7 @@ async def get_all_users_admin(db: AsyncSession = Depends(get_db_session)):
                 email=usuario.email,
                 activo=usuario.activo,
                 created_at=usuario.created_at,
+                roles=roles,  # Agregar roles
             )
             usuarios_response.append(usuario_response)
 

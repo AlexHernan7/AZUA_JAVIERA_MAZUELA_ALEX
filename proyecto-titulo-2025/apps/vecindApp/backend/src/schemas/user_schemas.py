@@ -82,6 +82,7 @@ class UsuarioListResponse(BaseModel):
     email: str
     activo: bool
     created_at: datetime
+    roles: list[str] = []  # Lista de roles del usuario
 
     class Config:
         from_attributes = True
