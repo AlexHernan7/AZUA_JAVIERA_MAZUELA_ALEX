@@ -130,10 +130,10 @@ class Settings(BaseSettings):
         final_url=getenv("WEBPAY_FINAL_URL", "http://localhost:4200/payment/success")
     ))
     
-    # Email settings - Brevo
-    BREVO_API_KEY: str = Field(default="")
-    BREVO_FROM_EMAIL: str = Field(default="vecindapp66@gmail.com")
-    BREVO_FROM_NAME: str = Field(default="VecindApp")
+    # Email settings - Gmail SMTP
+    GMAIL_USER: str = Field(default="vecindapp66@gmail.com")
+    GMAIL_APP_PASSWORD: str = Field(default="")
+    EMAIL_FROM_NAME: str = Field(default="VecindApp")
 
     @classmethod
     def get_database_settings(cls, environment: str) -> dict[str, Any]:
@@ -185,9 +185,9 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
         ),
         news_rss=NewsRSSSettings(),
-        BREVO_API_KEY=getenv("BREVO_API_KEY", ""),
-        BREVO_FROM_EMAIL=getenv("BREVO_FROM_EMAIL", "vecindapp66@gmail.com"),
-        BREVO_FROM_NAME=getenv("BREVO_FROM_NAME", "VecindApp"),
+        GMAIL_USER=getenv("GMAIL_USER", "vecindapp66@gmail.com"),
+        GMAIL_APP_PASSWORD=getenv("GMAIL_APP_PASSWORD", ""),
+        EMAIL_FROM_NAME=getenv("EMAIL_FROM_NAME", "VecindApp"),
     )
 
 

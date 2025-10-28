@@ -543,15 +543,15 @@ async def request_password_reset(
             elif usuario.directiva:
                 user_name = usuario.directiva.nombres
         
-        # Enviar email con código usando Brevo
+        # Enviar email con código usando Gmail SMTP
         from src.core.config import settings
         from src.services.email_service import EmailService
         
         # Verificar si estamos en modo desarrollo
         is_development = settings.environment != "PRODUCTION"
         
-        if not settings.BREVO_API_KEY:
-            logger.warning("⚠️  BREVO_API_KEY no configurada")
+        if not settings.GMAIL_APP_PASSWORD:
+            logger.warning("⚠️  GMAIL_APP_PASSWORD no configurada")
             if is_development:
                 logger.warning(f"🔑 CÓDIGO DE DESARROLLO: {code} para {request.email}")
                 return PasswordResetResponse(
@@ -563,11 +563,11 @@ async def request_password_reset(
                 detail={"error": "Servicio de email no configurado", "detalle": "Contacta al administrador"}
             )
         
-        # Intentar enviar email con Brevo
+        # Intentar enviar email con Gmail SMTP
         email_service = EmailService(
-            api_key=settings.BREVO_API_KEY,
-            from_email=settings.BREVO_FROM_EMAIL,
-            from_name=settings.BREVO_FROM_NAME
+            gmail_user=settings.GMAIL_USER,
+            gmail_password=settings.GMAIL_APP_PASSWORD,
+            from_name=settings.EMAIL_FROM_NAME
         )
         
         email_sent = email_service.send_password_reset_code(
@@ -577,17 +577,13 @@ async def request_password_reset(
         )
         
         if not email_sent:
-            # Si falla el envío (ej: error en la API de Brevo)
-            if is_development:
-                logger.warning(f"⚠️  No se pudo enviar email - Devolviendo código: {code}")
-                return PasswordResetResponse(
-                    message=f"[DEV] Email no disponible - Tu código es: {code}",
-                    email=request.email
-                )
-            logger.error(f"❌ No se pudo enviar email a {request.email}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={"error": "No se pudo enviar el email", "detalle": "Error en el servicio de correo Brevo"}
+            # Si falla el envío (ej: error de autenticación Gmail)
+            logger.warning(f"⚠️  No se pudo enviar email - Devolviendo código: {code}")
+            
+            # En desarrollo o si falla Gmail, devolver el código
+            return PasswordResetResponse(
+                message=f"⚠️ Servicio de email no disponible. Tu código temporal es: {code}",
+                email=request.email
             )
         
         logger.info(f"✅ Código de recuperación enviado a {request.email}")

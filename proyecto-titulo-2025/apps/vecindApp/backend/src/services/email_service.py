@@ -1,5 +1,5 @@
 """
-Servicio para envío de emails usando Brevo (SendinBlue).
+Servicio para envío de emails usando Gmail SMTP.
 
 Este servicio maneja el envío de emails transaccionales como:
 - Recuperación de contraseña
@@ -7,9 +7,10 @@ Este servicio maneja el envío de emails transaccionales como:
 - Notificaciones
 """
 
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
+import smtplib
 import logging
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -17,28 +18,23 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     """
-    Servicio para enviar emails usando Brevo API.
+    Servicio para enviar emails usando Gmail SMTP.
     """
 
-    def __init__(self, api_key: str, from_email: str = "noreply@vecindapp.com", from_name: str = "VecindApp"):
+    def __init__(self, gmail_user: str, gmail_password: str, from_name: str = "VecindApp"):
         """
         Inicializa el servicio de email.
         
         Args:
-            api_key: API key de Brevo
-            from_email: Email del remitente
+            gmail_user: Email de Gmail
+            gmail_password: Contraseña de aplicación de Gmail
             from_name: Nombre del remitente
         """
-        self.api_key = api_key
-        self.from_email = from_email
+        self.gmail_user = gmail_user
+        self.gmail_password = gmail_password
         self.from_name = from_name
-        
-        # Configurar cliente de Brevo
-        configuration = sib_api_v3_sdk.Configuration()
-        configuration.api_key['api-key'] = api_key
-        self.api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
-            sib_api_v3_sdk.ApiClient(configuration)
-        )
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587
 
     def send_email(
         self,
@@ -48,7 +44,7 @@ class EmailService:
         to_name: Optional[str] = None
     ) -> bool:
         """
-        Envía un email usando Brevo.
+        Envía un email usando Gmail SMTP.
         
         Args:
             to_email: Email del destinatario
@@ -60,27 +56,36 @@ class EmailService:
             True si el email se envió correctamente, False en caso contrario
         """
         try:
-            # Crear objeto de email transaccional
-            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-                to=[{"email": to_email, "name": to_name or to_email}],
-                sender={"email": self.from_email, "name": self.from_name},
-                subject=subject,
-                html_content=html_body
-            )
+            # Crear mensaje
+            msg = MIMEMultipart('alternative')
+            msg['From'] = f"{self.from_name} <{self.gmail_user}>"
+            msg['To'] = to_email
+            msg['Subject'] = subject
             
-            # Enviar email con Brevo
-            api_response = self.api_instance.send_transac_email(send_smtp_email)
+            # Agregar contenido HTML
+            html_part = MIMEText(html_body, 'html')
+            msg.attach(html_part)
             
-            # Verificar respuesta
-            if api_response and hasattr(api_response, 'message_id'):
-                logger.info(f"✅ Email enviado exitosamente a {to_email} (ID: {api_response.message_id})")
-                return True
-            else:
-                logger.error(f"❌ Error enviando email: respuesta inesperada")
-                return False
+            # Conectar al servidor SMTP de Gmail
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()  # Iniciar conexión segura TLS
+            
+            # Autenticar
+            server.login(self.gmail_user, self.gmail_password)
+            
+            # Enviar email
+            server.send_message(msg)
+            server.quit()
+            
+            logger.info(f"✅ Email enviado exitosamente a {to_email} desde Gmail")
+            return True
 
-        except ApiException as e:
-            logger.error(f"❌ Error de API Brevo: {str(e)}")
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"❌ Error de autenticación Gmail: {str(e)}")
+            logger.error("💡 Verifica que uses una contraseña de aplicación, no tu contraseña normal")
+            return False
+        except smtplib.SMTPException as e:
+            logger.error(f"❌ Error SMTP: {str(e)}")
             return False
         except Exception as e:
             logger.error(f"💥 Error inesperado enviando email: {str(e)}")

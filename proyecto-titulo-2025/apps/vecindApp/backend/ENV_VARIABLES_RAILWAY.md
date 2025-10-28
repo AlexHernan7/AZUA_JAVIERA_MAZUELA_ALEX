@@ -46,19 +46,23 @@ WEBPAY_RETURN_URL=https://tu-backend.up.railway.app/api/payments/webpay/return
 WEBPAY_FINAL_URL=https://tu-frontend-url.com/payment/success
 ```
 
-### Email - Brevo
-Obtén tu API key en https://app.brevo.com/settings/keys/api
+### Email - Gmail SMTP
+Usa una contraseña de aplicación de Gmail (NO tu contraseña normal):
 ```
-BREVO_API_KEY=xkeysib-tu_api_key_de_brevo
-BREVO_FROM_EMAIL=vecindapp66@gmail.com
-BREVO_FROM_NAME=VecindApp
+GMAIL_USER=vecindapp66@gmail.com
+GMAIL_APP_PASSWORD=tu_contraseña_de_aplicacion_16_caracteres
+EMAIL_FROM_NAME=VecindApp
 ```
 
-**Nota importante:** El email `vecindapp66@gmail.com` ya está verificado en Brevo.
-Si quieres usar un dominio personalizado en el futuro:
-1. Verificar el dominio en Brevo (Settings > Senders & IP)
-2. Agregar los registros SPF y DKIM a tu DNS
-3. Una vez verificado, podrás usar emails como noreply@tudominio.com
+**Cómo crear una contraseña de aplicación:**
+1. Ve a https://myaccount.google.com/apppasswords
+2. Inicia sesión con tu cuenta Gmail
+3. Selecciona "Correo" y "Otro (nombre personalizado)"
+4. Escribe "VecindApp Railway"
+5. Copia la contraseña de 16 caracteres
+6. Úsala en `GMAIL_APP_PASSWORD`
+
+**Nota:** Necesitas tener verificación en 2 pasos activada en tu cuenta Google
 
 ### CORS - URLs Permitidas
 Lista de URLs separadas por comas que pueden acceder a tu API:
