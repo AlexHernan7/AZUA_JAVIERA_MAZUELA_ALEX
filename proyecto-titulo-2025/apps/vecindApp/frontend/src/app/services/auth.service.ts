@@ -289,6 +289,28 @@ export class AuthService {
   }
 
   /**
+   * Obtiene TODOS los vecinos del sistema (solo para admin)
+   */
+  getAllVecinosAdmin(): Observable<VecinoListItem[]> {
+    return this.http.get<VecinoListItem[]>(
+      `${this.API_URL}/users/vecinos/admin/all`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtiene TODOS los directivos del sistema (solo para admin)
+   */
+  getAllDirectivosAdmin(): Observable<DirectivaListItem[]> {
+    return this.http.get<DirectivaListItem[]>(
+      `${this.API_URL}/directiva/admin/all`
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Obtiene la lista de regiones disponibles
    */
   getRegiones(): Observable<any> {

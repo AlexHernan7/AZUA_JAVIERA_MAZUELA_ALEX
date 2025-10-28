@@ -6,10 +6,13 @@ Contiene endpoints para registro y gestión de directivos.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from pydantic import ValidationError
 import logging
 
 from src.database.session import get_db_session
+from src.database.models.directiva import Directiva
 from src.services.directiva_service import DirectivaService
 from src.schemas.directiva_schemas import (
     DirectivaRegistroRequest,
@@ -153,6 +156,66 @@ async def register_directivo(
                 "detalle": str(e),
                 "codigo": "INTERNAL_ERROR",
             },
+        )
+
+
+@router.get(
+    "/admin/all",
+    response_model=list[DirectivaResponse],
+    summary="Obtener todos los directivos (Admin)",
+    description="Obtiene la lista de todos los directivos del sistema. Requiere permisos de administrador.",
+)
+async def get_all_directivos_admin(db: AsyncSession = Depends(get_db_session)):
+    """
+    Obtiene todos los directivos del sistema (TEMPORAL: sin auth).
+    """
+    try:
+        directiva_service = DirectivaService(db)
+        
+        # Obtener todos los directivos del sistema
+        result = await db.execute(
+            select(Directiva)
+            .options(joinedload(Directiva.junta))
+            .order_by(Directiva.apellido_paterno, Directiva.nombres)
+        )
+        directivos = result.scalars().unique().all()
+
+        # Convertir a response format
+        directivos_response = []
+        for directiva in directivos:
+            foto_perfil_base64 = None
+            if directiva.foto_perfil:
+                if (
+                    directiva.foto_perfil.startswith(b"<svg")
+                    or b"<svg" in directiva.foto_perfil[:100]
+                ):
+                    foto_perfil_base64 = binary_to_base64(
+                        directiva.foto_perfil, "image/svg+xml"
+                    )
+                else:
+                    foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
+
+            directivos_response.append(DirectivaResponse(
+                id_usuario=directiva.id_usuario,
+                id_directiva=directiva.id_directiva,
+                rut=directiva.rut,
+                nombres=directiva.nombres,
+                apellido_paterno=directiva.apellido_paterno,
+                apellido_materno=directiva.apellido_materno,
+                telefono=directiva.telefono,
+                email=directiva.email,
+                cargo=directiva.cargo,
+                fecha_inicio_cargo=directiva.fecha_inicio_cargo,
+                fecha_termino_cargo=directiva.fecha_termino_cargo,
+                foto_perfil=foto_perfil_base64,
+            ))
+
+        return directivos_response
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error al obtener directivos", "detalle": str(e)},
         )
 
 

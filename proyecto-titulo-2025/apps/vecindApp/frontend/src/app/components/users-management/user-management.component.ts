@@ -24,10 +24,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   
   isLoading = false;
   error: string | null = null;
+  isAdmin = false;
   
   private subscription: Subscription = new Subscription();
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {
+    // Detectar si el usuario es admin
+    const currentUser = this.authService.getCurrentUser();
+    this.isAdmin = currentUser?.roles?.includes('admin') || false;
+  }
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -44,34 +49,67 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    // Cargar vecinos
-    this.subscription.add(
-      this.authService.getVecinosMyJunta(false).subscribe({
-        next: (data) => {
-          this.vecinos = data;
-          this.aplicarFiltros();
-        },
-        error: (err) => {
-          this.error = 'Error al cargar la lista de vecinos';
-          this.isLoading = false;
-        }
-      })
-    );
+    // Si es admin, obtener todos los usuarios del sistema
+    // Si no es admin (es directivo), obtener solo de su junta
+    if (this.isAdmin) {
+      // Cargar TODOS los vecinos (admin)
+      this.subscription.add(
+        this.authService.getAllVecinosAdmin().subscribe({
+          next: (data) => {
+            this.vecinos = data;
+            this.aplicarFiltros();
+          },
+          error: (err) => {
+            this.error = 'Error al cargar la lista de vecinos';
+            this.isLoading = false;
+          }
+        })
+      );
 
-    // Cargar directivos
-    this.subscription.add(
-      this.authService.getDirectivosMyJunta(false).subscribe({
-        next: (data) => {
-          this.directivos = data;
-          this.aplicarFiltros();
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.error = 'Error al cargar la lista de directivos';
-          this.isLoading = false;
-        }
-      })
-    );
+      // Cargar TODOS los directivos (admin)
+      this.subscription.add(
+        this.authService.getAllDirectivosAdmin().subscribe({
+          next: (data) => {
+            this.directivos = data;
+            this.aplicarFiltros();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            this.error = 'Error al cargar la lista de directivos';
+            this.isLoading = false;
+          }
+        })
+      );
+    } else {
+      // Cargar vecinos de mi junta (directivo)
+      this.subscription.add(
+        this.authService.getVecinosMyJunta(false).subscribe({
+          next: (data) => {
+            this.vecinos = data;
+            this.aplicarFiltros();
+          },
+          error: (err) => {
+            this.error = 'Error al cargar la lista de vecinos';
+            this.isLoading = false;
+          }
+        })
+      );
+
+      // Cargar directivos de mi junta (directivo)
+      this.subscription.add(
+        this.authService.getDirectivosMyJunta(false).subscribe({
+          next: (data) => {
+            this.directivos = data;
+            this.aplicarFiltros();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            this.error = 'Error al cargar la lista de directivos';
+            this.isLoading = false;
+          }
+        })
+      );
+    }
   }
 
   /**

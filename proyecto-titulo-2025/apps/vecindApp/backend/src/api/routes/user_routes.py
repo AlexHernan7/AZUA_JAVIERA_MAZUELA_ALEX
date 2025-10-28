@@ -5,11 +5,14 @@ Rutas relacionadas con usuarios y vecinos.
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import joinedload
 from typing import Optional
 from pydantic import BaseModel
 from src.database.models.usuario import Usuario
 from src.database.models.usuario_rol import UsuarioRol
 from src.database.models.rol import Rol
+from src.database.models.vecino import Vecino
+from src.database.models.comuna import Comuna
 
 from src.database.session import get_db_session
 from src.services.user_service import UserService
@@ -718,6 +721,79 @@ async def change_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al cambiar contraseña: {str(e)}",
+        )
+
+
+@router.get(
+    "/vecinos/admin/all",
+    response_model=list[VecinoListResponse],
+    summary="Obtener todos los vecinos (Admin)",
+    description="Obtiene la lista de todos los vecinos del sistema. Requiere permisos de administrador.",
+)
+async def get_all_vecinos_admin(db: AsyncSession = Depends(get_db_session)):
+    """
+    Obtiene todos los vecinos del sistema (TEMPORAL: sin auth).
+    """
+    try:
+        # Obtener todos los vecinos del sistema con sus relaciones
+        result = await db.execute(
+            select(Vecino)
+            .options(
+                joinedload(Vecino.usuario),
+                joinedload(Vecino.junta),
+                joinedload(Vecino.comuna).joinedload(Comuna.region)
+            )
+            .order_by(Vecino.apellido_paterno, Vecino.nombres)
+        )
+        vecinos = result.scalars().unique().all()
+        
+        # Convertir a response format
+        vecinos_response = []
+        for vecino in vecinos:
+            foto_perfil_base64 = None
+            if vecino.foto_perfil:
+                if (
+                    vecino.foto_perfil.startswith(b"<svg")
+                    or b"<svg" in vecino.foto_perfil[:100]
+                ):
+                    foto_perfil_base64 = binary_to_base64(
+                        vecino.foto_perfil, "image/svg+xml"
+                    )
+                else:
+                    foto_perfil_base64 = binary_to_base64(vecino.foto_perfil, "image/jpeg")
+
+            # Obtener estado activo del usuario
+            activo = vecino.usuario.activo if vecino.usuario else False
+            
+            # Obtener nombres de junta, comuna y región
+            junta_nombre = vecino.junta.nombre if vecino.junta else None
+            comuna_nombre = vecino.comuna.nombre if vecino.comuna else None
+            region_nombre = vecino.comuna.region.nombre if vecino.comuna and vecino.comuna.region else None
+
+            vecinos_response.append(VecinoListResponse(
+                id_vecino=vecino.id_vecino,
+                id_usuario=vecino.id_usuario,
+                rut=vecino.rut,
+                nombres=vecino.nombres,
+                apellido_paterno=vecino.apellido_paterno,
+                apellido_materno=vecino.apellido_materno,
+                email=vecino.email,
+                telefono=vecino.telefono,
+                direccion=vecino.direccion,
+                fecha_nacimiento=vecino.fecha_nacimiento,
+                foto_perfil=foto_perfil_base64,
+                activo=activo,
+                junta_nombre=junta_nombre,
+                comuna_nombre=comuna_nombre,
+                region_nombre=region_nombre,
+            ))
+
+        return vecinos_response
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener vecinos: {str(e)}",
         )
 
 
