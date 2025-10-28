@@ -195,6 +195,9 @@ async def get_all_directivos_admin(db: AsyncSession = Depends(get_db_session)):
                 else:
                     foto_perfil_base64 = binary_to_base64(directiva.foto_perfil, "image/jpeg")
 
+            # Obtener nombre de la junta
+            junta_nombre = directiva.junta.nombre if directiva.junta else None
+            
             directivos_response.append(DirectivaResponse(
                 id_usuario=directiva.id_usuario,
                 id_directiva=directiva.id_directiva,
@@ -208,6 +211,7 @@ async def get_all_directivos_admin(db: AsyncSession = Depends(get_db_session)):
                 fecha_inicio_cargo=directiva.fecha_inicio_cargo,
                 fecha_termino_cargo=directiva.fecha_termino_cargo,
                 foto_perfil=foto_perfil_base64,
+                junta_nombre=junta_nombre,
             ))
 
         return directivos_response

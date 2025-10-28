@@ -123,6 +123,7 @@ class DirectivaResponse(BaseModel):
     fecha_inicio_cargo: date
     fecha_termino_cargo: Optional[date]
     foto_perfil: Optional[str] = Field(None, description="Foto de perfil en base64")
+    junta_nombre: Optional[str] = Field(None, description="Nombre de la junta")
 
     class Config:
         from_attributes = True

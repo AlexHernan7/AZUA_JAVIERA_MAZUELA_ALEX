@@ -145,6 +145,7 @@ export interface VecinoListItem {
 
 // Interfaces para listado de directivos
 export interface DirectivaListItem {
+  id_usuario: number;
   id_directiva: number;
   rut: string;
   nombres: string;

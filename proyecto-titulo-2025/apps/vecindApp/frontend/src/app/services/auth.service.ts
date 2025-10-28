@@ -292,10 +292,15 @@ export class AuthService {
    * Obtiene TODOS los vecinos del sistema (solo para admin)
    */
   getAllVecinosAdmin(): Observable<VecinoListItem[]> {
-    return this.http.get<VecinoListItem[]>(
-      `${this.API_URL}/users/vecinos/admin/all`
-    ).pipe(
-      catchError(this.handleError)
+    const url = `${this.API_URL}/users/vecinos/admin/all`;
+    console.log('🌐 [AuthService] GET Vecinos Admin:', url);
+    
+    return this.http.get<VecinoListItem[]>(url).pipe(
+      tap(response => console.log('✅ [AuthService] Vecinos Admin response:', response)),
+      catchError(err => {
+        console.error('❌ [AuthService] Error Vecinos Admin:', err);
+        return this.handleError(err);
+      })
     );
   }
 
@@ -303,10 +308,15 @@ export class AuthService {
    * Obtiene TODOS los directivos del sistema (solo para admin)
    */
   getAllDirectivosAdmin(): Observable<DirectivaListItem[]> {
-    return this.http.get<DirectivaListItem[]>(
-      `${this.API_URL}/directiva/admin/all`
-    ).pipe(
-      catchError(this.handleError)
+    const url = `${this.API_URL}/directiva/admin/all`;
+    console.log('🌐 [AuthService] GET Directivos Admin:', url);
+    
+    return this.http.get<DirectivaListItem[]>(url).pipe(
+      tap(response => console.log('✅ [AuthService] Directivos Admin response:', response)),
+      catchError(err => {
+        console.error('❌ [AuthService] Error Directivos Admin:', err);
+        return this.handleError(err);
+      })
     );
   }
 
