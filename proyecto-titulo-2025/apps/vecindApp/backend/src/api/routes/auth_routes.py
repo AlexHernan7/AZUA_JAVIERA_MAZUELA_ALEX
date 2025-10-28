@@ -548,7 +548,7 @@ async def request_password_reset(
         from src.services.email_service import EmailService
         
         # Verificar si estamos en modo desarrollo
-        is_development = settings.ENVIRONMENT != "PRODUCTION"
+        is_development = settings.environment != "PRODUCTION"
         
         if not settings.BREVO_API_KEY:
             logger.warning("⚠️  BREVO_API_KEY no configurada")
