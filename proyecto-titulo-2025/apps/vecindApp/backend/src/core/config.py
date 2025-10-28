@@ -130,9 +130,9 @@ class Settings(BaseSettings):
         final_url=getenv("WEBPAY_FINAL_URL", "http://localhost:4200/payment/success")
     ))
     
-    # Email settings - Gmail SMTP
-    GMAIL_USER: str = Field(default="vecindapp66@gmail.com")
-    GMAIL_APP_PASSWORD: str = Field(default="")
+    # Email settings - SendGrid API
+    SENDGRID_API_KEY: str = Field(default="")
+    SENDGRID_FROM_EMAIL: str = Field(default="vecindapp66@gmail.com")
     EMAIL_FROM_NAME: str = Field(default="VecindApp")
 
     @classmethod
@@ -185,8 +185,8 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
         ),
         news_rss=NewsRSSSettings(),
-        GMAIL_USER=getenv("GMAIL_USER", "vecindapp66@gmail.com"),
-        GMAIL_APP_PASSWORD=getenv("GMAIL_APP_PASSWORD", ""),
+        SENDGRID_API_KEY=getenv("SENDGRID_API_KEY", ""),
+        SENDGRID_FROM_EMAIL=getenv("SENDGRID_FROM_EMAIL", "vecindapp66@gmail.com"),
         EMAIL_FROM_NAME=getenv("EMAIL_FROM_NAME", "VecindApp"),
     )
 

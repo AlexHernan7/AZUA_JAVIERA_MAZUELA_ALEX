@@ -1,16 +1,17 @@
 """
-Servicio para envío de emails usando Gmail SMTP.
+Servicio para envío de emails usando SendGrid API.
 
 Este servicio maneja el envío de emails transaccionales como:
 - Recuperación de contraseña
 - Bienvenida
 - Notificaciones
+
+SendGrid funciona con API HTTP (no SMTP), por lo que funciona en Railway.
 """
 
-import smtplib
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -18,23 +19,22 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     """
-    Servicio para enviar emails usando Gmail SMTP.
+    Servicio para enviar emails usando SendGrid API.
     """
 
-    def __init__(self, gmail_user: str, gmail_password: str, from_name: str = "VecindApp"):
+    def __init__(self, api_key: str, from_email: str = "vecindapp66@gmail.com", from_name: str = "VecindApp"):
         """
         Inicializa el servicio de email.
         
         Args:
-            gmail_user: Email de Gmail
-            gmail_password: Contraseña de aplicación de Gmail
+            api_key: API key de SendGrid
+            from_email: Email del remitente (debe estar verificado en SendGrid)
             from_name: Nombre del remitente
         """
-        self.gmail_user = gmail_user
-        self.gmail_password = gmail_password
+        self.api_key = api_key
+        self.from_email = from_email
         self.from_name = from_name
-        self.smtp_server = "smtp.gmail.com"
-        self.smtp_port = 587
+        self.client = SendGridAPIClient(api_key)
 
     def send_email(
         self,
@@ -44,7 +44,7 @@ class EmailService:
         to_name: Optional[str] = None
     ) -> bool:
         """
-        Envía un email usando Gmail SMTP.
+        Envía un email usando SendGrid API.
         
         Args:
             to_email: Email del destinatario
@@ -56,39 +56,27 @@ class EmailService:
             True si el email se envió correctamente, False en caso contrario
         """
         try:
-            # Crear mensaje
-            msg = MIMEMultipart('alternative')
-            msg['From'] = f"{self.from_name} <{self.gmail_user}>"
-            msg['To'] = to_email
-            msg['Subject'] = subject
+            # Crear email con SendGrid
+            message = Mail(
+                from_email=Email(self.from_email, self.from_name),
+                to_emails=To(to_email),
+                subject=subject,
+                html_content=Content("text/html", html_body)
+            )
             
-            # Agregar contenido HTML
-            html_part = MIMEText(html_body, 'html')
-            msg.attach(html_part)
+            # Enviar con SendGrid
+            response = self.client.send(message)
             
-            # Conectar al servidor SMTP de Gmail
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()  # Iniciar conexión segura TLS
-            
-            # Autenticar
-            server.login(self.gmail_user, self.gmail_password)
-            
-            # Enviar email
-            server.send_message(msg)
-            server.quit()
-            
-            logger.info(f"✅ Email enviado exitosamente a {to_email} desde Gmail")
-            return True
+            # Verificar respuesta
+            if response.status_code in [200, 201, 202]:
+                logger.info(f"✅ Email enviado exitosamente a {to_email} via SendGrid (Status: {response.status_code})")
+                return True
+            else:
+                logger.error(f"❌ Error enviando email: Status {response.status_code}")
+                return False
 
-        except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"❌ Error de autenticación Gmail: {str(e)}")
-            logger.error("💡 Verifica que uses una contraseña de aplicación, no tu contraseña normal")
-            return False
-        except smtplib.SMTPException as e:
-            logger.error(f"❌ Error SMTP: {str(e)}")
-            return False
         except Exception as e:
-            logger.error(f"💥 Error inesperado enviando email: {str(e)}")
+            logger.error(f"💥 Error inesperado enviando email con SendGrid: {str(e)}")
             return False
 
     def send_password_reset_code(

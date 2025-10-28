@@ -46,23 +46,30 @@ WEBPAY_RETURN_URL=https://tu-backend.up.railway.app/api/payments/webpay/return
 WEBPAY_FINAL_URL=https://tu-frontend-url.com/payment/success
 ```
 
-### Email - Gmail SMTP
-Usa una contraseña de aplicación de Gmail (NO tu contraseña normal):
+### Email - SendGrid API
+Obtén tu API key en https://app.sendgrid.com/settings/api_keys
 ```
-GMAIL_USER=vecindapp66@gmail.com
-GMAIL_APP_PASSWORD=tu_contraseña_de_aplicacion_16_caracteres
+SENDGRID_API_KEY=SG.tu_api_key_de_sendgrid
+SENDGRID_FROM_EMAIL=vecindapp66@gmail.com
 EMAIL_FROM_NAME=VecindApp
 ```
 
-**Cómo crear una contraseña de aplicación:**
-1. Ve a https://myaccount.google.com/apppasswords
-2. Inicia sesión con tu cuenta Gmail
-3. Selecciona "Correo" y "Otro (nombre personalizado)"
-4. Escribe "VecindApp Railway"
-5. Copia la contraseña de 16 caracteres
-6. Úsala en `GMAIL_APP_PASSWORD`
+**Cómo crear cuenta y API key (5 minutos):**
+1. Crea cuenta gratis en https://signup.sendgrid.com
+2. Ve a Settings → API Keys
+3. Click "Create API Key"
+4. Nombre: "VecindApp Railway"
+5. Permisos: "Full Access" o "Mail Send"
+6. Copia la API key (empieza con `SG.`)
+7. Ve a Settings → Sender Authentication → Verify Single Sender
+8. Verifica `vecindapp66@gmail.com` (recibirás email de confirmación)
 
-**Nota:** Necesitas tener verificación en 2 pasos activada en tu cuenta Google
+**Por qué SendGrid:**
+- ✅ Usa API HTTP (funciona en Railway)
+- ✅ **100 emails gratis por día** (permanente)
+- ✅ **Envía a cualquier email** sin restricciones
+- ✅ Setup rápido con verificación de un solo email
+- ✅ Muy confiable y usado por empresas grandes
 
 ### CORS - URLs Permitidas
 Lista de URLs separadas por comas que pueden acceder a tu API:

@@ -543,15 +543,15 @@ async def request_password_reset(
             elif usuario.directiva:
                 user_name = usuario.directiva.nombres
         
-        # Enviar email con código usando Gmail SMTP
+        # Enviar email con código usando SendGrid API
         from src.core.config import settings
         from src.services.email_service import EmailService
         
         # Verificar si estamos en modo desarrollo
         is_development = settings.environment != "PRODUCTION"
         
-        if not settings.GMAIL_APP_PASSWORD:
-            logger.warning("⚠️  GMAIL_APP_PASSWORD no configurada")
+        if not settings.SENDGRID_API_KEY:
+            logger.warning("⚠️  SENDGRID_API_KEY no configurada")
             if is_development:
                 logger.warning(f"🔑 CÓDIGO DE DESARROLLO: {code} para {request.email}")
                 return PasswordResetResponse(
@@ -563,10 +563,10 @@ async def request_password_reset(
                 detail={"error": "Servicio de email no configurado", "detalle": "Contacta al administrador"}
             )
         
-        # Intentar enviar email con Gmail SMTP
+        # Intentar enviar email con SendGrid API
         email_service = EmailService(
-            gmail_user=settings.GMAIL_USER,
-            gmail_password=settings.GMAIL_APP_PASSWORD,
+            api_key=settings.SENDGRID_API_KEY,
+            from_email=settings.SENDGRID_FROM_EMAIL,
             from_name=settings.EMAIL_FROM_NAME
         )
         
@@ -577,10 +577,10 @@ async def request_password_reset(
         )
         
         if not email_sent:
-            # Si falla el envío (ej: error de autenticación Gmail)
+            # Si falla el envío con SendGrid
             logger.warning(f"⚠️  No se pudo enviar email - Devolviendo código: {code}")
             
-            # En desarrollo o si falla Gmail, devolver el código
+            # En desarrollo o si falla SendGrid, devolver el código
             return PasswordResetResponse(
                 message=f"⚠️ Servicio de email no disponible. Tu código temporal es: {code}",
                 email=request.email
