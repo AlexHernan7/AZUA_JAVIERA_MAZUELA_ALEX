@@ -29,7 +29,7 @@ interface SystemUser {
 })
 export class ListUserComponent implements OnInit {
   // Ajusta la base URL a tu backend
-  private readonly BASE_URL = '/api/admin';
+  private readonly BASE_URL = '/api/users/admin';
 
   loading = false;
   error = '';
@@ -66,7 +66,7 @@ export class ListUserComponent implements OnInit {
     if (this.isAdmin) {
       const headers = this.getAuthHeaders();
       this.http
-        .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/usuarios?limit=1000`, { headers })
+        .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/all?limit=1000`, { headers })
         .subscribe({
           next: (res) => {
             // excluir admins
