@@ -12,12 +12,13 @@ import {
 } from '../interfaces/certificado.interface';
 import { CertificadoConPagoResponse } from '../interfaces/payment.interface';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CertificadoService {
-  private readonly API_URL = 'http://localhost:8000/api/certificados';
+  private readonly API_URL = `${environment.apiUrl}/certificados`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

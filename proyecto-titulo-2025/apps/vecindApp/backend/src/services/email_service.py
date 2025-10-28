@@ -1,5 +1,5 @@
 """
-Servicio para envío de emails usando Resend.
+Servicio para envío de emails usando Brevo (SendinBlue).
 
 Este servicio maneja el envío de emails transaccionales como:
 - Recuperación de contraseña
@@ -7,7 +7,8 @@ Este servicio maneja el envío de emails transaccionales como:
 - Notificaciones
 """
 
-import resend
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 import logging
 from typing import Optional
 
@@ -16,57 +17,71 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     """
-    Servicio para enviar emails usando Resend API.
+    Servicio para enviar emails usando Brevo API.
     """
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, from_email: str = "noreply@vecindapp.com", from_name: str = "VecindApp"):
         """
         Inicializa el servicio de email.
         
         Args:
-            api_key: API key de Resend
+            api_key: API key de Brevo
+            from_email: Email del remitente
+            from_name: Nombre del remitente
         """
         self.api_key = api_key
-        resend.api_key = api_key
+        self.from_email = from_email
+        self.from_name = from_name
+        
+        # Configurar cliente de Brevo
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = api_key
+        self.api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+            sib_api_v3_sdk.ApiClient(configuration)
+        )
 
     def send_email(
         self,
         to_email: str,
         subject: str,
         html_body: str,
-        from_email: str = "VecindApp <onboarding@resend.dev>"
+        to_name: Optional[str] = None
     ) -> bool:
         """
-        Envía un email usando Resend.
+        Envía un email usando Brevo.
         
         Args:
             to_email: Email del destinatario
             subject: Asunto del email
             html_body: Contenido HTML del email
-            from_email: Email del remitente (por defecto usa el de Resend)
+            to_name: Nombre del destinatario (opcional)
             
         Returns:
             True si el email se envió correctamente, False en caso contrario
         """
         try:
-            # Enviar email con Resend
-            params = {
-                "from": from_email,
-                "to": to_email,
-                "subject": subject,
-                "html": html_body,
-            }
+            # Crear objeto de email transaccional
+            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+                to=[{"email": to_email, "name": to_name or to_email}],
+                sender={"email": self.from_email, "name": self.from_name},
+                subject=subject,
+                html_content=html_body
+            )
             
-            response = resend.Emails.send(params)
+            # Enviar email con Brevo
+            api_response = self.api_instance.send_transac_email(send_smtp_email)
             
             # Verificar respuesta
-            if response and 'id' in response:
-                logger.info(f"✅ Email enviado exitosamente a {to_email} (ID: {response['id']})")
+            if api_response and hasattr(api_response, 'message_id'):
+                logger.info(f"✅ Email enviado exitosamente a {to_email} (ID: {api_response.message_id})")
                 return True
             else:
-                logger.error(f"❌ Error enviando email: {response}")
+                logger.error(f"❌ Error enviando email: respuesta inesperada")
                 return False
 
+        except ApiException as e:
+            logger.error(f"❌ Error de API Brevo: {str(e)}")
+            return False
         except Exception as e:
             logger.error(f"💥 Error inesperado enviando email: {str(e)}")
             return False
@@ -225,5 +240,6 @@ class EmailService:
         return self.send_email(
             to_email=to_email,
             subject=subject,
-            html_body=html_body
+            html_body=html_body,
+            to_name=user_name
         )

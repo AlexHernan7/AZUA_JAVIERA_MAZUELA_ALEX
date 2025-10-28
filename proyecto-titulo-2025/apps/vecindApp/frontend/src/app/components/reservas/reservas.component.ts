@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { EspacioResponse } from '../../interfaces/espacio.interface';
 import { DisponibilidadRequest, DisponibilidadResponse, ReservaCreateRequest, ReservaConPagoRequest, ReservaWebpayResponse } from '../../interfaces/reserva.interface';
 import { UserLoginData } from '../../interfaces/auth.interface';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-reservas',
@@ -412,12 +413,13 @@ export class ReservasComponent implements OnInit, OnDestroy {
         return espacio.foto;
       }
       // Si la foto existe como URL, construir la URL correcta
+      const baseUrl = environment.apiUrl.replace('/api', '');
       if (espacio.foto.startsWith('uploads/')) {
-        return `http://localhost:8000/${espacio.foto}`;
+        return `${baseUrl}/${espacio.foto}`;
       } else if (espacio.foto.startsWith('http')) {
         return espacio.foto;
       } else if (espacio.foto.startsWith('/')) {
-        return `http://localhost:8000${espacio.foto}`;
+        return `${baseUrl}${espacio.foto}`;
       }
     }
     

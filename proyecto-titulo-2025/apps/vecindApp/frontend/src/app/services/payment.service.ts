@@ -8,12 +8,13 @@ import {
   PaymentErrorResponse
 } from '../interfaces/payment.interface';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
-  private readonly API_URL = 'http://localhost:8000/api/payments';
+  private readonly API_URL = `${environment.apiUrl}/payments`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

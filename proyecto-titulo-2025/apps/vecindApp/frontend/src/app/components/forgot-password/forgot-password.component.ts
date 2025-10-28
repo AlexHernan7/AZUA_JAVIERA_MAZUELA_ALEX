@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-forgot-password',
@@ -27,7 +28,7 @@ export class ForgotPasswordComponent {
   successMessage = '';
   email = '';
   
-  private readonly API_URL = 'http://localhost:8000/api/auth';
+  private readonly API_URL = `${environment.apiUrl}/auth`;
 
   constructor(
     private fb: FormBuilder,
@@ -80,7 +81,8 @@ export class ForgotPasswordComponent {
       catchError(this.handleError.bind(this))
     ).subscribe({
       next: (response) => {
-        this.successMessage = 'Código enviado a tu email';
+        // Mostrar mensaje del servidor (en desarrollo puede incluir el código)
+        this.successMessage = response.message || 'Código enviado a tu email';
         this.step = 'code';
         this.isLoading = false;
       },

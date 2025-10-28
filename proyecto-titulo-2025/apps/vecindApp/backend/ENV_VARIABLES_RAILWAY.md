@@ -46,12 +46,19 @@ WEBPAY_RETURN_URL=https://tu-backend.up.railway.app/api/payments/webpay/return
 WEBPAY_FINAL_URL=https://tu-frontend-url.com/payment/success
 ```
 
-### Email - Resend
-Obtén tu API key en https://resend.com
+### Email - Brevo
+Obtén tu API key en https://app.brevo.com/settings/keys/api
 ```
-RESEND_API_KEY=re_tu_api_key_de_resend
-RESEND_FROM_EMAIL=VecindApp <noreply@tudominio.com>
+BREVO_API_KEY=xkeysib-tu_api_key_de_brevo
+BREVO_FROM_EMAIL=vecindapp66@gmail.com
+BREVO_FROM_NAME=VecindApp
 ```
+
+**Nota importante:** El email `vecindapp66@gmail.com` ya está verificado en Brevo.
+Si quieres usar un dominio personalizado en el futuro:
+1. Verificar el dominio en Brevo (Settings > Senders & IP)
+2. Agregar los registros SPF y DKIM a tu DNS
+3. Una vez verificado, podrás usar emails como noreply@tudominio.com
 
 ### CORS - URLs Permitidas
 Lista de URLs separadas por comas que pueden acceder a tu API:

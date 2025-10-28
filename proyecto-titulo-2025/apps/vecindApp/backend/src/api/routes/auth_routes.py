@@ -543,19 +543,32 @@ async def request_password_reset(
             elif usuario.directiva:
                 user_name = usuario.directiva.nombres
         
-        # Enviar email con código usando Resend
+        # Enviar email con código usando Brevo
         from src.core.config import settings
         from src.services.email_service import EmailService
         
-        if not settings.RESEND_API_KEY:
-            logger.error("❌ RESEND_API_KEY no está configurada")
+        # Verificar si estamos en modo desarrollo
+        is_development = settings.ENVIRONMENT != "PRODUCTION"
+        
+        if not settings.BREVO_API_KEY:
+            logger.warning("⚠️  BREVO_API_KEY no configurada")
+            if is_development:
+                logger.warning(f"🔑 CÓDIGO DE DESARROLLO: {code} para {request.email}")
+                return PasswordResetResponse(
+                    message=f"Modo desarrollo - Tu código es: {code}",
+                    email=request.email
+                )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={"error": "Servicio de email no configurado", "detalle": "Contacta al administrador"}
             )
         
-        # Enviar email con Resend
-        email_service = EmailService(api_key=settings.RESEND_API_KEY)
+        # Intentar enviar email con Brevo
+        email_service = EmailService(
+            api_key=settings.BREVO_API_KEY,
+            from_email=settings.BREVO_FROM_EMAIL,
+            from_name=settings.BREVO_FROM_NAME
+        )
         
         email_sent = email_service.send_password_reset_code(
             to_email=request.email,
@@ -564,10 +577,17 @@ async def request_password_reset(
         )
         
         if not email_sent:
+            # Si falla el envío (ej: error en la API de Brevo)
+            if is_development:
+                logger.warning(f"⚠️  No se pudo enviar email - Devolviendo código: {code}")
+                return PasswordResetResponse(
+                    message=f"[DEV] Email no disponible - Tu código es: {code}",
+                    email=request.email
+                )
             logger.error(f"❌ No se pudo enviar email a {request.email}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={"error": "No se pudo enviar el email", "detalle": "Error en el servicio de correo"}
+                detail={"error": "No se pudo enviar el email", "detalle": "Error en el servicio de correo Brevo"}
             )
         
         logger.info(f"✅ Código de recuperación enviado a {request.email}")

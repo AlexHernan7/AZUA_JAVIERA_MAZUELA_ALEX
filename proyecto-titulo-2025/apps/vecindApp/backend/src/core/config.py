@@ -107,8 +107,8 @@ class WebpaySettings(BaseModel):
 class EmailSettings(BaseModel):
     """Configuración de envío de emails."""
     
-    resend_api_key: str = Field(..., description="API Key de Resend")
-    from_email: str = Field("VecindApp <onboarding@resend.dev>", description="Email del remitente")
+    brevo_api_key: str = Field(..., description="API Key de Brevo")
+    from_email: str = Field("VecindApp <noreply@vecindapp.com>", description="Email del remitente")
 
 
 class Settings(BaseSettings):
@@ -130,9 +130,10 @@ class Settings(BaseSettings):
         final_url=getenv("WEBPAY_FINAL_URL", "http://localhost:4200/payment/success")
     ))
     
-    # Email settings - Resend
-    RESEND_API_KEY: str = Field(default="")
-    RESEND_FROM_EMAIL: str = Field(default="VecindApp <onboarding@resend.dev>")
+    # Email settings - Brevo
+    BREVO_API_KEY: str = Field(default="")
+    BREVO_FROM_EMAIL: str = Field(default="vecindapp66@gmail.com")
+    BREVO_FROM_NAME: str = Field(default="VecindApp")
 
     @classmethod
     def get_database_settings(cls, environment: str) -> dict[str, Any]:
@@ -184,8 +185,9 @@ def get_settings(env_loader: EnvironmentLoader = DotEnvLoader()) -> Settings:
             redirect_uri=getenv("GOOGLE_OAUTH_REDIRECT_URI", "ADMIN"),
         ),
         news_rss=NewsRSSSettings(),
-        RESEND_API_KEY=getenv("RESEND_API_KEY", ""),
-        RESEND_FROM_EMAIL=getenv("RESEND_FROM_EMAIL", "VecindApp <onboarding@resend.dev>"),
+        BREVO_API_KEY=getenv("BREVO_API_KEY", ""),
+        BREVO_FROM_EMAIL=getenv("BREVO_FROM_EMAIL", "vecindapp66@gmail.com"),
+        BREVO_FROM_NAME=getenv("BREVO_FROM_NAME", "VecindApp"),
     )
 
 
