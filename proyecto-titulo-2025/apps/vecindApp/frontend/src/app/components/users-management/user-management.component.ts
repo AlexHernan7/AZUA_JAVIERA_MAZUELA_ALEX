@@ -48,18 +48,12 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   cargarDatos(): void {
     this.isLoading = true;
     this.error = null;
-    
-    console.log('🔍 [UserManagement] Iniciando carga de datos...');
-    console.log('🔍 [UserManagement] ¿Es admin?:', this.isAdmin);
 
     let vecinosCargados = false;
     let directivosCargados = false;
 
     const finalizarCarga = () => {
       if (vecinosCargados && directivosCargados) {
-        console.log('✅ [UserManagement] Carga completada');
-        console.log('📊 [UserManagement] Total vecinos:', this.vecinos.length);
-        console.log('📊 [UserManagement] Total directivos:', this.directivos.length);
         this.isLoading = false;
       }
     };
@@ -67,20 +61,16 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     // Si es admin, obtener todos los usuarios del sistema
     // Si no es admin (es directivo), obtener solo de su junta
     if (this.isAdmin) {
-      console.log('🔄 [UserManagement] Modo ADMIN - Cargando todos los usuarios...');
-      
       // Cargar TODOS los vecinos (admin)
       this.subscription.add(
         this.authService.getAllVecinosAdmin().subscribe({
           next: (data) => {
-            console.log('✅ [UserManagement] Vecinos cargados:', data.length);
             this.vecinos = data;
             vecinosCargados = true;
             this.aplicarFiltros();
             finalizarCarga();
           },
           error: (err) => {
-            console.error('❌ [UserManagement] Error al cargar vecinos:', err);
             this.error = 'Error al cargar la lista de vecinos';
             vecinosCargados = true;
             finalizarCarga();
@@ -92,15 +82,12 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       this.subscription.add(
         this.authService.getAllDirectivosAdmin().subscribe({
           next: (data) => {
-            console.log('✅ [UserManagement] Directivos cargados:', data.length);
-            console.log('📋 [UserManagement] Directivos data:', data);
             this.directivos = data;
             directivosCargados = true;
             this.aplicarFiltros();
             finalizarCarga();
           },
           error: (err) => {
-            console.error('❌ [UserManagement] Error al cargar directivos:', err);
             this.error = 'Error al cargar la lista de directivos';
             directivosCargados = true;
             finalizarCarga();
@@ -108,20 +95,16 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         })
       );
     } else {
-      console.log('🔄 [UserManagement] Modo DIRECTIVO - Cargando usuarios de mi junta...');
-      
       // Cargar vecinos de mi junta (directivo)
       this.subscription.add(
         this.authService.getVecinosMyJunta(false).subscribe({
           next: (data) => {
-            console.log('✅ [UserManagement] Vecinos cargados:', data.length);
             this.vecinos = data;
             vecinosCargados = true;
             this.aplicarFiltros();
             finalizarCarga();
           },
           error: (err) => {
-            console.error('❌ [UserManagement] Error al cargar vecinos:', err);
             this.error = 'Error al cargar la lista de vecinos';
             vecinosCargados = true;
             finalizarCarga();
@@ -133,15 +116,12 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       this.subscription.add(
         this.authService.getDirectivosMyJunta(false).subscribe({
           next: (data) => {
-            console.log('✅ [UserManagement] Directivos cargados:', data.length);
-            console.log('📋 [UserManagement] Directivos data:', data);
             this.directivos = data;
             directivosCargados = true;
             this.aplicarFiltros();
             finalizarCarga();
           },
           error: (err) => {
-            console.error('❌ [UserManagement] Error al cargar directivos:', err);
             this.error = 'Error al cargar la lista de directivos';
             directivosCargados = true;
             finalizarCarga();
@@ -155,10 +135,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
    * Aplica los filtros seleccionados
    */
   aplicarFiltros(): void {
-    console.log('🔍 [UserManagement] Aplicando filtros...');
-    console.log('🔍 [UserManagement] Vecinos antes de filtrar:', this.vecinos.length);
-    console.log('🔍 [UserManagement] Directivos antes de filtrar:', this.directivos.length);
-    
     // Filtrar vecinos
     switch (this.filtroEstado) {
       case 'activos':
@@ -174,9 +150,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     // Los directivos no tienen estado activo/inactivo en el schema actual
     // pero podemos filtrarlos si es necesario
     this.directivosFiltrados = [...this.directivos];
-    
-    console.log('✅ [UserManagement] Vecinos filtrados:', this.vecinosFiltrados.length);
-    console.log('✅ [UserManagement] Directivos filtrados:', this.directivosFiltrados.length);
   }
 
   /**

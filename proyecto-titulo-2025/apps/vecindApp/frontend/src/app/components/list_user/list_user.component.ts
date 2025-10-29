@@ -64,26 +64,47 @@ export class ListUserComponent implements OnInit {
     this.error = '';
     
     if (this.isAdmin) {
-      const headers = this.getAuthHeaders();
-      this.http
-        .get<{ usuarios: SystemUser[] }>(`${this.BASE_URL}/all?limit=1000`, { headers })
-        .subscribe({
-          next: (res) => {
-            // excluir admins
-            this.allUsers = (res.usuarios || []).filter(
-              u => !(u.roles || []).includes('admin')
-            );
-            // orden alfabético por apellido/nombre
-            this.allUsers.sort((a, b) =>
-              (this.displayName(a)).localeCompare(this.displayName(b), 'es')
-            );
-            this.loading = false;
-          },
-          error: (err) => {
-            this.error = 'No se pudieron cargar los usuarios.';
-            this.loading = false;
-          },
-        });
+      // Admin: cargar TODOS los vecinos y TODOS los directivos del sistema
+      forkJoin({
+        vecinos: this.auth.getAllVecinosAdmin(),
+        directivos: this.auth.getAllDirectivosAdmin()
+      }).subscribe({
+        next: ({ vecinos, directivos }) => {
+          const vecinosArr = vecinos as VecinoListItem[];
+          const mappedVecinos: SystemUser[] = vecinosArr.map(v => ({
+            id_usuario: v.id_usuario,
+            email: v.email,
+            activo: v.activo,
+            roles: ['vecino'],
+            nombres: v.nombres,
+            apellido_paterno: v.apellido_paterno,
+            apellido_materno: v.apellido_materno ?? null,
+            junta_nombre: v.junta_nombre
+          }));
+          
+          const mappedDirectivos: SystemUser[] = (directivos as DirectivaListItem[]).map((d) => ({
+            id_usuario: d.id_usuario,
+            email: d.email,
+            activo: true,
+            roles: ['directiva'],
+            nombres: d.nombres,
+            apellido_paterno: d.apellido_paterno,
+            apellido_materno: d.apellido_materno ?? null,
+            junta_nombre: d.junta_nombre
+          }));
+
+          this.allUsers = [...mappedDirectivos, ...mappedVecinos];
+          this.allUsers.sort((a, b) =>
+            (this.displayName(a)).localeCompare(this.displayName(b), 'es')
+          );
+          
+          this.loading = false;
+        },
+        error: (err) => {
+          this.error = 'No se pudieron cargar los usuarios.';
+          this.loading = false;
+        }
+      });
     } else {
       // Directiva/vecino: cargar solo usuarios de mi junta
       forkJoin({
@@ -106,8 +127,7 @@ export class ListUserComponent implements OnInit {
             || this.auth.getCurrentUser()?.vecino?.junta
             || undefined;
           const mappedDirectivos: SystemUser[] = (directivos as DirectivaListItem[]).map((d) => ({
-            // usar id_usuario real si viene del backend; si no, omitir acciones sobre él
-            id_usuario: (d as any).id_usuario ?? -d.id_directiva,
+            id_usuario: d.id_usuario,
             email: d.email,
             activo: true,
             roles: ['directiva'],
@@ -121,6 +141,7 @@ export class ListUserComponent implements OnInit {
           this.allUsers.sort((a, b) =>
             (this.displayName(a)).localeCompare(this.displayName(b), 'es')
           );
+          
           this.loading = false;
         },
         error: (err) => {

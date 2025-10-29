@@ -21,7 +21,11 @@ export const directivaGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.isAuthenticated() && auth.getCurrentUser()?.roles?.includes('directiva')) {
+  const user = auth.getCurrentUser();
+  const hasAccess = auth.isAuthenticated() && user?.roles && 
+                    (user.roles.includes('directiva') || user.roles.includes('admin'));
+  
+  if (hasAccess) {
     return true;
   }
   router.navigate(['/']);
@@ -292,15 +296,10 @@ export class AuthService {
    * Obtiene TODOS los vecinos del sistema (solo para admin)
    */
   getAllVecinosAdmin(): Observable<VecinoListItem[]> {
-    const url = `${this.API_URL}/users/vecinos/admin/all`;
-    console.log('🌐 [AuthService] GET Vecinos Admin:', url);
-    
-    return this.http.get<VecinoListItem[]>(url).pipe(
-      tap(response => console.log('✅ [AuthService] Vecinos Admin response:', response)),
-      catchError(err => {
-        console.error('❌ [AuthService] Error Vecinos Admin:', err);
-        return this.handleError(err);
-      })
+    return this.http.get<VecinoListItem[]>(
+      `${this.API_URL}/users/vecinos/admin/all`
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 
@@ -308,15 +307,10 @@ export class AuthService {
    * Obtiene TODOS los directivos del sistema (solo para admin)
    */
   getAllDirectivosAdmin(): Observable<DirectivaListItem[]> {
-    const url = `${this.API_URL}/directiva/admin/all`;
-    console.log('🌐 [AuthService] GET Directivos Admin:', url);
-    
-    return this.http.get<DirectivaListItem[]>(url).pipe(
-      tap(response => console.log('✅ [AuthService] Directivos Admin response:', response)),
-      catchError(err => {
-        console.error('❌ [AuthService] Error Directivos Admin:', err);
-        return this.handleError(err);
-      })
+    return this.http.get<DirectivaListItem[]>(
+      `${this.API_URL}/directiva/admin/all`
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 
