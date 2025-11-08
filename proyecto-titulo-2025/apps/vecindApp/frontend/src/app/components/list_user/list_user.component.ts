@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { VecinoListItem, DirectivaListItem } from '../../interfaces/auth.interface';
 import { forkJoin } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 type RoleCode = 'admin' | 'vecino' | 'directiva';
 
@@ -28,8 +29,9 @@ interface SystemUser {
   styleUrls: ['./list_user.component.css'],
 })
 export class ListUserComponent implements OnInit {
-  // Ajusta la base URL a tu backend
-  private readonly BASE_URL = '/api/users/admin';
+  // Usa la URL base del environment para apuntar a Railway
+  // La ruta del backend es: /api/admin/usuarios/{id}/estado
+  private readonly BASE_URL = `${environment.apiUrl}/admin`;
 
   loading = false;
   error = '';
@@ -194,7 +196,7 @@ export class ListUserComponent implements OnInit {
     this.rowBusy.add(u.id_usuario);
     const req$ = this.isAdmin
       ? this.http.patch(`${this.BASE_URL}/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers })
-      : this.http.patch(`/api/users/directiva/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers });
+      : this.http.patch(`${environment.apiUrl}/users/directiva/usuarios/${u.id_usuario}/estado`, { activo: nuevo }, { headers });
 
     req$
       .subscribe({
