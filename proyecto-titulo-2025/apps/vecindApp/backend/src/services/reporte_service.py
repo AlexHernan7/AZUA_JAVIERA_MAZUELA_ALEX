@@ -633,10 +633,13 @@ class ReporteService:
             fecha_hasta_dt = datetime.combine(fecha_hasta, datetime.max.time())
 
             # Usar la fecha de creación del usuario para agrupar por mes
+            # Formatear directamente usando to_char para evitar problemas de zona horaria
+            # date_trunc devuelve un timestamp, y to_char lo formatea usando la zona horaria del timestamp
             mes_trunc = func.date_trunc('month', Usuario.created_at)
+            mes_formateado = func.to_char(mes_trunc, 'YYYY-MM')
             
             query = select(
-                mes_trunc.label('mes'),
+                mes_formateado.label('mes'),
                 func.count(Usuario.id_usuario).label('cantidad')
             ).where(
                 and_(
@@ -650,12 +653,12 @@ class ReporteService:
             if meses_especificos:
                 query = self._filtrar_por_meses_especificos(query, meses_especificos, Usuario.created_at)
             
-            query = query.group_by(mes_trunc).order_by('mes')
+            query = query.group_by(mes_formateado).order_by('mes')
 
             result = await self.db.execute(query)
             return [
                 {
-                    'mes': row.mes.strftime('%Y-%m'),
+                    'mes': row.mes,
                     'cantidad': row.cantidad or 0
                 }
                 for row in result

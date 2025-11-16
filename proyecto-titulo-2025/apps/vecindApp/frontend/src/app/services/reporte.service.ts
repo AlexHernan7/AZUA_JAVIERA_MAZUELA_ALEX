@@ -27,6 +27,11 @@ export interface CertificadoMensual {
   cantidad: number;
 }
 
+export interface UsuarioMensual {
+  mes: string;
+  cantidad: number;
+}
+
 export interface EspacioStats {
   nombre: string;
   total_reservas: number;

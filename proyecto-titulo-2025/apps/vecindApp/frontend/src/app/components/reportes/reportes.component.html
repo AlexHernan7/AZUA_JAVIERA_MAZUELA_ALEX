@@ -209,9 +209,7 @@
           <div class="card-body report-card-chart">
             <canvas
               data-chart="usuarios"
-              *ngIf="dashboardData()
-                     && dashboardData()!.usuarios_mensuales
-                     && dashboardData()!.usuarios_mensuales.length > 0">
+              *ngIf="dashboardData() && dashboardData()!.usuarios_mensuales && dashboardData()!.usuarios_mensuales.length > 0">
             </canvas>
             <div
               *ngIf="!dashboardData()

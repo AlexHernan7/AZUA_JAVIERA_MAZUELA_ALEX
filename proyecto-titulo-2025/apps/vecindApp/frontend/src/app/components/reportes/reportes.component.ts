@@ -634,8 +634,23 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const canvas = document.querySelector('canvas[data-chart="usuarios"]') as HTMLCanvasElement;
-    if (!canvas) return;
+    // Intentar encontrar el canvas con retry
+    let canvas = document.querySelector('canvas[data-chart="usuarios"]') as HTMLCanvasElement;
+    if (!canvas) {
+      // Si no se encuentra, intentar de nuevo después de un breve delay
+      setTimeout(() => {
+        canvas = document.querySelector('canvas[data-chart="usuarios"]') as HTMLCanvasElement;
+        if (canvas) {
+          this.crearGraficoUsuarios(canvas, data);
+        }
+      }, 200);
+      return;
+    }
+
+    this.crearGraficoUsuarios(canvas, data);
+  }
+
+  private crearGraficoUsuarios(canvas: HTMLCanvasElement, data: DashboardResponse) {
 
     const labels = data.usuarios_mensuales.map(item =>
       this.formatearFecha(item.mes)
@@ -700,7 +715,10 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public formatearFecha(mes: string): string {
     try {
-      const fecha = new Date(mes + '-01');
+      // Parsear el mes directamente para evitar problemas de zona horaria
+      // Formato esperado: 'YYYY-MM'
+      const [año, mesNum] = mes.split('-');
+      const fecha = new Date(parseInt(año), parseInt(mesNum) - 1, 1);
       return fecha.toLocaleDateString(this.LOCALE, { month: 'short', year: 'numeric' });
     } catch (error) {
       return mes;
