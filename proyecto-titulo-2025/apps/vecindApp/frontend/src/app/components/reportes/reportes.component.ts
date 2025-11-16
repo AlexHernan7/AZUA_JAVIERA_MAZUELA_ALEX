@@ -39,6 +39,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
   private pieChart?: Chart;
   private lineChart?: Chart;
   private certMoneyChart?: Chart; // 👈 NUEVO gráfico de ingresos por certificados
+  private usuariosChart?: Chart; // 👈 Gráfico de usuarios nuevos por mes
 
   private destroy$ = new Subject<void>();
 
@@ -88,6 +89,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pieChart?.destroy();
     this.lineChart?.destroy();
     this.certMoneyChart?.destroy();
+    this.usuariosChart?.destroy();
   }
 
   // ==========================
@@ -131,7 +133,8 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
         this.makeBar();
         this.makePie();
         this.makeLine();
-        this.makeCertificadosMoney(); // 👈 nuevo gráfico
+        this.makeCertificadosMoney();
+        this.makeUsuariosNuevos();
       } catch (error) {
         this.crearGraficosIndividualmente();
       }
@@ -159,6 +162,12 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       this.makeCertificadosMoney();
+    } catch (error) {
+      // Error silencioso
+    }
+
+    try {
+      this.makeUsuariosNuevos();
     } catch (error) {
       // Error silencioso
     }
@@ -197,7 +206,8 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
             this.makeBar();
             this.makePie();
             this.makeLine();
-            this.makeCertificadosMoney(); // 👈 también al filtrar
+            this.makeCertificadosMoney();
+            this.makeUsuariosNuevos();
           }, 100);
         },
         error: (error) => {
@@ -611,6 +621,71 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.certMoneyChart = new Chart(canvas, cfg);
+  }
+
+  // ===== GRÁFICO: USUARIOS NUEVOS POR MES =====
+  private makeUsuariosNuevos() {
+    const data = this.dashboardData();
+    if (!data) return;
+
+    this.usuariosChart?.destroy();
+
+    if (!data.usuarios_mensuales || data.usuarios_mensuales.length === 0) {
+      return;
+    }
+
+    const canvas = document.querySelector('canvas[data-chart="usuarios"]') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const labels = data.usuarios_mensuales.map(item =>
+      this.formatearFecha(item.mes)
+    );
+
+    const chartData = data.usuarios_mensuales.map(item => item.cantidad);
+
+    const cfg: ChartConfiguration<'bar'> = {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Usuarios nuevos registrados',
+          data: chartData,
+          backgroundColor: 'rgba(139, 92, 246, 0.8)',
+          borderColor: 'rgba(139, 92, 246, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: (context) => {
+                const value = typeof context.parsed.y === 'number' ? context.parsed.y : 0;
+                return `${value} usuario${value !== 1 ? 's' : ''}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              callback: (v: any) => {
+                const value = Number(v);
+                return Number.isInteger(value) ? value.toString() : '';
+              }
+            }
+          }
+        }
+      }
+    };
+
+    this.usuariosChart = new Chart(canvas, cfg);
   }
 
   // ==========================

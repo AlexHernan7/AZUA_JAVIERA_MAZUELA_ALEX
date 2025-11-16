@@ -42,6 +42,7 @@ export interface DashboardResponse {
   kpis: KPI[];
   ingresos_mensuales: IngresoMensual[];
   certificados_mensuales: CertificadoMensual[];
+  usuarios_mensuales: UsuarioMensual[];
   distribucion_reservas: DistribucionReserva[];
   resumen_espacios: EspacioStats[];
   periodo: Periodo;

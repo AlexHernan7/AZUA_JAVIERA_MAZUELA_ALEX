@@ -16,6 +16,7 @@ from src.schemas.reporte_schemas import (
     KPIResponse,
     IngresoMensualResponse,
     CertificadoMensualResponse,
+    UsuarioMensualResponse,
     DistribucionReservaResponse,
     EspacioStatsResponse,
     PeriodoResponse
@@ -158,6 +159,19 @@ async def get_dashboard_reportes(
             for item in certificados_mensuales
         ]
 
+        # Obtener usuarios nuevos por mes
+        usuarios_mensuales = await reporte_service.get_usuarios_por_mes(
+            id_junta=id_junta,
+            fecha_desde=fecha_desde,
+            fecha_hasta=fecha_hasta,
+            meses_especificos=meses_especificos
+        )
+
+        usuarios_mensuales_response = [
+            UsuarioMensualResponse(mes=item['mes'], cantidad=item['cantidad'])
+            for item in usuarios_mensuales
+        ]
+
         # Obtener distribución de reservas
         distribucion_reservas = await reporte_service.get_distribucion_reservas(
             id_junta=id_junta,
@@ -186,6 +200,7 @@ async def get_dashboard_reportes(
             kpis=kpis,
             ingresos_mensuales=ingresos_mensuales,
             certificados_mensuales=certificados_mensuales_response,
+            usuarios_mensuales=usuarios_mensuales_response,
             distribucion_reservas=distribucion_reservas_response,
             resumen_espacios=resumen_espacios,
             periodo=PeriodoResponse(

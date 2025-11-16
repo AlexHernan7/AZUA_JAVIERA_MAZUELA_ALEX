@@ -199,6 +199,32 @@
         </div>
       </div>
 
+      <!-- Usuarios nuevos por mes -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100 report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex align-items-center">
+            <i class="bi bi-people me-2 text-teal-700"></i>
+            <span>Usuarios nuevos registrados</span>
+          </div>
+          <div class="card-body report-card-chart">
+            <canvas
+              data-chart="usuarios"
+              *ngIf="dashboardData()
+                     && dashboardData()!.usuarios_mensuales
+                     && dashboardData()!.usuarios_mensuales.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.usuarios_mensuales
+                     || dashboardData()!.usuarios_mensuales.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-people fs-1"></i>
+              <p class="mt-2 mb-0">No hay usuarios nuevos para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Certificados vs Reservas (línea) -->
       <div class="col-12">
         <div class="card border-0 shadow-sm report-chart-card">

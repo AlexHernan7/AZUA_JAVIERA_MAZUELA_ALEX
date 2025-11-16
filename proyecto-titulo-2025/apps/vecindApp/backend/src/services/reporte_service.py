@@ -14,6 +14,7 @@ from src.database.models.reserva import Reserva
 from src.database.models.certificado_pedido import CertificadoPedido
 from src.database.models.vecino import Vecino
 from src.database.models.directiva import Directiva
+from src.database.models.usuario import Usuario
 from src.database.models.junta import Junta
 
 logger = logging.getLogger(__name__)
@@ -600,4 +601,66 @@ class ReporteService:
 
         except Exception as e:
             logger.error(f"❌ Error obteniendo certificados por mes: {e}")
+            raise
+
+    async def get_usuarios_por_mes(
+        self, 
+        id_junta: int, 
+        fecha_desde: Optional[date] = None,
+        fecha_hasta: Optional[date] = None,
+        meses_especificos: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene usuarios nuevos registrados por mes.
+        
+        Args:
+            id_junta: ID de la junta
+            fecha_desde: Fecha desde (opcional)
+            fecha_hasta: Fecha hasta (opcional)
+            meses_especificos: Lista de meses específicos en formato YYYY-MM (opcional)
+            
+        Returns:
+            Lista de usuarios nuevos por mes
+        """
+        try:
+            if not fecha_desde:
+                fecha_desde = date.today().replace(month=1, day=1)
+            if not fecha_hasta:
+                fecha_hasta = date.today()
+
+            from datetime import datetime
+            fecha_desde_dt = datetime.combine(fecha_desde, datetime.min.time())
+            fecha_hasta_dt = datetime.combine(fecha_hasta, datetime.max.time())
+
+            # Usar la fecha de creación del usuario para agrupar por mes
+            mes_trunc = func.date_trunc('month', Usuario.created_at)
+            
+            query = select(
+                mes_trunc.label('mes'),
+                func.count(Usuario.id_usuario).label('cantidad')
+            ).where(
+                and_(
+                    Usuario.id_junta == id_junta,
+                    Usuario.created_at >= fecha_desde_dt,
+                    Usuario.created_at <= fecha_hasta_dt
+                )
+            )
+            
+            # Aplicar filtro de meses específicos si se proporcionan
+            if meses_especificos:
+                query = self._filtrar_por_meses_especificos(query, meses_especificos, Usuario.created_at)
+            
+            query = query.group_by(mes_trunc).order_by('mes')
+
+            result = await self.db.execute(query)
+            return [
+                {
+                    'mes': row.mes.strftime('%Y-%m'),
+                    'cantidad': row.cantidad or 0
+                }
+                for row in result
+            ]
+
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo usuarios por mes: {e}")
             raise

@@ -33,6 +33,12 @@ class CertificadoMensualResponse(BaseModel):
     cantidad: int = Field(..., description="Cantidad de certificados emitidos")
 
 
+class UsuarioMensualResponse(BaseModel):
+    """Usuarios nuevos registrados por mes."""
+    mes: str = Field(..., description="Mes en formato YYYY-MM")
+    cantidad: int = Field(..., description="Cantidad de usuarios nuevos registrados")
+
+
 class PeriodoResponse(BaseModel):
     """Período de consulta."""
     fecha_desde: str = Field(..., description="Fecha desde en formato ISO")
@@ -75,6 +81,7 @@ class ReporteDashboardResponse(BaseModel):
     kpis: List[KPIResponse] = Field(..., description="KPIs principales")
     ingresos_mensuales: List[IngresoMensualResponse] = Field(..., description="Ingresos por mes")
     certificados_mensuales: List[CertificadoMensualResponse] = Field(..., description="Certificados por mes")
+    usuarios_mensuales: List[UsuarioMensualResponse] = Field(..., description="Usuarios nuevos por mes")
     distribucion_reservas: List[DistribucionReservaResponse] = Field(..., description="Distribución de reservas")
     resumen_espacios: List[EspacioStatsResponse] = Field(..., description="Resumen por espacios")
     periodo: PeriodoResponse = Field(..., description="Período de consulta")
