@@ -294,17 +294,79 @@ form-control, form-select{border: 1px solid rgba(13,148,136,.25); background-col
 
  //                                           S T Y L E S  R E P O R T E S
 
-.kpi { border-radius: 16px; }
-.kpi .card-body { padding: 1rem 1.25rem; }
-.kpi-label { color: #6b7280; font-weight: 600; font-size: .9rem; }
-.kpi-value { color: #0c2a33; font-weight: 800; font-size: 1.75rem; line-height: 1; }
-.card-header { border-bottom: 1px solid rgba(0,0,0,.06); }
+/* ===== CONTENEDOR GENERAL DEL REPORTE ===== */
+.report-shell {  background-color: #f8fafc;}
+.report-title { color: var(--ink-900);  font-weight: 800;  font-size: clamp(1.6rem, 3vw, 2.1rem);}
+.report-subtitle {  color: var(--ink-700);  font-size: .95rem;}
+/* ===== TARJETA DE FILTRO DE MESES ===== */
+.report-filter-card {  border-radius: 16px;}
+.report-filter-card .card-header {  border-bottom: 1px solid rgba(0,0,0,.04);font-size: 1.15rem !important; font-weight: 700 !important;}
+.report-chart-card .card-header i {  font-size: 1.3rem !important;}
+
+/* Chips de meses */
+.report-months-wrap {  display: flex;  flex-wrap: wrap;  gap: .4rem;}
+.report-month-item {  flex: 0 0 auto;}
+.report-month-chip {  display: inline-block;  padding: .25rem .9rem;  border-radius: 999px;  border: 1px solid #d1d5db;  font-size: .85rem;  cursor: pointer;
+  background-color: #ffffff;  color: #4b5563;  transition: all .15s ease;  white-space: nowrap;}
+.report-month-chip:hover {  background-color: #ecfeff;  border-color: var(--teal-700);  color: var(--teal-700);}
+.report-month-chip-active {  background-color: var(--teal-700);  border-color: var(--teal-700);  color: #ffffff;}
+/* ===== KPIs ===== */
+.report-kpi-card {  border-radius: 16px;  border-top: 3px solid rgba(15, 118, 110, .7);}
+
+/* ===== CARDS DE GRÁFICOS ===== */
+
+.report-card-chart {  padding: 1.2rem !important;   /* 👈 margen interno */}
+.report-card-chart canvas {  padding: 1.4rem !important;     /* 👈 respiración para que el borde no toque */}
+.card-header {  padding: 0.9rem 1.2rem !important; /* 👈 margen más amplio arriba/abajo */}
+.report-chart-card {  border-radius: 12px;}
+.report-chart-card .card-header i {  font-size: 1.3rem !important;}
+.report-chart-card .card-header { font-size: 1.15rem !important;  font-weight: 700 !important;  padding-top: 0.8rem;  padding-bottom: 0.8rem;}
+/* contenedor que controla el tamaño del canvas */
+.report-card-chart {  position: relative;  min-height: 260px;}
+/* Pie un poco más "cuadrado" para que no se vea enorme */
+.report-card-chart.report-card-chart--square {  min-height: 260px;  max-height: 320px;}
+/* Line chart un poco más ancho pero bajo */
+.report-card-chart.report-card-chart--wide {  min-height: 260px;  max-height: 340px;}
+/* Canvas ocupa todo el contenedor pero es controlado por min/max-height */
+.report-card-chart canvas {  position: absolute;  inset: 0;  width: 100% !important;  height: 100% !important;}
+/* Botones toggle modo cantidad / monto */
+.btn-group .btn.active {  background-color: var(--teal-700);  color: #fff;  border-color: var(--teal-700);}
+/* ===== TABLA RESUMEN ===== */
+.report-summary-card .card-header {  font-size: 1.15rem !important;  font-weight: 700 !important;  color: var(--ink-900);  padding-top: 0.8rem;  padding-bottom: 0.8rem;}
+.report-summary-card {  border-radius: 16px;  padding: 1.4rem}
+.report-summary-card thead th {  font-size: .9rem;  color: #4b5563;}
+.report-summary-card tbody td {  font-size: .9rem;}
+/* ====== Tarjetas KPI (arriba) ====== */
+/* Título de la tarjeta: un poco más grande y seminegrita */
+.kpi-label {  font-size: 1.05rem;  font-weight: 600;  color: #0c2a33; /* título oscuro */}
+/* Valor: grande y bien en negrita */
+.kpi-value {  margin-top: 0.35rem;  font-size: 1.6rem;  font-weight: 800;  color: #0c2a33;}
+/* El puntito de color a la derecha, lo puedes dejar igual */
+.report-kpi-dot {  width: 8px;  height: 8px;  border-radius: 999px;  background-color: #0f766e;}
 
 
-.hero-section {
-  background-color: transparent !important;
-  color: inherit !important;
+/* ===== RESPONSIVE ===== */
+@media (max-width: 767.98px) {
+  .report-filter-card .card-body {    padding: .9rem .9rem 1rem;  }
+  .report-card-chart {    min-height: 220px;  }
+  .report-card-chart.report-card-chart--square,
+  .report-card-chart.report-card-chart--wide {    min-height: 220px;    max-height: 260px;  }
+  .report-title {    font-size: 1.4rem;  }
+  .report-subtitle {    font-size: .85rem;  }
 }
+
+@media (min-width: 1400px) {
+  .report-card-chart {
+    min-height: 280px;
+  }
+  .report-card-chart.report-card-chart--square {
+    max-height: 340px;
+  }
+  .report-card-chart.report-card-chart--wide {
+    max-height: 360px;
+  }
+}
+
 
 
 

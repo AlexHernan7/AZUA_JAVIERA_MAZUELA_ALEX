@@ -347,7 +347,8 @@ class ReporteService:
             
             ingresos_mensuales_query = select(
                 mes_trunc.label('mes'),
-                func.sum(Reserva.valor_reserva).label('ingresos_reservas')
+                func.sum(Reserva.valor_reserva).label('ingresos_reservas'),
+                func.count(Reserva.id_reserva).label('cantidad_reservas')
             ).where(
                 and_(
                     Reserva.id_junta == id_junta,
@@ -367,7 +368,8 @@ class ReporteService:
             ingresos_mensuales = [
                 {
                     'mes': row.mes.strftime('%Y-%m'),
-                    'ingresos': row.ingresos_reservas or 0
+                    'ingresos': row.ingresos_reservas or 0,
+                    'cantidad_reservas': row.cantidad_reservas or 0
                 }
                 for row in ingresos_mensuales_result
             ]

@@ -18,6 +18,7 @@ class IngresoMensualResponse(BaseModel):
     """Ingresos por mes."""
     mes: str = Field(..., description="Mes en formato YYYY-MM")
     ingresos: float = Field(..., description="Ingresos del mes")
+    cantidad_reservas: int = Field(0, description="Cantidad de reservas del mes")
 
 
 class DistribucionReservaResponse(BaseModel):

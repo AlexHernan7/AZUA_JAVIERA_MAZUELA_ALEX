@@ -137,7 +137,11 @@ async def get_dashboard_reportes(
 
         # Obtener ingresos mensuales
         ingresos_mensuales = [
-            IngresoMensualResponse(mes=item['mes'], ingresos=item['ingresos'])
+            IngresoMensualResponse(
+                mes=item['mes'], 
+                ingresos=item['ingresos'],
+                cantidad_reservas=item.get('cantidad_reservas', 0)
+            )
             for item in estadisticas['ingresos_mensuales']
         ]
 
@@ -310,7 +314,11 @@ async def get_estadisticas_detalladas(
                 for item in estadisticas['espacios_stats']
             ],
             ingresos_mensuales=[
-                IngresoMensualResponse(mes=item['mes'], ingresos=item['ingresos'])
+                IngresoMensualResponse(
+                    mes=item['mes'], 
+                    ingresos=item['ingresos'],
+                    cantidad_reservas=item.get('cantidad_reservas', 0)
+                )
                 for item in estadisticas['ingresos_mensuales']
             ],
             periodo=PeriodoResponse(

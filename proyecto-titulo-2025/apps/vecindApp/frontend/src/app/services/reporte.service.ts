@@ -14,6 +14,7 @@ export interface KPI {
 export interface IngresoMensual {
   mes: string;
   ingresos: number;
+  cantidad_reservas?: number;
 }
 
 export interface DistribucionReserva {
