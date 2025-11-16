@@ -397,11 +397,22 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
       data.certificados_mensuales.map(item => [item.mes, item.cantidad])
     );
 
-    const certificadosData = data.ingresos_mensuales.map(item =>
-      certificadosMap.get(item.mes) || 0
-    );
-
     const isCantidad = this.viewLineMode === 'cantidad';
+
+    // Calcular datos de certificados según el modo
+    let certificadosData: number[];
+    if (isCantidad) {
+      // En modo cantidad: usar la cantidad directamente
+      certificadosData = data.ingresos_mensuales.map(item =>
+        certificadosMap.get(item.mes) || 0
+      );
+    } else {
+      // En modo dinero: calcular monto (cantidad × 2000 CLP) y convertir a miles
+      certificadosData = data.ingresos_mensuales.map(item => {
+        const cantidad = certificadosMap.get(item.mes) || 0;
+        return Math.floor((cantidad * 2000) / 1000); // miles CLP
+      });
+    }
 
     // Calcular datos de reservas según el modo
     let reservasData: number[];
@@ -423,7 +434,7 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
         labels,
         datasets: [
           {
-            label: isCantidad ? 'Certificados (cantidad)' : 'Certificados (aprox. CLP)',
+            label: isCantidad ? 'Certificados (cantidad)' : 'Certificados (miles CLP)',
             data: certificadosData,
             tension: 0.2,
             fill: false,
@@ -477,8 +488,8 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
                     ? `${rawLabel}: ${value}`
                     : `${value}`;
                 } else {
-                  const isMiles = rawLabel.includes('miles');
-                  const base = `$${this.formatearNumero(value)}${isMiles ? 'K' : ''}`;
+                  // En modo dinero, ambos datasets están en miles CLP
+                  const base = `$${this.formatearNumero(value)}K`;
                   return rawLabel
                     ? `${rawLabel}: ${base}`
                     : base;
