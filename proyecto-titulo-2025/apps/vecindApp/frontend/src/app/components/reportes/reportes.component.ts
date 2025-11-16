@@ -919,18 +919,46 @@ export class ReportesComponent implements OnInit, AfterViewInit, OnDestroy {
     // ====== 1) Ingresos mensuales por reservas (barChart) ======
     if (this.barChart && typeof this.barChart.toBase64Image === 'function') {
       addNewPageIfNeeded();
+      currentY += 8; // Espacio antes del título
       doc.setFontSize(12);
-      doc.text('Ingresos mensuales por reservas', chartMarginX, currentY);
-      currentY += 4;
+      doc.setTextColor(0);
+      const titleY = currentY;
+      doc.text('Ingresos mensuales por reservas', chartMarginX, titleY);
 
+      // Posición del gráfico
+      const chartY = titleY + 4;
       const barImg = this.barChart.toBase64Image();
-      doc.addImage(barImg, 'PNG', chartMarginX, currentY, chartWidth, chartHeight);
-      currentY += chartHeight + 8;
+      doc.addImage(barImg, 'PNG', chartMarginX, chartY, chartWidth, chartHeight);
+
+      // ==== Cifras exactas debajo del gráfico ====
+      const data = this.dashboardData();
+      if (data && data.ingresos_mensuales && data.ingresos_mensuales.length > 0) {
+        const cifrasY = chartY + chartHeight + 6; // empieza justo bajo el gráfico
+
+        doc.setFontSize(9);
+        doc.setTextColor(80);
+
+        // Acumular todas las cifras en una sola línea
+        const lineas: string[] = [];
+        data.ingresos_mensuales.forEach((item) => {
+          const ingresos = item.ingresos ?? 0;
+          const mesFormateado = this.formatearFecha(item.mes);
+          lineas.push(`${mesFormateado}: $${this.formatearNumero(ingresos)}`);
+        });
+
+        const textoCompleto = lineas.join('  '); // separado por doble espacio
+        doc.text(textoCompleto, chartMarginX + 2, cifrasY);
+
+        currentY = cifrasY + 4; // dejamos currentY después de la línea
+      } else {
+        currentY = chartY + chartHeight + 8;
+      }
     }
 
   // ====== 2) Distribución de reservas por espacio (pieChart) ======
 if (this.pieChart && typeof this.pieChart.toBase64Image === 'function') {
   addNewPageIfNeeded();
+  currentY += 8; // Espacio antes del título
 
   doc.setFontSize(12);
   doc.setTextColor(0);
@@ -949,27 +977,23 @@ if (this.pieChart && typeof this.pieChart.toBase64Image === 'function') {
       .reduce((sum, item) => sum + (item.cantidad ?? 0), 0);
 
     if (total > 0) {
-      let percY = chartY + chartHeight + 6; // empieza justo bajo el gráfico
+      const percY = chartY + chartHeight + 6; // empieza justo bajo el gráfico
 
       doc.setFontSize(9);
       doc.setTextColor(80);
 
+      // Acumular todas las cifras en una sola línea
+      const lineas: string[] = [];
       data.distribucion_reservas.forEach((item) => {
         const cantidad = item.cantidad ?? 0;
         const porcentaje = (cantidad / total) * 100;
-        const linea = `${item.espacio}: ${porcentaje.toFixed(1)}% (${cantidad} reservas)`;
-
-        // Si nos acercamos al final de la página, agregamos otra
-        if (percY > pageHeight - 20) {
-          doc.addPage();
-          percY = 20;
-        }
-
-        doc.text(linea, chartMarginX + 2, percY);
-        percY += 4;
+        lineas.push(`${item.espacio}: ${porcentaje.toFixed(1)}% (${cantidad} reservas)`);
       });
 
-      currentY = percY + 4; // dejamos currentY después de la lista
+      const textoCompleto = lineas.join('  '); // separado por doble espacio
+      doc.text(textoCompleto, chartMarginX + 2, percY);
+
+      currentY = percY + 4; // dejamos currentY después de la línea
     } else {
       currentY = chartY + chartHeight + 8;
     }
@@ -982,13 +1006,80 @@ if (this.pieChart && typeof this.pieChart.toBase64Image === 'function') {
     // ====== 3) Ingresos mensuales por certificados (certMoneyChart) ======
     if (this.certMoneyChart && typeof this.certMoneyChart.toBase64Image === 'function') {
       addNewPageIfNeeded();
+      currentY += 8; // Espacio antes del título
       doc.setFontSize(12);
-      doc.text('Ingresos mensuales por certificados', chartMarginX, currentY);
-      currentY += 4;
+      doc.setTextColor(0);
+      const titleY = currentY;
+      doc.text('Ingresos mensuales por certificados', chartMarginX, titleY);
 
+      // Posición del gráfico
+      const chartY = titleY + 4;
       const certImg = this.certMoneyChart.toBase64Image();
-      doc.addImage(certImg, 'PNG', chartMarginX, currentY, chartWidth, chartHeight);
-      currentY += chartHeight + 8;
+      doc.addImage(certImg, 'PNG', chartMarginX, chartY, chartWidth, chartHeight);
+
+      // ==== Cifras exactas debajo del gráfico ====
+      const data = this.dashboardData();
+      if (data && data.certificados_mensuales && data.certificados_mensuales.length > 0) {
+        const cifrasY = chartY + chartHeight + 6; // empieza justo bajo el gráfico
+
+        doc.setFontSize(9);
+        doc.setTextColor(80);
+
+        // Acumular todas las cifras en una sola línea
+        const lineas: string[] = [];
+        data.certificados_mensuales.forEach((item) => {
+          const cantidad = item.cantidad ?? 0;
+          const ingresos = cantidad * 2000; // mismo cálculo que en el gráfico
+          const mesFormateado = this.formatearFecha(item.mes);
+          lineas.push(`${mesFormateado}: $${this.formatearNumero(ingresos)} (${cantidad} cert${cantidad !== 1 ? 's' : ''})`);
+        });
+
+        const textoCompleto = lineas.join('  '); // separado por doble espacio
+        doc.text(textoCompleto, chartMarginX + 2, cifrasY);
+
+        currentY = cifrasY + 4; // dejamos currentY después de la línea
+      } else {
+        currentY = chartY + chartHeight + 8;
+      }
+    }
+
+    // ====== 4) Usuarios nuevos por mes (usuariosChart) ======
+    if (this.usuariosChart && typeof this.usuariosChart.toBase64Image === 'function') {
+      addNewPageIfNeeded();
+      currentY += 8; // Espacio antes del título
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      const titleY = currentY;
+      doc.text('Usuarios nuevos registrados por mes', chartMarginX, titleY);
+
+      // Posición del gráfico
+      const chartY = titleY + 4;
+      const usuariosImg = this.usuariosChart.toBase64Image();
+      doc.addImage(usuariosImg, 'PNG', chartMarginX, chartY, chartWidth, chartHeight);
+
+      // ==== Cifras exactas debajo del gráfico ====
+      const data = this.dashboardData();
+      if (data && data.usuarios_mensuales && data.usuarios_mensuales.length > 0) {
+        const cifrasY = chartY + chartHeight + 6; // empieza justo bajo el gráfico
+
+        doc.setFontSize(9);
+        doc.setTextColor(80);
+
+        // Acumular todas las cifras en una sola línea
+        const lineas: string[] = [];
+        data.usuarios_mensuales.forEach((item) => {
+          const cantidad = item.cantidad ?? 0;
+          const mesFormateado = this.formatearFecha(item.mes);
+          lineas.push(`${mesFormateado}: ${cantidad} usuario${cantidad !== 1 ? 's' : ''}`);
+        });
+
+        const textoCompleto = lineas.join('  '); // separado por doble espacio
+        doc.text(textoCompleto, chartMarginX + 2, cifrasY);
+
+        currentY = cifrasY + 4; // dejamos currentY después de la línea
+      } else {
+        currentY = chartY + chartHeight + 8;
+      }
     }
 
     // // ====== 4) Certificados vs reservas (lineChart) ======
@@ -1012,21 +1103,6 @@ if (this.pieChart && typeof this.pieChart.toBase64Image === 'function') {
       chartMarginX,
       currentY + 4
     );
-
-    // ====== FOOTER CON NÚMERO DE PÁGINA ======
-    const totalPages = doc.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      const footerText = `Página ${i} de ${totalPages}`;
-      doc.setFontSize(9);
-      doc.setTextColor(130);
-      doc.text(
-        footerText,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: 'center' }
-      );
-    }
 
     // Descargar
     doc.save('resumen_reportes.pdf');
