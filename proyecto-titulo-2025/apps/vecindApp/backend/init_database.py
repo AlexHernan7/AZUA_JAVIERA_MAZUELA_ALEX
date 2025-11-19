@@ -171,10 +171,10 @@ async def init_database():
             print("\n[5/7] Creando tipos de espacio...")
             
             tipos_espacio = [
-                ("cancha", "Cancha deportiva"),
-                ("sala", "Sala de reuniones o eventos"),
-                ("plaza", "Plaza o espacio al aire libre"),
-                ("otro", "Otro tipo de espacio")
+                ("Cancha", "Cancha deportiva"),
+                ("Sala", "Sala de reuniones o eventos"),
+                ("Plaza", "Plaza o espacio al aire libre"),
+                ("Otro", "Otro tipo de espacio")
             ]
             
             for tipo, descripcion in tipos_espacio:
