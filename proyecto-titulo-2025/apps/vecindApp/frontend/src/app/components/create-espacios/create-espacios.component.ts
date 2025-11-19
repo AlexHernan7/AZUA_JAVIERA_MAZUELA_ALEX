@@ -233,7 +233,17 @@ export class CreateEspaciosComponent implements OnInit {
   private loadTiposEspacio(): void {
     this.masterService.getTiposEspacio(true).subscribe({
       next: (response) => {
-        this.tiposEspacio = response;
+        // Ordenar para que "Otros" quede siempre al final
+        const otros = response.filter(tipo => 
+          tipo.tipo.toLowerCase().trim() === 'otros'
+        );
+        const otrosTipos = response.filter(tipo => 
+          tipo.tipo.toLowerCase().trim() !== 'otros'
+        );
+        
+        // Ordenar los demás tipos alfabéticamente y luego agregar "Otros" al final
+        otrosTipos.sort((a, b) => a.tipo.localeCompare(b.tipo));
+        this.tiposEspacio = [...otrosTipos, ...otros];
       },
       error: (error) => {
         this.error = 'Error al cargar los tipos de espacio';
