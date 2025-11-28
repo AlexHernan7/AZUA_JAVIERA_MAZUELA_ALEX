@@ -10,7 +10,6 @@ import { authGuard, directivaGuard } from './services/auth.service';
 import { DirectivaRegisterComponent } from './components/directiva-register/directiva-register.component';
 import { JuntaCreateComponent } from './components/junta-create/junta-create.component';
 import { CertificadoCreateComponent} from './components/certificado-create/certificado-create.component';
-import { JuntaProfileComponent } from './components/junta-profile/junta-profile.component';
 import { PaymentSuccessComponent } from './components/payment-success/payment-success.component';
 import { PaymentFailureComponent } from './components/payment-failure/payment-failure.component';
 import { PaymentPendingComponent } from './components/payment-pending/payment-pending.component';
@@ -20,7 +19,6 @@ import { CreateEspaciosComponent } from './components/create-espacios/create-esp
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { TramitesComponent } from './components/tramites/tramites.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
-import { ListUserComponent } from './components/list_user/list_user.component';
 import { UserManagementComponent } from './components/users-management/user-management.component';
 
 
