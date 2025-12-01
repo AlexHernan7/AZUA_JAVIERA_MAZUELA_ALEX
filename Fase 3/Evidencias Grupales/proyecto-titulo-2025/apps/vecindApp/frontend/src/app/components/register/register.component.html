@@ -1,0 +1,307 @@
+<div class=" register-fondo py-5 " style=" background: url('/images/parque-fondo1.png') center/cover no-repeat;">
+  <div class="mx-auto register-card shadow rounded-4 p-4 p-md-5" style="max-width: 900px; background: rgba(255,255,255,.9);">
+    <!-- Títulos -->
+    <div class="text-center mb-4">
+      <h1 class="fw-bold text-teal-750 mb-1 ">Inscríbete en VecindApp</h1>
+      <p class="text-muted mb-0">Crea tu cuenta y valida tu residencia</p>
+      <hr>
+    </div>
+
+    <!-- FORM -->
+    <form class="row g-3" (ngSubmit)="onRegister()" #registerForm="ngForm">
+      
+      <!-- Mostrar mensajes de error y éxito -->
+      <div class="col-12" *ngIf="errorMessage || successMessage">
+        <div class="alert alert-danger py-2 small" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+        <div class="alert alert-success py-2 small" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+      </div>
+
+      <!-- FOTO PERFIL (primero) -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Foto de perfil</label>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="avatar-preview border">
+            <img [src]="photoPreview || 'images/avatar-placeholder2.svg'" alt="Foto de perfil">
+          </div>
+
+          <div class="ms-3">
+            <label class="btn btn-outline-teal-menu fw-medium me-5 mb-2">
+              Subir imagen
+              <input type="file" class="d-none" accept="image/*" (change)="onFileChange($event)">
+            </label>
+            <div class="small text-muted">Formatos: JPG/PNG. Tamaño sugerido 400×400.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nombres y Apellidos -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Nombres *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Tus nombres"
+          [(ngModel)]="registerData.nombres"
+          name="nombres"
+          #nombresCtrl="ngModel"
+          required
+          minlength="2"
+          autocomplete="given-name"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || nombresCtrl.touched) && (!registerData.nombres || registerData.nombres.trim().length < 2)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || nombresCtrl.touched) && (!registerData.nombres || registerData.nombres.trim().length < 2)">
+          Debe tener al menos 2 caracteres.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Apellido Paterno *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Paterno"
+          [(ngModel)]="registerData.apellido_paterno"
+          name="apellido_paterno"
+          #apPatCtrl="ngModel"
+          required
+          minlength="2"
+          autocomplete="family-name"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || apPatCtrl.touched) && (!registerData.apellido_paterno || registerData.apellido_paterno.trim().length < 2)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || apPatCtrl.touched) && (!registerData.apellido_paterno || registerData.apellido_paterno.trim().length < 2)">
+          Debe tener al menos 2 caracteres.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Apellido Materno *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Materno"
+          [(ngModel)]="registerData.apellido_materno"
+          name="apellido_materno"
+          #apMatCtrl="ngModel"
+          required
+          minlength="2"
+          autocomplete="additional-name"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || apMatCtrl.touched) && (!registerData.apellido_materno || registerData.apellido_materno.trim().length < 2)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || apMatCtrl.touched) && (!registerData.apellido_materno || registerData.apellido_materno.trim().length < 2)">
+          Debe tener al menos 2 caracteres.
+        </div>
+      </div>
+
+      <!-- RUT, Fecha nacimiento -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">RUT *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="12.345.678-9"
+          [(ngModel)]="registerData.rut"
+          name="rut"
+          #rutCtrl="ngModel"
+          required
+          autocomplete="off"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || rutCtrl.touched) && !isValidRut(registerData.rut)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || rutCtrl.touched) && !isValidRut(registerData.rut)">
+          Ingresa un RUT válido (sin puntos ni guion).
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Fecha de nacimiento *</label>
+        <input 
+          type="date" 
+          class="form-control"
+          [(ngModel)]="registerData.fecha_nacimiento"
+          name="fecha_nacimiento"
+          #fnacCtrl="ngModel"
+          required
+          autocomplete="bday"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || fnacCtrl.touched) && !registerData.fecha_nacimiento}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || fnacCtrl.touched) && !registerData.fecha_nacimiento">
+          Selecciona tu fecha de nacimiento.
+        </div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Teléfono *</label>
+        <input 
+          type="tel" 
+          class="form-control" 
+          placeholder="+56 9 1234 5678"
+          [(ngModel)]="registerData.telefono"
+          name="telefono"
+          #telCtrl="ngModel"
+          required
+          autocomplete="tel"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || telCtrl.touched) && !isValidPhone(registerData.telefono)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || telCtrl.touched) && !isValidPhone(registerData.telefono)">
+          Formato esperado: +56XXXXXXXXX (9 dígitos después de +56).
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Dirección *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Calle, número, depto"
+          [(ngModel)]="registerData.direccion"
+          name="direccion"
+          #dirCtrl="ngModel"
+          required
+          minlength="5"
+          autocomplete="street-address"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || dirCtrl.touched) && (!registerData.direccion || registerData.direccion.trim().length < 5)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || dirCtrl.touched) && (!registerData.direccion || registerData.direccion.trim().length < 5)">
+          Debe tener al menos 5 caracteres.
+        </div>
+      </div>
+
+      <!-- Región / Comuna / Junta -->
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Región *</label>
+        <select class="form-select"
+                (change)="onRegionChange($event)"
+                [(ngModel)]="regionSeleccionada"
+                name="region"
+                #regionCtrl="ngModel"
+                required
+                [disabled]="isLoading"
+                [ngClass]="{'is-invalid': (registerForm.submitted || regionCtrl.touched) && !regionSeleccionada}">
+          <option value="" disabled>Selecciona una región</option>
+          <option *ngFor="let region of regiones" [value]="region.id_region">{{ region.nombre }}</option>
+        </select>
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || regionCtrl.touched) && !regionSeleccionada">
+          Selecciona una región.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Comuna *</label>
+        <select class="form-select"
+                (change)="onComunaChange($event)"
+                [(ngModel)]="comunaSeleccionada"
+                name="comuna"
+                #comunaCtrl="ngModel"
+                required
+                [disabled]="isLoading"
+                [ngClass]="{'is-invalid': (registerForm.submitted || comunaCtrl.touched) && !comunaSeleccionada}">
+          <option value="" disabled>Selecciona una comuna</option>
+          <option *ngFor="let comuna of comunas" [value]="comuna.id_comuna">{{ comuna.nombre }}</option>
+        </select>
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || comunaCtrl.touched) && !comunaSeleccionada">
+          Selecciona una comuna.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Junta de Vecinos *</label>
+        <select class="form-select"
+                (change)="onJuntaChange($event)"
+                [(ngModel)]="juntaSeleccionada"
+                name="junta"
+                #juntaCtrl="ngModel"
+                required
+                [disabled]="isLoading"
+                [ngClass]="{'is-invalid': (registerForm.submitted || juntaCtrl.touched) && !juntaSeleccionada}">
+          <option value="" disabled>Selecciona una junta</option>
+          <option *ngFor="let junta of juntas" [value]="junta.id_junta">{{ junta.nombre }}</option>
+        </select>
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || juntaCtrl.touched) && !juntaSeleccionada">
+          Selecciona una junta de vecinos.
+        </div>
+      </div>
+      
+      <!-- Correo / Contraseña -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Correo electrónico *</label>
+        <input 
+          type="email" 
+          class="form-control" 
+          placeholder="tucorreo@correo.com"
+          [(ngModel)]="registerData.email"
+          name="email"
+          #emailCtrl="ngModel"
+          required
+          autocomplete="email"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || emailCtrl.touched) && !isValidEmail(registerData.email)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || emailCtrl.touched) && !isValidEmail(registerData.email)">
+          Ingresa un correo válido.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">Contraseña *</label>
+        <input 
+          type="password" 
+          class="form-control" 
+          placeholder="8-12 caracteres"
+          [(ngModel)]="registerData.password"
+          name="password"
+          #passCtrl="ngModel"
+          required
+          minlength="8"
+          maxlength="12"
+          autocomplete="new-password"
+          [disabled]="isLoading"
+          [ngClass]="{'is-invalid': (registerForm.submitted || passCtrl.touched) && (!registerData.password || registerData.password.length < 8 || registerData.password.length > 12)}">
+        <div class="invalid-feedback d-block" *ngIf="(registerForm.submitted || passCtrl.touched) && (!registerData.password || registerData.password.length < 8 || registerData.password.length > 12)">
+          La contraseña debe tener entre 8 y 12 caracteres.
+        </div>
+      </div>
+
+      <!-- Declaración de veracidad (obligatoria para habilitar envío) -->
+      <div class="col-12 mt-4">
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="chkVeracidad"
+                 [(ngModel)]="declaraVeracidad" name="declaraVeracidad" required>
+          <label class="form-check-label" for="chkVeracidad">
+            Declaro que la información entregada es real.
+          </label>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="col-12 mt-5 d-flex justify-content-center gap-4">
+        <button 
+          type="submit" 
+          class="btn btn-cta1 py-2 px-4"
+          [disabled]="isLoading || !declaraVeracidad || registerForm.invalid">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isLoading ? 'Creando cuenta...' : 'Crear cuenta' }}
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-cta2 py-2 px-4"
+          (click)="goBack()"
+          [disabled]="isLoading">
+          Volver
+        </button>
+      </div>
+
+      <div class="col-12 text-center">
+        <a 
+          href="javascript:void(0)" 
+          class="text-teal-700 text-decoration-none fw-semibold small"
+          (click)="goToLogin()">
+          Ya tengo cuenta
+        </a>
+      </div>
+    </form>
+  </div>
+</div>

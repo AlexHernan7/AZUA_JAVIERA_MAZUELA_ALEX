@@ -1,0 +1,143 @@
+<div class="container-xxl py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-0">Usuarios del sistema</h1>
+    </div>
+
+    <div class="searchbox">
+      <i class="bi bi-search"></i>
+      <input
+        class="form-control"
+        type="search"
+        placeholder="Buscar por nombre, correo o junta…"
+        [(ngModel)]="q"
+      />
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="alert alert-info d-flex align-items-center gap-2">
+    <span class="spinner-border spinner-border-sm"></span>
+    Cargando usuarios…
+  </div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <!-- CARD DIRECTIVA -->
+  <div class="card border-0 shadow-soft rounded-4 mb-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill text-primary"></i>
+        Directiva
+      </h2>
+      <span class="badge bg-primary-subtle text-primary px-3 py-2">
+        {{ directiva.length }} usuarios
+      </span>
+      <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="showDirectiva = !showDirectiva">
+        <i class="bi" [ngClass]="showDirectiva ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
+    </div>
+
+    <div class="table-responsive" *ngIf="showDirectiva">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Usuario</th>
+            <th scope="col" class="d-none d-md-table-cell">Correo</th>
+            <th scope="col" class="d-none d-lg-table-cell">Junta</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-end">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of directiva">
+            <td>
+              <div class="fw-semibold">{{ displayName(u) }}</div>
+              <div class="small text-muted d-md-none">{{ u.email }}</div>
+              <div class="small text-muted d-lg-none">{{ u.junta_nombre }}</div>
+            </td>
+            <td class="d-none d-md-table-cell">{{ u.email }}</td>
+            <td class="d-none d-lg-table-cell">{{ u.junta_nombre }}</td>
+            <td>
+              <span class="status-badge" [class.on]="u.activo" [class.off]="!u.activo">
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-end">
+              <button
+                class="btn btn-sm"
+                [ngClass]="u.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                (click)="toggleActive(u)"
+                [disabled]="rowBusy.has(u.id_usuario)"
+              >
+                <span *ngIf="rowBusy.has(u.id_usuario)" class="spinner-border spinner-border-sm me-1"></span>
+                {{ u.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!directiva.length">
+            <td colspan="5" class="text-center text-muted py-4">No hay usuarios de directiva.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CARD VECINOS -->
+  <div class="card border-0 shadow-soft rounded-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-house-heart-fill text-teal"></i>
+        Vecinos
+      </h2>
+      <span class="badge bg-teal-soft text-teal px-3 py-2">
+        {{ vecinos.length }} usuarios
+      </span>
+      <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="showVecinos = !showVecinos">
+        <i class="bi" [ngClass]="showVecinos ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
+    </div>
+
+    <div class="table-responsive" *ngIf="showVecinos">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Usuario</th>
+            <th scope="col" class="d-none d-md-table-cell">Correo</th>
+            <th scope="col" class="d-none d-lg-table-cell">Junta</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-end">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of vecinos">
+            <td>
+              <div class="fw-semibold">{{ displayName(u) }}</div>
+              <div class="small text-muted d-md-none">{{ u.email }}</div>
+              <div class="small text-muted d-lg-none">{{ u.junta_nombre }}</div>
+            </td>
+            <td class="d-none d-md-table-cell">{{ u.email }}</td>
+            <td class="d-none d-lg-table-cell">{{ u.junta_nombre || '—' }}</td>
+            <td>
+              <span class="status-badge" [class.on]="u.activo" [class.off]="!u.activo">
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-end">
+              <button
+                class="btn btn-sm"
+                [ngClass]="u.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                (click)="toggleActive(u)"
+                [disabled]="rowBusy.has(u.id_usuario)"
+              >
+                <span *ngIf="rowBusy.has(u.id_usuario)" class="spinner-border spinner-border-sm me-1"></span>
+                {{ u.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!vecinos.length">
+            <td colspan="5" class="text-center text-muted py-4">No hay usuarios vecinos.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

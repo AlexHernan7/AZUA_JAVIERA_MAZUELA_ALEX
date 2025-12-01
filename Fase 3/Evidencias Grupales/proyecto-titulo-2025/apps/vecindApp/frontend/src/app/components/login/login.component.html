@@ -1,0 +1,85 @@
+<div class="login-bg d-flex align-items-center justify-content-center"
+  style="background: url('/images/fondo_login.png') center / cover no-repeat fixed;">
+  <div class="card login-card shadow-lg border-0 p-4" style="max-width: 420px; width: 92%; position: relative;">
+    <!-- flecha volver atras -->
+    <div class="position-absolute top-0 start-0 m-3">
+      <a routerLink="/" class="back-arrow" aria-label="Volver al inicio">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+    </div>
+
+    <!-- Logo y título -->
+    <div class="text-center mb-4">
+      <img src="/images/Logo_vecindapp.png" alt="VecindApp" class="img-fluid mb-2" style="max-width: 13rem;">
+      <p class="text-teal-600 fs-4 fw-semibold mb-0">Bienvenido a tu comunidad!</p>
+    </div>
+
+    <!-- Formulario -->
+    <form #f="ngForm" class="d-grid gap-3" (ngSubmit)="onLogin(f)" novalidate>
+      <!-- Mensajes globales -->
+      <div *ngIf="successMessage" class="alert alert-success py-2 small">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger py-2 small">{{ errorMessage }}</div>
+
+      <!-- Email -->
+      <div class="input-group ">
+        <span class="input-group-text bg-white border-teal-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#79909a" stroke-width="1.6"
+            viewBox="0 0 24 24">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M22 4L12 13 2 4" />
+          </svg>
+        </span>
+
+        <input type="email" class="form-control border-teal-200" placeholder="Correo electrónico" name="email"
+          [(ngModel)]="loginData.email" required email #emailCtrl="ngModel" [class.is-invalid]="showInvalid(emailCtrl)"
+          autocomplete="email" [disabled]="isLoading" />
+
+      </div>
+      <div *ngIf="showInvalid(emailCtrl)" class="invalid-feedback d-block small ms-1">
+        <ng-container *ngIf="emailCtrl?.errors?.['required']">El email es obligatorio.</ng-container>
+        <ng-container *ngIf="emailCtrl?.errors?.['email']">Ingresa un email válido.</ng-container>
+      </div>
+
+      <!-- Password con “ojo” dentro del input -->
+      <div class="input-group input-password ">
+        <span class="input-group-text bg-white border-teal-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#79909a" stroke-width="1.6"
+            viewBox="0 0 24 24">
+            <rect x="4" y="11" width="16" height="9" rx="2" />
+            <path d="M8 11V8a4 4 0 1 1 8 0v3" />
+          </svg>
+        </span>
+
+        <input [type]="showPass ? 'text' : 'password'" class="form-control border-teal-200" placeholder="Contraseña"
+          name="password" [(ngModel)]="loginData.password" required [attr.minlength]="loginData.email === 'admin@admin.cl' ? null : 8" maxlength="64" #passCtrl="ngModel"
+          [class.is-invalid]="showInvalid(passCtrl)" autocomplete="current-password" [disabled]="isLoading" />
+
+        <!-- Ojo dentro del input (sin caja) -->
+        <button type="button" class="btn-eye " (click)="toggleShowPass()" tabindex="-1"
+          aria-label="Mostrar u ocultar contraseña">
+          <i class="bi" [ngClass]="showPass ? 'bi-eye-slash' : 'bi-eye'"></i>
+        </button>
+      </div>
+      
+      <div *ngIf="showInvalid(passCtrl)" class="invalid-feedback d-block small ms-1">
+        <ng-container *ngIf="passCtrl?.errors?.['required']">La contraseña es obligatoria.</ng-container>
+        <ng-container *ngIf="passCtrl?.errors?.['minlength'] && loginData.email !== 'admin@admin.cl'">
+          Mínimo 8 caracteres.
+        </ng-container>
+      </div>
+
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-teal-menu fw-semibold py-2" [disabled]="isLoading || f.invalid">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ isLoading ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <div class="text-center mt-4">
+      <a routerLink="/forgot-password" class="d-block text-sm text-teal-700 text-decoration-none mb-2">¿Olvidaste tu
+        contraseña?</a>
+      <a routerLink="/register" class="d-block text-sm text-teal-700 text-decoration-none">Registrarme como vecino</a>
+    </div>
+  </div>
+</div>

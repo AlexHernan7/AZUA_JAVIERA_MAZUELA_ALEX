@@ -1,0 +1,9 @@
+/* Botón teal ya lo tienes; añadimos versión responsive suave */
+.btn-responsive { line-height: 1.2; min-height: 40px;}
+
+/* Por si en móviles quieres aún más compacto */
+@media (max-width: 576px) {
+    .btn-responsive { padding-left: .6rem;     padding-right: .6rem; margin-top:  1rem; }}
+/* Opcional: que la alerta se vea parecida en alto junto a botones en md+ */
+@media (min-width: 768px) {
+  .alert-info.h-100 { display: flex; flex-direction: column; justify-content: center;  }}

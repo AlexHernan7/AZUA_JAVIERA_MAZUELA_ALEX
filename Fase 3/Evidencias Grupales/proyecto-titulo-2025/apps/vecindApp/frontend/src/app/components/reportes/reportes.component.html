@@ -1,0 +1,316 @@
+<div class="public-shell report-shell">
+  <div class="container-xxl pb-5 pt-1">
+
+    <!-- Encabezado general -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <h1 class="report-title mb-2">
+          {{ getTituloReporte() }}
+        </h1>
+        <p class="report-subtitle mb-0">
+          Resumen de espacios arrendados, certificados emitidos e ingresos de la junta de vecinos.
+        </p>
+      </div>
+    </div>
+
+    <!-- Selector de meses -->
+    <div class="card border-0 shadow-sm mb-3 report-filter-card">
+      <div class="card-header bg-white fw-semibold d-flex align-items-center justify-content-between">
+        <div>
+          <i class="bi bi-calendar3 me-2 text-teal-700"></i>
+          <span>Periodo del reporte</span>
+        </div>
+        <small class="text-muted d-none d-md-inline">
+          Selecciona uno o varios meses para filtrar la información.
+        </small>
+      </div>
+      <div class="card-body">
+        <!-- Chips de meses -->
+        <div class="report-months-wrap mb-3">
+          <div *ngFor="let mes of getMesesDisponibles()" class="report-month-item">
+            <input
+              class="form-check-input d-none"
+              type="checkbox"
+              [id]="'mes-' + mes"
+              [value]="mes"
+              [checked]="isMesSeleccionado(mes)"
+              (change)="toggleMes(mes)">
+            <label
+              class="report-month-chip"
+              [class.report-month-chip-active]="isMesSeleccionado(mes)"
+              [for]="'mes-' + mes">
+              {{ formatearFecha(mes) }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Acciones de filtro -->
+        <div class="d-flex flex-wrap gap-2">
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            (click)="seleccionarTodosLosMeses()">
+            <i class="bi bi-check-square me-1"></i>
+            Seleccionar todos
+          </button>
+
+          <div class="vr d-none d-md-block mx-1"></div>
+
+          <button
+            class="btn btn-teal btn-sm"
+            (click)="aplicarFiltros()"
+            [disabled]="selectedMonths.length === 0">
+            <i class="bi bi-funnel me-1"></i>
+            Filtrar ({{ selectedMonths.length }} meses)
+          </button>
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            (click)="verTodosLosMeses()">
+            <i class="bi bi-calendar3 me-1"></i>
+            Ver todos los meses
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading()" class="text-center py-5">
+      <div class="spinner-border text-teal-700" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2 text-muted">Cargando reporte...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error()" class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ error() }}
+    </div>
+
+    <!-- KPIs -->
+    <!-- KPIs -->
+<div *ngIf="!loading() && !error()" class="row g-3 mb-3">
+  <div class="col-12 col-sm-6 col-lg-3" *ngFor="let k of kpis()">
+    <div class="card kpi border-0 shadow-sm h-100 report-kpi-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <div class="kpi-label">{{ k.label }}</div>
+          <div class="report-kpi-dot"></div>
+        </div>
+
+        <!-- 👇 SOLO NÚMERO / VALOR EN NEGRITA -->
+        <div class="kpi-value text-center">
+  <ng-container *ngIf="k.type === 'money'; else normalKpi">
+    $ {{ k.value | number:'1.0-0':'' }} CLP
+  </ng-container>
+  <ng-template #normalKpi>
+    {{ k.value | number:'1.0-0':'' }}
+  </ng-template>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <!-- Charts -->
+    <div *ngIf="!loading() && !error()" class="row g-3">
+
+      <!-- Ingresos por mes (reservas) -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100 report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex align-items-center">
+            <i class="bi bi-bar-chart-line me-2 text-teal-700"></i>
+            <span>Ingresos mensuales por reservas</span>
+          </div>
+          <div class="card-body report-card-chart">
+            <canvas
+              data-chart="bar"
+              *ngIf="dashboardData()
+                     && dashboardData()!.ingresos_mensuales
+                     && dashboardData()!.ingresos_mensuales.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.ingresos_mensuales
+                     || dashboardData()!.ingresos_mensuales.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-bar-chart fs-1"></i>
+              <p class="mt-2 mb-0">No hay datos de ingresos para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distribución de reservas -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100 report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex align-items-center">
+            <i class="bi bi-pie-chart me-2 text-teal-700"></i>
+            <span>Distribución de reservas por espacio</span>
+          </div>
+          <div class="card-body report-card-chart report-card-chart--square">
+            <canvas
+              data-chart="pie"
+              *ngIf="dashboardData()
+                     && dashboardData()!.distribucion_reservas
+                     && dashboardData()!.distribucion_reservas.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.distribucion_reservas
+                     || dashboardData()!.distribucion_reservas.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-pie-chart fs-1"></i>
+              <p class="mt-2 mb-0">No hay datos de reservas para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingresos por certificados (dinero) -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex align-items-center">
+            <i class="bi bi-cash-coin me-2 text-teal-700"></i>
+            <span>Ingresos mensuales por certificados</span>
+          </div>
+          <div class="card-body report-card-chart">
+            <canvas
+              data-chart="cert-money"
+              *ngIf="dashboardData()
+                     && dashboardData()!.certificados_mensuales
+                     && dashboardData()!.certificados_mensuales.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.certificados_mensuales
+                     || dashboardData()!.certificados_mensuales.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-cash-coin fs-1"></i>
+              <p class="mt-2 mb-0">No hay ingresos por certificados para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usuarios nuevos por mes -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100 report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex align-items-center">
+            <i class="bi bi-people me-2 text-teal-700"></i>
+            <span>Usuarios nuevos registrados</span>
+          </div>
+          <div class="card-body report-card-chart">
+            <canvas
+              data-chart="usuarios"
+              *ngIf="dashboardData() && dashboardData()!.usuarios_mensuales && dashboardData()!.usuarios_mensuales.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.usuarios_mensuales
+                     || dashboardData()!.usuarios_mensuales.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-people fs-1"></i>
+              <p class="mt-2 mb-0">No hay usuarios nuevos para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificados vs Reservas (línea) -->
+      <div class="col-12">
+        <div class="card border-0 shadow-sm report-chart-card">
+          <div class="card-header bg-white fw-semibold d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-graph-up-arrow me-2 text-teal-700"></i>
+              <span>Certificados vs Reservas</span>
+            </div>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Modo gráfico certificados vs reservas">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [class.active]="viewLineMode === 'cantidad'"
+                (click)="setLineMode('cantidad')">
+                Cantidad
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [class.active]="viewLineMode === 'monto'"
+                (click)="setLineMode('monto')">
+                Dinero
+              </button>
+            </div>
+          </div>
+          <div class="card-body report-card-chart report-card-chart--wide">
+            <canvas
+              data-chart="line"
+              *ngIf="dashboardData()
+                     && dashboardData()!.ingresos_mensuales
+                     && dashboardData()!.ingresos_mensuales.length > 0">
+            </canvas>
+            <div
+              *ngIf="!dashboardData()
+                     || !dashboardData()!.ingresos_mensuales
+                     || dashboardData()!.ingresos_mensuales.length === 0"
+              class="text-center text-muted py-4">
+              <i class="bi bi-graph-up fs-1"></i>
+              <p class="mt-2 mb-0">No hay datos para mostrar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Resumen tabla -->
+    <div
+      *ngIf="!loading() && !error() && dashboardData()"
+      class="card border-0 shadow-sm mt-3 report-summary-card">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span>Resumen detallado de espacios y certificados</span>
+        <button
+  class="btn btn-outline-teal-menu btn-sm"
+  (click)="exportarResumenCSV()">
+  <i class="bi bi-download me-1"></i>
+  Exportar CSV
+</button>
+<button
+  class="btn btn-outline-teal-menu btn-sm"
+  (click)="exportarResumenPDF()" >
+  <i class="bi bi-file-earmark-pdf me-1"></i>
+  Exportar PDF
+</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Espacio / Tipo</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Ingresos (CLP)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let espacio of dashboardData()!.resumen_espacios">
+              <td>{{ espacio.nombre }}</td>
+              <td class="text-end">{{ espacio.total_reservas | number:'1.0-0':'' }}</td>
+              <td class="text-end">{{ formatoCLP(espacio.ingresos) }}</td>
+            </tr>
+            <tr>
+              <td>Certificados emitidos</td>
+              <td class="text-end">{{ dashboardData()!.kpis[1].value | number:'1.0-0':'' }}</td>
+              <td class="text-end">{{ formatoCLP(dashboardData()!.kpis[1].value * 2000) }}</td>
+            </tr>
+            <tr class="fw-semibold">
+              <td>Total general</td>
+              <td class="text-end">{{ getTotalReservas() | number:'1.0-0':'' }}</td>
+              <td class="text-end">{{ formatoCLP(getTotalIngresos()) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

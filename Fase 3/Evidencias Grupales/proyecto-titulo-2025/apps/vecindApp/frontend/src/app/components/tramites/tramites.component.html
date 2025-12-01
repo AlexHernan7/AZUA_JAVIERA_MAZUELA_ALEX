@@ -1,0 +1,139 @@
+<div class="public-shell">
+    <div class="container-xxl py-4">
+        <h1 class="display-5 fw-bold text-dark-emphasis text-center mb-5">Mis trámites</h1>
+        <hr class="mb-5">
+
+        <!-- Indicador de carga -->
+        <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-secondary">Cargando tus trámites...</p>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div *ngIf="errorMessage && !isLoading" class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ errorMessage }}
+        </div>
+
+        <div class="row g-4" *ngIf="!isLoading">
+            <!-- ====== TARJETA: CERTIFICADOS ====== -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-soft h-100" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+
+
+                        <!-- Resumen con icono -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <!-- Título alineado a la izquierda -->
+                            <h2 class="h4 fw-bold mb-0">Certificados Descargados</h2>
+
+                            <!-- KPI alineado a la derecha -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                                    style="width:56px;height:56px;background:#e6f4ea;">
+                                    <i class="bi bi-check2 text-success fs-2"></i>
+                                </div>
+                                <div class="">
+                                    <div class="h3 fw-bold mb-0">{{ totalCertificados }}</div>
+                                    <div class="small text-secondary">Total certificados</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item px-0 py-3 d-flex align-items-start gap-3"
+                                *ngFor="let c of certificados">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-3"
+                                    style="width:42px;height:42px;background:#f1f5f9;">
+                                    <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ c.titulo }}</div>
+                                    <div class="text-secondary small">{{ c.fecha }}</div>
+                                </div>
+                                <i class="bi" 
+                                   [class.bi-download]="c.esUltimo"
+                                   [class.bi-chevron-right]="!c.esUltimo"
+                                   [class.text-success]="c.esUltimo"
+                                   [class.text-secondary]="!c.esUltimo"
+                                   [style.cursor]="c.esUltimo ? 'pointer' : 'default'"
+                                   [title]="c.esUltimo ? 'Descargar certificado' : 'Solo se puede descargar el último certificado'"
+                                   (click)="c.esUltimo && descargarCertificado(c)"></i>
+                            </div>
+
+                            <!-- Mensaje si no hay certificados -->
+                            <div *ngIf="certificados.length === 0 && !isLoading" class="text-center text-secondary py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                <p>No tienes certificados aún</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-3">
+                            <button class="btn btn-teal-menu w-100 fw-semibold py-2" (click)="solicitarCertificado()">
+                                Solicitar nuevo certificado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== TARJETA: RESERVAS ====== -->
+            <!-- ====== TARJETA: RESERVAS ====== -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-soft h-100" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+
+                        <!-- Resumen con icono -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <!-- Título alineado a la izquierda -->
+                            <h2 class="h4 fw-bold mb-0">Reservas Realizadas</h2>
+
+                            <!-- KPI alineado a la derecha -->
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                                    style="width:56px;height:56px;background:#e7f0fb;">
+                                    <i class="bi bi-calendar3 text-primary fs-2"></i>
+                                </div>
+                                <div>
+                                    <div class="h3 fw-bold mb-0">{{ totalReservas }}</div>
+                                    <div class="small text-secondary">Total reservas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista -->
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item px-0 py-3 d-flex align-items-start gap-3"
+                                *ngFor="let r of reservas">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-3"
+                                    style="width:42px;height:42px;background:#f1f5f9;">
+                                    <i class="bi bi-calendar3 fs-5 text-secondary"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ r.espacio }}</div>
+                                    <div class="text-secondary small">{{ r.fecha }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Mensaje si no hay reservas -->
+                            <div *ngIf="reservas.length === 0 && !isLoading" class="text-center text-secondary py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                <p>No tienes reservas aún</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-3">
+                            <button class="btn btn-teal-menu w-100 fw-semibold py-2" (click)="hacerReserva()">
+                                Realizar nueva reserva
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- /tarjetas -->
+        </div>
+    </div>
+</div>

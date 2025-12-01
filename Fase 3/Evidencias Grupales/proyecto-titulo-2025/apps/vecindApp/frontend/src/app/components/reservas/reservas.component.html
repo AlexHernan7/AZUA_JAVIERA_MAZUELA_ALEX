@@ -1,0 +1,196 @@
+<!-- HERO (se adapta al layout con menú lateral) -->
+<section
+  class="rounded-3 mb-4 position-relative overflow-hidden"
+  style="
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+    min-height: 180px;
+  "
+>
+  <div class="p-4 p-lg-5" style="background: #fff; max-width: 720px;">
+    <h1 class="display-5 fw-bold text-dark-emphasis mb-1">Reserva tu espacio comunitario</h1>
+    <p class="lead text-dark-emphasis mb-0">Agéndalo fácil y rápido para tus actividades</p>
+  </div>
+</section>
+
+<!-- ESTADO DE CARGA -->
+<div *ngIf="loading()" class="text-center py-5">
+  <div class="spinner-border text-teal" role="status">
+    <span class="visually-hidden">Cargando espacios...</span>
+  </div>
+  <p class="mt-2 text-muted">Cargando espacios disponibles...</p>
+</div>
+
+<!-- ESTADO DE ERROR -->
+<div *ngIf="error()" class="alert alert-danger mx-2" role="alert">
+  <h4 class="alert-heading">Error</h4>
+  <p>{{ error() }}</p>
+  <hr>
+  <button class="btn btn-outline-danger" (click)="cargarEspacios()">Reintentar</button>
+</div>
+
+<!-- TARJETAS DE ESPACIOS -->
+<div class="row g-4 mb-4 mx-2" *ngIf="!loading() && !error()">
+  <div class="col-md-4" *ngFor="let e of espacios">
+    <div class="card shadow-sm h-100">
+      <div class="ratio ratio-16x9">
+        <img *ngIf="getEspacioImage(e)" [src]="getEspacioImage(e)!" class="card-img-top object-fit-cover" alt="{{ e.nombre }}">
+        <div *ngIf="!getEspacioImage(e)" class="d-flex align-items-center justify-content-center bg-light text-muted">
+          <i class="bi bi-building" style="font-size: 3rem;"></i>
+        </div>
+      </div>
+      <div class="card-body d-flex flex-column gap-2">
+        <h5 class="mb-1">{{ e.nombre }}</h5>
+        <div class="d-flex align-items-center justify-content-between small text-secondary">
+          <span>Capacidad: <strong class="text-body">{{ e.capacidad }}</strong> personas</span>
+          <span>Valor: <strong class="text-body">{{ formatoMoneda(toNumber(e.valor)) }}</strong> / hora</span>
+        </div>
+        <div class="mt-auto">
+          <button type="button" class="btn btn-teal w-100" (click)="reservar(e)">Reservar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENSAJE SI NO HAY ESPACIOS -->
+<div *ngIf="!loading() && !error() && espacios.length === 0" class="text-center py-5">
+  <div class="text-muted">
+    <i class="bi bi-building" style="font-size: 3rem;"></i>
+    <h4 class="mt-3">No hay espacios disponibles</h4>
+    <p>No se encontraron espacios comunitarios en tu junta de vecinos.</p>
+  </div>
+</div>
+
+<!-- PANEL DE RESERVA (aparece al seleccionar un espacio) -->
+<div class="card shadow-sm mb-5" *ngIf="panelAbierto()">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <img *ngIf="getEspacioImage(seleccionado()!)" [src]="getEspacioImage(seleccionado()!)!" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: .375rem;">
+      <div *ngIf="!getEspacioImage(seleccionado()!)" class="d-flex align-items-center justify-content-center bg-light text-muted" style="width: 60px; height: 40px; border-radius: .375rem;">
+        <i class="bi bi-building"></i>
+      </div>
+      <div>
+        <div class="fw-semibold">{{ seleccionado()!.nombre }}</div>
+        <div class="small text-secondary">
+          Capacidad: {{ seleccionado()!.capacidad }} &nbsp;•&nbsp;
+          Valor: {{ formatoMoneda(toNumber(seleccionado()!.valor)) }}/hora
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" (click)="cerrarPanel()">Cerrar</button>
+  </div>
+
+  <div class="card-body">
+    <div class="row g-4">
+      <!-- Formulario (fecha / horas / motivo / asistentes / reglamento) -->
+      <div class="col-lg-8">
+        <form [formGroup]="form" (ngSubmit)="comprobarDisponibilidad()" novalidate>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Fecha</label>
+              <input type="date" class="form-control" formControlName="fecha" [min]="hoyISO()">
+              <div class="invalid-feedback d-block" *ngIf="!esFechaValida() && form.get('fecha')?.touched">
+                No se pueden hacer reservas para fechas pasadas
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Hora inicio</label>
+              <select class="form-select" formControlName="horaInicio">
+                <option *ngFor="let h of horas" [value]="h" [disabled]="esHorarioPasado(form.get('fecha')?.value, h)">{{ h }}</option>
+              </select>
+              <div class="invalid-feedback d-block" *ngIf="!esHorarioInicioValido() && form.get('horaInicio')?.touched">
+                No se pueden hacer reservas para horarios pasados
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Hora término</label>
+              <select class="form-select" formControlName="horaTermino">
+                <option *ngFor="let h of getHorasTerminoDisponibles()" [value]="h">{{ h }}</option>
+              </select>
+              <div class="invalid-feedback d-block" *ngIf="!esHorarioTerminoValido() && form.get('horaTermino')?.touched">
+                La hora término debe ser posterior a la hora inicio
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Motivo de la reserva</label>
+              <input type="text" class="form-control" formControlName="motivo" placeholder="cumpleaños, reunión, taller...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">N° de asistentes (opcional)</label>
+              <input type="number" class="form-control" formControlName="asistentes" min="1" placeholder="Ej: 20">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="reglamento" formControlName="aceptaReglamento">
+                <label class="form-check-label" for="reglamento">
+                  Acepto el reglamento de uso
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <button type="submit" class="btn btn-outline-secondary" [disabled]="verificandoDisponibilidad()">
+              <span *ngIf="verificandoDisponibilidad()" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Comprobar disponibilidad
+            </button>
+            <div class="small"
+                 [class.text-success]="disponibilidad?.disponible === true"
+                 [class.text-danger]="disponibilidad?.disponible === false">
+              <ng-container *ngIf="disponibilidad">
+                <span *ngIf="disponibilidad.disponible" class="text-success">
+                  ✓ El horario seleccionado está disponible
+                </span>
+                <span *ngIf="!disponibilidad.disponible" class="text-danger">
+                  ✗ {{ disponibilidad.mensaje }}
+                </span>
+              </ng-container>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Información del espacio -->
+      <div class="col-lg-4">
+        <div class="border rounded-3 p-3">
+          <div class="fw-semibold mb-2">Información del espacio</div>
+
+          <div class="mb-2" *ngIf="hasPermitido()">
+            <div class="small text-secondary">Permitido</div>
+            <ul class="mb-2 ps-3">
+              <li *ngFor="let p of getPermitido()">{{ p }}</li>
+            </ul>
+          </div>
+
+          <div class="mb-2" *ngIf="hasNoPermitido()">
+            <div class="small text-secondary">No permitido</div>
+            <ul class="mb-2 ps-3">
+              <li *ngFor="let p of getNoPermitido()">{{ p }}</li>
+            </ul>
+          </div>
+
+          <div class="small text-secondary">
+            Tiempo máximo por reserva:
+            <strong class="text-body">{{ seleccionado()!.max_horas }} h</strong>
+          </div>
+        </div>
+
+        <button class="btn btn-teal btn-lg w-100 mt-3"
+                [disabled]="form.invalid || !disponibilidad?.disponible || creandoReserva()"
+                (click)="irAPagar()">
+          <span *ngIf="creandoReserva()" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ creandoReserva() ? 'Procesando pago...' : 'Proceder al pago' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- estilos mínimos en línea para btn teal y helpers -->
+<style>
+  .btn-teal{background:#0f766e;border-color:#0f766e;color:#fff}
+  .btn-teal:hover{background:#0b5f59;border-color:#0b5f59;color:#fff}
+  .object-fit-cover{object-fit:cover}
+</style>

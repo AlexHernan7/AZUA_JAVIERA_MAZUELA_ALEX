@@ -1,0 +1,9 @@
+{
+  "/api": {
+    "target": "https://azuajavieramazuelaalex-production.up.railway.app",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
+
