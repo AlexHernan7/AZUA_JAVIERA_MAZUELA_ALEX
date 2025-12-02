@@ -26,12 +26,11 @@ async def init_database():
             print("INICIALIZANDO BASE DE DATOS VECINDAPP")
             print("=" * 60)
             
-            # ========== 1. CREAR SCHEMA Y TABLAS ==========
-            print("\n[1/7] Creando schema y tablas...")
+            # ========== 1. CREAR SCHEMA (TABLAS SE CREAN CON ALEMBIC) ==========
+            print("\n[1/7] Verificando schema...")
             await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {settings.database.db_schema}"))
-            await conn.run_sync(Base.metadata.create_all)
-            print("✅ Schema y tablas creadas")
-            print("ℹ️  Nota: Las migraciones de Alembic se ejecutarán automáticamente antes de iniciar el servidor")
+            print("✅ Schema verificado")
+            print("ℹ️  Nota: Las tablas se crean mediante migraciones de Alembic (ya ejecutadas antes de este script)")
             
             # ========== 2. CREAR ROLES ==========
             print("\n[2/7] Creando roles del sistema...")
