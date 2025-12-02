@@ -31,6 +31,7 @@ async def init_database():
             await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {settings.database.db_schema}"))
             await conn.run_sync(Base.metadata.create_all)
             print("✅ Schema y tablas creadas")
+            print("ℹ️  Nota: Las migraciones de Alembic se ejecutarán automáticamente antes de iniciar el servidor")
             
             # ========== 2. CREAR ROLES ==========
             print("\n[2/7] Creando roles del sistema...")

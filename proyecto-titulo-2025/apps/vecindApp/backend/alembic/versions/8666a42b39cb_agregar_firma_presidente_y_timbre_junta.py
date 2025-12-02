@@ -20,15 +20,31 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Agregar columna firma_presidente
-    op.add_column('vecindapp.junta', 
-        sa.Column('firma_presidente', sa.LargeBinary(), nullable=True)
-    )
+    # Verificar si las columnas ya existen antes de agregarlas (idempotente)
+    from sqlalchemy import inspect
     
-    # Agregar columna timbre
-    op.add_column('vecindapp.junta',
-        sa.Column('timbre', sa.LargeBinary(), nullable=True)
-    )
+    # Obtener conexión para inspeccionar
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('junta', schema='vecindapp')]
+    
+    # Agregar columna firma_presidente solo si no existe
+    if 'firma_presidente' not in columns:
+        op.add_column('vecindapp.junta', 
+            sa.Column('firma_presidente', sa.LargeBinary(), nullable=True)
+        )
+        print("✅ Columna firma_presidente agregada")
+    else:
+        print("ℹ️  Columna firma_presidente ya existe")
+    
+    # Agregar columna timbre solo si no existe
+    if 'timbre' not in columns:
+        op.add_column('vecindapp.junta',
+            sa.Column('timbre', sa.LargeBinary(), nullable=True)
+        )
+        print("✅ Columna timbre agregada")
+    else:
+        print("ℹ️  Columna timbre ya existe")
 
 
 def downgrade() -> None:
