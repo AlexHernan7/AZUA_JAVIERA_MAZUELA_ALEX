@@ -14,7 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 )
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 
@@ -69,6 +69,32 @@ class CertificadoPDFGenerator:
         ap_ma = datos.get("apellido_materno", "").strip()
         nombre_completo = " ".join(x for x in [nombres, ap_pa, ap_ma] if x)
 
+        # Procesar firma y timbre si existen (convertir de base64 a BytesIO para reportlab)
+        firma_io = None
+        timbre_io = None
+        
+        if datos.get("firma_presidente"):
+            try:
+                # Extraer base64 del data URL
+                firma_base64 = datos["firma_presidente"]
+                if "," in firma_base64:
+                    firma_base64 = firma_base64.split(",", 1)[1]
+                firma_bytes = base64.b64decode(firma_base64)
+                firma_io = BytesIO(firma_bytes)
+            except Exception as e:
+                logger.warning(f"Error procesando firma: {str(e)}")
+        
+        if datos.get("timbre"):
+            try:
+                # Extraer base64 del data URL
+                timbre_base64 = datos["timbre"]
+                if "," in timbre_base64:
+                    timbre_base64 = timbre_base64.split(",", 1)[1]
+                timbre_bytes = base64.b64decode(timbre_base64)
+                timbre_io = BytesIO(timbre_bytes)
+            except Exception as e:
+                logger.warning(f"Error procesando timbre: {str(e)}")
+
         return {
             "folio": datos.get("numero", "CERT-2-2025-0000"),
             "titulo": "CERTIFICADO DE RESIDENCIA",
@@ -82,6 +108,8 @@ class CertificadoPDFGenerator:
                 datos.get("motivo_solicitud",
                           "Postulación a beneficios sociales (Registro Social de Hogares, subsidios habitacionales, bonos)"),
             "lugar_fecha": f"Santiago, {datos.get('comuna', 'Maipú')}, {_fecha_es(fecha_emision)}",
+            "firma_io": firma_io,
+            "timbre_io": timbre_io,
         }
 
     def _setup_custom_styles(self):
@@ -199,19 +227,51 @@ class CertificadoPDFGenerator:
         # Espacio antes de firmas
         story.append(Spacer(1, 1.6 * cm))
 
-        # Tabla de firmas: línea larga y roles debajo
+        # Tabla de firmas: imagen de firma (si existe) o línea, y roles debajo
+        # Preparar contenido de las celdas
+        celda_presidente_content = None
+        celda_secretario_content = "_" * 30
+        
+        # Celda del presidente: firma si existe, sino línea
+        if c.get("firma_io"):
+            try:
+                celda_presidente_content = Image(c["firma_io"], width=6*cm, height=2*cm, kind='proportional')
+            except Exception as e:
+                logger.warning(f"Error insertando firma en PDF: {str(e)}")
+                celda_presidente_content = "_" * 30
+        else:
+            celda_presidente_content = "_" * 30
+        
+        # Crear tabla con las firmas
         firma_tabla = Table([
-            ["_" * 30, "_" * 30],
+            [celda_presidente_content, celda_secretario_content],
             ["Presidente", "Secretario"]
         ], colWidths=[8*cm, 8*cm])
 
         firma_tabla.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 12),
             ('TOPPADDING', (0, 1), (-1, 1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
         ]))
         story.append(firma_tabla)
+
+        # Agregar timbre si existe (debajo de las firmas, centrado)
+        if c.get("timbre_io"):
+            try:
+                story.append(Spacer(1, 0.5 * cm))
+                timbre_img = Image(c["timbre_io"], width=3*cm, height=3*cm, kind='proportional')
+                # Centrar el timbre
+                timbre_table = Table([[timbre_img]], colWidths=[16*cm])
+                timbre_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                story.append(timbre_table)
+            except Exception as e:
+                logger.warning(f"Error insertando timbre en PDF: {str(e)}")
 
         
 

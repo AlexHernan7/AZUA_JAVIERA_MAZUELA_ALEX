@@ -8,8 +8,9 @@ import { AuthService } from '../../services/auth.service';
 import { JuntaService } from '../../services/junta.service';
 import { EspacioService } from '../../services/espacio.service';
 import { DirectivaResponse } from '../../interfaces/directiva.interface';
-import { JuntaResponse, JuntaUpdateRequest } from '../../interfaces/junta.interface';
+import { JuntaResponse, JuntaUpdateRequest, JuntaFirmaTimbreUpdateRequest } from '../../interfaces/junta.interface';
 import { EspacioResponse, EspacioDirectivaUpdateRequest } from '../../interfaces/espacio.interface';
+import { SignaturePadComponent } from '../signature-pad/signature-pad.component';
 
 export interface Junta {
   id_junta: number;
@@ -40,7 +41,7 @@ export interface Directivo {
 @Component({
   selector: 'app-junta-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SignaturePadComponent],
   templateUrl: './junta-profile.component.html',
   styleUrls: ['./junta-profile.component.css'],
 })
@@ -101,6 +102,17 @@ export class JuntaProfileComponent implements OnInit {
   nuevaActividadPermitida = '';
   nuevaActividadNoPermitida = '';
 
+  // Firma y timbre
+  firmaActual: string | null = null;
+  timbreActual: string | null = null;
+  nuevaFirma: string | null = null;
+  nuevoTimbre: string | null = null;
+  selectedTimbreFile: File | null = null;
+  previewTimbre: string | null = null;
+  isSavingFirmaTimbre = false;
+  firmaTimbreSuccess: string | null = null;
+  firmaTimbreError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private directivaService: DirectivaService,
@@ -153,6 +165,10 @@ export class JuntaProfileComponent implements OnInit {
           logo_url: juntaData.logo || '',
           created_at: juntaData.created_at
         };
+
+        // Cargar firma y timbre si existen
+        this.firmaActual = juntaData.firma_presidente || null;
+        this.timbreActual = juntaData.timbre || null;
 
         // Cargar directivos de la junta
         this.loadDirectivos();
@@ -238,6 +254,29 @@ export class JuntaProfileComponent implements OnInit {
       return false;
     }
     return currentUser.roles.includes('directiva');
+  }
+
+  /**
+   * Verifica si el usuario actual es presidente activo de esta junta
+   */
+  get isPresidente(): boolean {
+    if (!this.isDirectiva) {
+      return false;
+    }
+    
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser || !currentUser.email) {
+      return false;
+    }
+
+    // Buscar presidente activo en la lista de directivos
+    const presidente = this.directiva.find(d => 
+      d.cargo.toLowerCase() === 'presidente'
+    );
+
+    // Verificar si el usuario actual es el presidente comparando emails
+    // Nota: El backend validará correctamente los permisos
+    return presidente !== undefined && presidente.email === currentUser.email;
   }
 
   /**
@@ -644,6 +683,105 @@ export class JuntaProfileComponent implements OnInit {
       error: (error: any) => {
         this.espacioEditError = error.message || 'Error al actualizar el espacio';
         this.isSavingEspacio = false;
+      }
+    });
+  }
+
+  /**
+   * Maneja cambios en la firma
+   */
+  onFirmaChange(firmaBase64: string | null): void {
+    this.nuevaFirma = firmaBase64;
+  }
+
+  /**
+   * Maneja la selección de archivo de timbre
+   */
+  onTimbreFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const file = input.files[0];
+    
+    // Validar tipo de archivo
+    if (!file.type.match(/image\/(jpeg|jpg|png|svg\+xml)/)) {
+      this.firmaTimbreError = 'Solo se permiten imágenes JPEG, PNG o SVG';
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.firmaTimbreError = 'La imagen es muy grande. Máximo 5MB permitido';
+      return;
+    }
+
+    this.selectedTimbreFile = file;
+    this.firmaTimbreError = null;
+
+    // Generar preview y convertir a base64
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.previewTimbre = e.target?.result as string;
+      this.nuevoTimbre = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Guarda la firma y/o timbre
+   */
+  saveFirmaTimbre(): void {
+    if (!this.junta) return;
+
+    // Validar que hay algo para guardar
+    if (!this.nuevaFirma && !this.nuevoTimbre) {
+      this.firmaTimbreError = 'Debes proporcionar al menos una firma o un timbre';
+      return;
+    }
+
+    this.isSavingFirmaTimbre = true;
+    this.firmaTimbreSuccess = null;
+    this.firmaTimbreError = null;
+
+    const updateData: JuntaFirmaTimbreUpdateRequest = {};
+    
+    if (this.nuevaFirma) {
+      updateData.firma_presidente = this.nuevaFirma;
+    }
+    
+    if (this.nuevoTimbre) {
+      updateData.timbre = this.nuevoTimbre;
+    }
+
+    this.juntaService.updateFirmaTimbre(this.junta.id_junta, updateData).subscribe({
+      next: (response) => {
+        // Actualizar datos locales
+        if (this.junta) {
+          if (response.firma_presidente !== undefined) {
+            this.firmaActual = response.firma_presidente;
+            this.nuevaFirma = null;
+          }
+          if (response.timbre !== undefined) {
+            this.timbreActual = response.timbre;
+            this.nuevoTimbre = null;
+            this.previewTimbre = null;
+            this.selectedTimbreFile = null;
+          }
+        }
+        
+        this.firmaTimbreSuccess = response.mensaje || 'Firma y timbre actualizados exitosamente';
+        this.isSavingFirmaTimbre = false;
+        
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => {
+          this.firmaTimbreSuccess = null;
+        }, 3000);
+      },
+      error: (error: any) => {
+        this.firmaTimbreError = error.message || 'Error al actualizar firma y timbre';
+        this.isSavingFirmaTimbre = false;
       }
     });
   }

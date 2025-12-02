@@ -204,6 +204,8 @@ class JuntaResponse(BaseModel):
     descripcion: Optional[str]
     activa: bool
     logo: Optional[str] = None  # Logo en base64 si existe
+    firma_presidente: Optional[str] = None  # Firma en base64 si existe
+    timbre: Optional[str] = None  # Timbre en base64 si existe
     created_at: datetime
 
     class Config:
@@ -335,6 +337,110 @@ class JuntaUpdateResponse(BaseModel):
     descripcion: Optional[str]
     logo: Optional[str] = None  # Logo en base64 si existe
     mensaje: str = "Junta actualizada exitosamente"
+
+    class Config:
+        from_attributes = True
+
+
+class JuntaFirmaTimbreUpdateRequest(BaseModel):
+    """
+    Schema para actualizar firma del presidente o timbre de la junta.
+    Solo puede ser usado por el presidente activo.
+    """
+    
+    firma_presidente: Optional[str] = Field(None, description="Firma del presidente en base64 (PNG)")
+    timbre: Optional[str] = Field(None, description="Timbre/sello de la junta en base64 (imagen)")
+
+    @validator("firma_presidente")
+    def validate_firma(cls, v):
+        """Validar formato de firma en base64."""
+        if v is None:
+            return v
+        
+        # Validar formato base64
+        if not v.startswith("data:image/"):
+            raise ValueError("La firma debe estar en formato base64 con prefijo data:image/")
+        
+        try:
+            # Extraer el tipo MIME y los datos
+            header, data = v.split(",", 1)
+            mime_type = header.split(";")[0].split(":")[1]
+            
+            # Validar tipos MIME permitidos (PNG preferido para firmas)
+            allowed_types = ["image/png", "image/jpeg", "image/jpg"]
+            if mime_type not in allowed_types:
+                raise ValueError(f"Tipo de imagen no permitido para firma. Use: {', '.join(allowed_types)}")
+            
+            # Validar que los datos base64 sean válidos
+            import base64
+            decoded = base64.b64decode(data)
+            
+            # Validar tamaño (máximo 2MB para firmas)
+            max_size = 2 * 1024 * 1024  # 2MB
+            if len(decoded) > max_size:
+                raise ValueError("La firma es demasiado grande. Máximo 2MB permitido")
+            
+            return v
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error al validar firma: {str(e)}")
+
+    @validator("timbre")
+    def validate_timbre(cls, v):
+        """Validar formato de timbre en base64."""
+        if v is None:
+            return v
+        
+        # Validar formato base64
+        if not v.startswith("data:image/"):
+            raise ValueError("El timbre debe estar en formato base64 con prefijo data:image/")
+        
+        try:
+            # Extraer el tipo MIME y los datos
+            header, data = v.split(",", 1)
+            mime_type = header.split(";")[0].split(":")[1]
+            
+            # Validar tipos MIME permitidos
+            allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/svg+xml"]
+            if mime_type not in allowed_types:
+                raise ValueError(f"Tipo de imagen no permitido para timbre. Use: {', '.join(allowed_types)}")
+            
+            # Validar que los datos base64 sean válidos
+            import base64
+            decoded = base64.b64decode(data)
+            
+            # Validar tamaño (máximo 5MB para timbres)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if len(decoded) > max_size:
+                raise ValueError("El timbre es demasiado grande. Máximo 5MB permitido")
+            
+            return v
+            
+        except ValueError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Error al validar timbre: {str(e)}")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "firma_presidente": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+                "timbre": "data:image/png;base64,iVBORw0KGgoAAAANS..."
+            }
+        }
+
+
+class JuntaFirmaTimbreUpdateResponse(BaseModel):
+    """
+    Schema para respuesta de actualización de firma/timbre.
+    """
+    
+    id_junta: int
+    firma_presidente: Optional[str] = None  # Firma en base64 si existe
+    timbre: Optional[str] = None  # Timbre en base64 si existe
+    mensaje: str = "Firma y/o timbre actualizados exitosamente"
 
     class Config:
         from_attributes = True

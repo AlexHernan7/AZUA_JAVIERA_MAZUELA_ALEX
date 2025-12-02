@@ -9,6 +9,8 @@ import {
   JuntasList,
   JuntaUpdateRequest,
   JuntaUpdateResponse,
+  JuntaFirmaTimbreUpdateRequest,
+  JuntaFirmaTimbreUpdateResponse,
   RegionsList,
   ComunasList,
   ApiError 
@@ -96,6 +98,21 @@ export class JuntaService {
       );
   }
 
+
+  /**
+   * Actualiza la firma del presidente y/o el timbre de la junta (solo presidente)
+   */
+  updateFirmaTimbre(juntaId: number, updateData: JuntaFirmaTimbreUpdateRequest): Observable<JuntaFirmaTimbreUpdateResponse> {
+    const headers = this.getAuthHeaders();
+    
+    return this.http.patch<JuntaFirmaTimbreUpdateResponse>(
+      `${this.API_URL}/juntas/${juntaId}/firma-timbre`, 
+      updateData, 
+      { headers }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   /**
    * Obtiene todas las comunas con sus IDs desde el backend

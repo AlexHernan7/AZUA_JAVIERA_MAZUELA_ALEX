@@ -1,0 +1,14 @@
+<div class="signature-pad-container">
+  <canvas #canvas class="signature-canvas"></canvas>
+  <div class="signature-actions">
+    <button 
+      type="button" 
+      class="btn btn-outline-secondary btn-sm"
+      (click)="clear()"
+      [disabled]="isEmpty()">
+      <i class="bi bi-x-circle me-1"></i>
+      Limpiar
+    </button>
+  </div>
+</div>
+

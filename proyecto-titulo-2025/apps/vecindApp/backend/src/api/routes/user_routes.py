@@ -236,6 +236,48 @@ async def verify_directiva_user(
     return (user_id, junta_id)
 
 
+async def verify_presidente_user(
+    authorization: Optional[str] = Header(None),
+    db: AsyncSession = Depends(get_db_session),
+) -> tuple[int, int]:
+    """
+    Verifica que el usuario tenga rol de directiva y cargo de presidente activo.
+    
+    Returns:
+        tuple: (user_id, junta_id) del usuario presidente verificado
+    """
+    from src.core.logging import get_logger
+    from sqlalchemy import select, and_
+    logger = get_logger(__name__)
+    
+    # Primero verificar que es directiva
+    user_id, junta_id = await verify_directiva_user(authorization, db)
+    
+    # Verificar que tiene cargo de presidente y está activo
+    from src.database.models.directiva import Directiva
+    
+    directiva_result = await db.execute(
+        select(Directiva).where(
+            and_(
+                Directiva.id_usuario == user_id,
+                Directiva.cargo == 'presidente',
+                Directiva.fecha_termino_cargo.is_(None)  # Cargo activo
+            )
+        )
+    )
+    directiva = directiva_result.scalar_one_or_none()
+    
+    if not directiva:
+        logger.warning(f"[AUTH] Usuario {user_id} no es presidente activo")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren permisos de presidente activo",
+        )
+    
+    logger.info(f"[AUTH] Usuario {user_id} verificado como presidente activo de junta {junta_id}")
+    return (user_id, junta_id)
+
+
 async def verify_user_token(
     authorization: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db_session),

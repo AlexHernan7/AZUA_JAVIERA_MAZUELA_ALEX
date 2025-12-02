@@ -45,6 +45,8 @@ export interface JuntaResponse {
   descripcion?: string;
   activa: boolean;
   logo?: string;
+  firma_presidente?: string; // Firma en base64 si existe
+  timbre?: string; // Timbre en base64 si existe
   created_at: string;
 }
 
@@ -102,6 +104,18 @@ export interface JuntaUpdateResponse {
   email?: string;
   descripcion?: string;
   logo?: string;
+  mensaje: string;
+}
+
+export interface JuntaFirmaTimbreUpdateRequest {
+  firma_presidente?: string; // base64 string
+  timbre?: string; // base64 string
+}
+
+export interface JuntaFirmaTimbreUpdateResponse {
+  id_junta: number;
+  firma_presidente?: string;
+  timbre?: string;
   mensaje: string;
 }
 

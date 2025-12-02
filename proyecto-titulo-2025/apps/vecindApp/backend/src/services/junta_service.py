@@ -18,7 +18,9 @@ from src.schemas.junta_schemas import (
     JuntaResponse, 
     JuntaListResponse,
     JuntaUpdateRequest,
-    JuntaUpdateResponse
+    JuntaUpdateResponse,
+    JuntaFirmaTimbreUpdateRequest,
+    JuntaFirmaTimbreUpdateResponse
 )
 from src.utils.image_utils import base64_to_binary, binary_to_base64
 
@@ -168,6 +170,29 @@ class JuntaService:
                 except Exception as e:
                     logger.warning(f"Error convirtiendo logo a base64: {str(e)}")
 
+            # Convertir firma a base64 si existe
+            firma_base64 = None
+            if junta.firma_presidente:
+                try:
+                    firma_base64 = binary_to_base64(junta.firma_presidente, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo firma a base64: {str(e)}")
+
+            # Convertir timbre a base64 si existe
+            timbre_base64 = None
+            if junta.timbre:
+                try:
+                    # Detectar tipo de imagen
+                    if (
+                        junta.timbre.startswith(b"<svg")
+                        or b"<svg" in junta.timbre[:100]
+                    ):
+                        timbre_base64 = binary_to_base64(junta.timbre, "image/svg+xml")
+                    else:
+                        timbre_base64 = binary_to_base64(junta.timbre, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo timbre a base64: {str(e)}")
+
             return JuntaResponse(
                 id_junta=junta.id_junta,
                 nombre=junta.nombre,
@@ -182,6 +207,8 @@ class JuntaService:
                 descripcion=junta.descripcion,
                 activa=junta.activa,
                 logo=logo_base64,
+                firma_presidente=firma_base64,
+                timbre=timbre_base64,
                 created_at=junta.created_at
             )
 
@@ -411,3 +438,104 @@ class JuntaService:
             await self.db.rollback()
             logger.error(f"❌ Error actualizando junta {junta_id}: {str(e)}")
             raise Exception(f"Error interno al actualizar junta: {str(e)}")
+
+    async def update_firma_timbre(
+        self,
+        junta_id: int,
+        update_data: JuntaFirmaTimbreUpdateRequest,
+        presidente_junta_id: int
+    ) -> JuntaFirmaTimbreUpdateResponse:
+        """
+        Actualiza la firma del presidente y/o el timbre de la junta.
+        Solo puede ser usado por el presidente activo de la junta.
+        
+        Args:
+            junta_id: ID de la junta a actualizar
+            update_data: Datos a actualizar (firma y/o timbre)
+            presidente_junta_id: ID de la junta del usuario presidente (para verificar permisos)
+            
+        Returns:
+            Datos actualizados de firma y timbre
+            
+        Raises:
+            ValueError: Si hay errores de validación o permisos
+            Exception: Si hay errores de base de datos
+        """
+        try:
+            # Verificar que la junta existe
+            query = select(Junta).where(Junta.id_junta == junta_id)
+            result = await self.db.execute(query)
+            junta = result.scalar_one_or_none()
+            
+            if not junta:
+                raise ValueError(f"Junta con ID {junta_id} no encontrada")
+            
+            # Verificar que el usuario presidente tiene permiso para editar esta junta
+            if junta.id_junta != presidente_junta_id:
+                raise ValueError("No tienes permisos para actualizar la firma/timbre de esta junta")
+            
+            # Actualizar solo los campos proporcionados
+            campos_actualizados = []
+            
+            if update_data.firma_presidente is not None:
+                try:
+                    firma_binary = base64_to_binary(update_data.firma_presidente)
+                    junta.firma_presidente = firma_binary
+                    campos_actualizados.append("firma_presidente")
+                except Exception as e:
+                    raise ValueError(f"Error procesando firma: {str(e)}")
+            
+            if update_data.timbre is not None:
+                try:
+                    timbre_binary = base64_to_binary(update_data.timbre)
+                    junta.timbre = timbre_binary
+                    campos_actualizados.append("timbre")
+                except Exception as e:
+                    raise ValueError(f"Error procesando timbre: {str(e)}")
+            
+            # Si no se proporcionó ningún campo para actualizar
+            if not campos_actualizados:
+                raise ValueError("No se proporcionaron campos para actualizar")
+            
+            # Guardar cambios
+            await self.db.commit()
+            await self.db.refresh(junta)
+            
+            logger.info(f"✅ Firma/timbre de junta {junta_id} actualizados exitosamente. Campos actualizados: {', '.join(campos_actualizados)}")
+            
+            # Convertir a base64 si existen
+            firma_base64 = None
+            if junta.firma_presidente:
+                try:
+                    firma_base64 = binary_to_base64(junta.firma_presidente, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo firma a base64: {str(e)}")
+            
+            timbre_base64 = None
+            if junta.timbre:
+                try:
+                    # Detectar tipo de imagen
+                    if (
+                        junta.timbre.startswith(b"<svg")
+                        or b"<svg" in junta.timbre[:100]
+                    ):
+                        timbre_base64 = binary_to_base64(junta.timbre, "image/svg+xml")
+                    else:
+                        timbre_base64 = binary_to_base64(junta.timbre, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo timbre a base64: {str(e)}")
+            
+            return JuntaFirmaTimbreUpdateResponse(
+                id_junta=junta.id_junta,
+                firma_presidente=firma_base64,
+                timbre=timbre_base64,
+                mensaje=f"Firma y/o timbre actualizados exitosamente. Campos modificados: {', '.join(campos_actualizados)}"
+            )
+        
+        except ValueError:
+            await self.db.rollback()
+            raise
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"❌ Error actualizando firma/timbre de junta {junta_id}: {str(e)}")
+            raise Exception(f"Error interno al actualizar firma/timbre: {str(e)}")

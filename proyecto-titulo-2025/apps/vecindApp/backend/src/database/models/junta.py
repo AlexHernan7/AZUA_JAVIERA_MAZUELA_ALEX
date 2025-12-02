@@ -24,6 +24,8 @@ class Junta(Base):
     fecha_constitucion = Column(Date, nullable=True)  # Fecha de constitución
     activa = Column(Boolean, nullable=False, default=True)  # Si está activa
     logo = Column(LargeBinary, nullable=True)  # Logo en binario
+    firma_presidente = Column(LargeBinary, nullable=True)  # Firma del presidente en binario
+    timbre = Column(LargeBinary, nullable=True)  # Timbre/sello de la junta en binario
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

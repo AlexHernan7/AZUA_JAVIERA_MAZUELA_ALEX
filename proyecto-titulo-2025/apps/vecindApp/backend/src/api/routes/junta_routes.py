@@ -18,9 +18,11 @@ from src.schemas.junta_schemas import (
     JuntasList,
     JuntaUpdateRequest,
     JuntaUpdateResponse,
+    JuntaFirmaTimbreUpdateRequest,
+    JuntaFirmaTimbreUpdateResponse,
     ErrorResponse,
 )
-from src.api.routes.user_routes import verify_admin_user, verify_directiva_user
+from src.api.routes.user_routes import verify_admin_user, verify_directiva_user, verify_presidente_user
 
 # Crear router para rutas de juntas
 router = APIRouter(prefix="/juntas", tags=["Juntas"])

@@ -440,6 +440,32 @@ class CertificadoService:
         # Usar dirección actualizada o la del vecino
         direccion_final = direccion_actualizada or pedido.vecino.direccion
         
+        # Obtener firma y timbre de la junta si existen
+        firma_presidente_base64 = None
+        timbre_base64 = None
+        
+        if pedido.junta:
+            from src.utils.image_utils import binary_to_base64
+            
+            if pedido.junta.firma_presidente:
+                try:
+                    firma_presidente_base64 = binary_to_base64(pedido.junta.firma_presidente, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo firma a base64: {str(e)}")
+            
+            if pedido.junta.timbre:
+                try:
+                    # Detectar tipo de imagen
+                    if (
+                        pedido.junta.timbre.startswith(b"<svg")
+                        or b"<svg" in pedido.junta.timbre[:100]
+                    ):
+                        timbre_base64 = binary_to_base64(pedido.junta.timbre, "image/svg+xml")
+                    else:
+                        timbre_base64 = binary_to_base64(pedido.junta.timbre, "image/png")
+                except Exception as e:
+                    logger.warning(f"Error convirtiendo timbre a base64: {str(e)}")
+        
         # Preparar datos para el PDF
         datos_pdf = {
             'numero': numero_certificado,
@@ -456,7 +482,9 @@ class CertificadoService:
                 else None
             ),
             'junta': pedido.junta.nombre if pedido.junta else None,
-            'motivo_solicitud': motivo_solicitud
+            'motivo_solicitud': motivo_solicitud,
+            'firma_presidente': firma_presidente_base64,
+            'timbre': timbre_base64
         }
         
         # Generar PDF y guardarlo como base64 (por ahora)

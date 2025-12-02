@@ -289,6 +289,31 @@ async def _process_webpay_return(
                         year = datetime.now().year
                         numero_certificado = f"CERT-{pedido.id_junta}-{year}-{count + 1:04d}"
                         
+                        # Obtener firma y timbre de la junta si existen
+                        from src.utils.image_utils import binary_to_base64
+                        firma_presidente_base64 = None
+                        timbre_base64 = None
+                        
+                        if pedido.junta:
+                            if pedido.junta.firma_presidente:
+                                try:
+                                    firma_presidente_base64 = binary_to_base64(pedido.junta.firma_presidente, "image/png")
+                                except Exception as e:
+                                    logger.warning(f"Error convirtiendo firma a base64: {str(e)}")
+                            
+                            if pedido.junta.timbre:
+                                try:
+                                    # Detectar tipo de imagen
+                                    if (
+                                        pedido.junta.timbre.startswith(b"<svg")
+                                        or b"<svg" in pedido.junta.timbre[:100]
+                                    ):
+                                        timbre_base64 = binary_to_base64(pedido.junta.timbre, "image/svg+xml")
+                                    else:
+                                        timbre_base64 = binary_to_base64(pedido.junta.timbre, "image/png")
+                                except Exception as e:
+                                    logger.warning(f"Error convirtiendo timbre a base64: {str(e)}")
+                        
                         # Preparar datos para el PDF
                         datos_pdf = {
                             'numero': numero_certificado,
@@ -305,7 +330,9 @@ async def _process_webpay_return(
                                 else None
                             ),
                             'junta': pedido.junta.nombre if pedido.junta else None,
-                            'motivo_solicitud': pedido.motivo.motivo if pedido.motivo else "No especificado"
+                            'motivo_solicitud': pedido.motivo.motivo if pedido.motivo else "No especificado",
+                            'firma_presidente': firma_presidente_base64,
+                            'timbre': timbre_base64
                         }
                         
                         # Generar PDF

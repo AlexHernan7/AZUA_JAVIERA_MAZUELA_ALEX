@@ -1,0 +1,33 @@
+.signature-pad-container {
+  border: 2px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  background-color: #fff;
+}
+
+.signature-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 576px) {
+  .signature-pad-container {
+    padding: 0.25rem;
+  }
+  
+  .signature-canvas {
+    max-width: 100%;
+  }
+}
+
