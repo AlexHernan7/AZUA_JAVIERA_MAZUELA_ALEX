@@ -255,31 +255,71 @@ async def verify_presidente_user(
     
     # Verificar que tiene cargo de presidente y está activo
     from src.database.models.directiva import Directiva
-    from sqlalchemy import func
+    from sqlalchemy import func, or_
+    from datetime import date
     
-    # Buscar directiva del usuario (case-insensitive para el cargo)
+    # Un presidente está activo si:
+    # 1. fecha_termino_cargo IS NULL (activo indefinidamente), O
+    # 2. fecha_termino_cargo >= fecha_actual (aún no ha terminado su cargo)
+    fecha_actual = date.today()
+    
+    # Primero verificar si el usuario es presidente activo
     directiva_result = await db.execute(
         select(Directiva).where(
             and_(
                 Directiva.id_usuario == user_id,
+                Directiva.id_junta == junta_id,
                 func.lower(Directiva.cargo) == 'presidente',  # Case-insensitive
-                Directiva.fecha_termino_cargo.is_(None)  # Cargo activo
+                or_(
+                    Directiva.fecha_termino_cargo.is_(None),  # Sin fecha de término (activo indefinidamente)
+                    Directiva.fecha_termino_cargo >= fecha_actual  # Fecha de término en el futuro o hoy
+                )
             )
         )
     )
     directiva = directiva_result.scalar_one_or_none()
     
-    # Si no se encuentra, buscar todas las directivas del usuario para debugging
+    # Si no se encuentra, verificar si hay algún presidente activo en la junta
     if not directiva:
+        # Buscar si hay algún presidente activo en la junta
+        presidente_activo_result = await db.execute(
+            select(Directiva).where(
+                and_(
+                    Directiva.id_junta == junta_id,
+                    func.lower(Directiva.cargo) == 'presidente',
+                    or_(
+                        Directiva.fecha_termino_cargo.is_(None),  # Sin fecha de término
+                        Directiva.fecha_termino_cargo >= fecha_actual  # Fecha de término en el futuro o hoy
+                    )
+                )
+            )
+        )
+        presidente_activo = presidente_activo_result.scalar_one_or_none()
+        
+        # Si hay un presidente activo diferente, no permitir
+        if presidente_activo and presidente_activo.id_usuario != user_id:
+            logger.warning(f"[AUTH] Usuario {user_id} no es presidente activo. Presidente activo es usuario {presidente_activo.id_usuario}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Se requieren permisos de presidente activo",
+            )
+        
+        # Si no hay presidente activo, buscar todas las directivas del usuario para debugging
         all_directivas_result = await db.execute(
-            select(Directiva).where(Directiva.id_usuario == user_id)
+            select(Directiva).where(
+                and_(
+                    Directiva.id_usuario == user_id,
+                    Directiva.id_junta == junta_id
+                )
+            )
         )
         all_directivas = all_directivas_result.scalars().all()
         
-        logger.warning(f"[AUTH] Usuario {user_id} no es presidente activo")
-        logger.warning(f"[AUTH] Directivas encontradas para usuario {user_id}:")
+        logger.warning(f"[AUTH] Usuario {user_id} no es presidente activo de junta {junta_id}")
+        logger.warning(f"[AUTH] Directivas encontradas para usuario {user_id} en junta {junta_id}:")
         for d in all_directivas:
-            logger.warning(f"[AUTH]   - Cargo: '{d.cargo}' (lower: '{d.cargo.lower() if d.cargo else None}'), Activo: {d.fecha_termino_cargo is None}, Junta: {d.id_junta}")
+            es_activo = d.fecha_termino_cargo is None or (d.fecha_termino_cargo and d.fecha_termino_cargo >= fecha_actual)
+            logger.warning(f"[AUTH]   - Cargo: '{d.cargo}' (lower: '{d.cargo.lower() if d.cargo else None}'), Activo: {es_activo}, Fecha término: {d.fecha_termino_cargo}, Junta: {d.id_junta}")
         
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
