@@ -176,11 +176,11 @@ class CertificadoPDFGenerator:
         self.styles.add(ParagraphStyle(
             name="FirmaRol",
             parent=self.styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName="Helvetica",
             fontSize=11.5,
             alignment=TA_CENTER,
             textColor=colors.black,
-            spaceAfter= 2.5*cm#despues
+            spaceAfter= 3*cm#despues
         ))
 
                 # Pie (lugar y fecha) centrado
@@ -267,22 +267,20 @@ class CertificadoPDFGenerator:
             lineas_texto.append(nombre_pres)
         # if rut_pres:
         #     lineas_texto.append(rut_pres)
-        lineas_texto.append("Presidente")
+        lineas_texto.append("<b>Presidente</b>")
         texto_bajo_firma = "<br/>".join(lineas_texto)
 
         texto_bajo_firma_paragraph = Paragraph(texto_bajo_firma, self.styles["FirmaRol"])
 
         firma_tabla = Table(
             [
-                # fila 0: timbre | firma
                 [col_timbre, celda_presidente_firma],
-                # fila 1: (vacío) | línea bajo la firma
-                ["", ""],
-                # fila 2: (vacío) | bloque de texto (nombre, rut, rol)
                 ["", texto_bajo_firma_paragraph],
             ],
-            colWidths=[5 * cm, 11 * cm],  # ajusta si quieres que la firma tenga menos/mas ancho
+            colWidths=[6 * cm, 8 * cm],   # total más chico => timbre y firma más juntos
+            hAlign="CENTER",              # la tabla completa se centra en la página
         )
+
 
         firma_tabla.setStyle(
             TableStyle(
@@ -290,23 +288,23 @@ class CertificadoPDFGenerator:
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
 
-                    # Línea bajo la firma (solo en la celda derecha de la fila 1)
-                    ("LINEABOVE", (1, 1), (1, 1), 0.8, colors.black),
-                    # Para que la línea no sea tan larga, añadimos padding interno
-                    ("LEFTPADDING", (1, 1), (1, 1), 80),
-                    ("RIGHTPADDING", (1, 1), (1, 1), 80),
+                    # Línea más fina y más corta
+                    ("LINEABOVE", (1, 1), (1, 1), 0.7, colors.black),
+                    ("LEFTPADDING", (1, 1), (1, 1), 100),   # más grande = línea más corta
+                    ("RIGHTPADDING", (1, 1), (1, 1), 100),
 
-                    # Sin espacio extra entre imagen y línea
+                    # Casi sin espacio entre firma y línea
                     ("TOPPADDING", (1, 0), (1, 0), 0),
                     ("BOTTOMPADDING", (1, 0), (1, 0), 0),
 
-                    # Muy poco espacio entre línea y texto
-                    ("TOPPADDING", (1, 1), (1, 1), 1),
-                    ("BOTTOMPADDING", (1, 1), (1, 1), 1),
+                    # Casi sin espacio entre línea y texto
+                    ("TOPPADDING", (1, 1), (1, 1), 0),
+                    ("BOTTOMPADDING", (1, 1), (1, 1), 0),
 
-                    # Texto (nombre, RUT, rol) pegado a la línea
-                    ("TOPPADDING", (1, 2), (1, 2), 1),
+                    # Nombre y "Presidente" muy pegados a la línea
+                    ("TOPPADDING", (1, 2), (1, 2), 0),
                     ("BOTTOMPADDING", (1, 2), (1, 2), 0),
+
                 ]
             )
         )
