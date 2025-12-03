@@ -275,7 +275,7 @@ class CertificadoPDFGenerator:
                 # fila 1: (vacío) | línea bajo la firma
                 
                 # fila 2: (vacío) | bloque de texto (nombre, rut, rol)
-                [ texto_bajo_firma_paragraph],
+                ["", texto_bajo_firma_paragraph],
             ],
             colWidths=[5 * cm, 11 * cm],  # ajusta si quieres que la firma tenga menos/mas ancho
         )
