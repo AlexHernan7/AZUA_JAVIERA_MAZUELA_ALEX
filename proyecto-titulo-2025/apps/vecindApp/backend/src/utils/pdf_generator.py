@@ -109,7 +109,7 @@ class CertificadoPDFGenerator:
             "comuna": datos.get("comuna", "Maipú"),
             "region": datos.get("region", "Región Metropolitana de Santiago"),
             "nombre_completo": nombre_completo or "NOMBRE APELLIDO",
-            "rut": datos.get("rut", "00000000-0"),
+            "rut": datos.get("rut", "00.000.000-0"),
             "direccion": datos.get("direccion", "Mi Casa #1234"),
             "motivo":
                 datos.get("motivo_solicitud",
@@ -276,7 +276,7 @@ class CertificadoPDFGenerator:
                 # fila 2: (vacío) | nombre
                 ["", nombre_pres],
                 # fila 3: (vacío) | RUT
-                ["", rut_pres],
+                # ["", rut_pres],
                 # fila 4: (vacío) | rol
                 ["", rol_pres],
             ],
