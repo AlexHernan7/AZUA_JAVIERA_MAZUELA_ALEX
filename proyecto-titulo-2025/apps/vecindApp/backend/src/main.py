@@ -103,6 +103,12 @@ api_router.include_router(admin_router)
 api_router.include_router(master_router)
 api_router.include_router(reporte_router)
 
+# Log todas las rutas registradas para debugging
+logger.info("📋 Rutas de juntas registradas:")
+for route in junta_router.routes:
+    if hasattr(route, 'path') and hasattr(route, 'methods'):
+        logger.info(f"   {', '.join(route.methods)} {route.path}")
+
 # Incluir el router en la aplicación
 app.include_router(api_router)
 

@@ -29,6 +29,15 @@ router = APIRouter(prefix="/juntas", tags=["Juntas"])
 
 logger = logging.getLogger(__name__)
 
+# Log al cargar el módulo para verificar que se está importando
+logger.info("📋 Módulo junta_routes cargado - Endpoints disponibles:")
+logger.info("   - POST /juntas/")
+logger.info("   - GET /juntas/")
+logger.info("   - GET /juntas/{junta_id}")
+logger.info("   - GET /juntas/comuna/{comuna_id}")
+logger.info("   - PATCH /juntas/{junta_id}/firma-timbre")
+logger.info("   - PATCH /juntas/{junta_id}")
+
 
 @router.post(
     "/",
