@@ -160,7 +160,7 @@ class CertificadoPDFGenerator:
             fontSize=11.5,
             alignment=TA_CENTER,
             textColor=colors.black,
-            spaceAfter=1*cm,   #despues
+            spaceAfter=2*cm,   #despues
         ))
         # Cuerpo
         self.styles.add(ParagraphStyle(
@@ -170,7 +170,7 @@ class CertificadoPDFGenerator:
             alignment=TA_JUSTIFY,
             leading=17,
             textColor=colors.black,
-            spaceAfter=0.3*cm,  # mucho menos espacio debajo del cuerpo
+            spaceAfter= 1*cm,#despues
         ))
         # Texto de firmas
         self.styles.add(ParagraphStyle(
@@ -180,7 +180,7 @@ class CertificadoPDFGenerator:
             fontSize=11.5,
             alignment=TA_CENTER,
             textColor=colors.black,
-            spaceAfter= 0.5*cm#despues
+            spaceAfter= 1.5*cm#despues
         ))
 
                 # Pie (lugar y fecha) centrado
@@ -203,7 +203,7 @@ class CertificadoPDFGenerator:
             pagesize=LETTER,
             leftMargin=2.2 * cm,
             rightMargin=2.2 * cm,
-            topMargin=1.0 * cm,
+            topMargin=2.0 * cm,
             bottomMargin=1 * cm,
         )
 
@@ -234,14 +234,13 @@ class CertificadoPDFGenerator:
         story.append(Paragraph(cuerpo, self.styles["Cuerpo"]))
 
         # Espacio antes de firmas
-        story.append(Spacer(1, 0.1 * cm))
+        story.append(Spacer(1, 1.6 * cm))
 
         # Preparar contenido de la celda del presidente: firma si existe, sino línea
         celda_presidente_firma = None
         if c.get("firma_io"):
             try:
-                # un poco más baja para que ocupe menos alto
-                celda_presidente_firma = Image(c["firma_io"], width=6*cm, height=1.5*cm, kind='proportional')
+                celda_presidente_firma = Image(c["firma_io"], width=6*cm, height=2*cm, kind='proportional')
             except Exception as e:
                 logger.warning(f"Error insertando firma en PDF: {str(e)}")
                 celda_presidente_firma = "_" * 30
@@ -252,8 +251,7 @@ class CertificadoPDFGenerator:
         celda_timbre = None
         if c.get("timbre_io"):
             try:
-                # también un poco más chico en alto
-                celda_timbre = Image(c["timbre_io"], width=3*cm, height=2.5*cm, kind='proportional')
+                celda_timbre = Image(c["timbre_io"], width=3*cm, height=3*cm, kind='proportional')
             except Exception as e:
                 logger.warning(f"Error insertando timbre en PDF: {str(e)}")
         
@@ -289,22 +287,24 @@ class CertificadoPDFGenerator:
         firma_tabla.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (0, 1), (0, 2), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (0, 2), 10),
-            ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 3), (-1, 3), 12),
-            # sin TOP/BOTTOMPADDING para que la tabla sea más “baja”
+            ('FONTNAME', (0, 1), (0, 2), 'Helvetica'),  # Nombre y RUT en normal
+            ('FONTSIZE', (0, 1), (0, 2), 10),  # Tamaño más pequeño para nombre y RUT
+            ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),  # Rol en negrita
+            ('FONTSIZE', (0, 3), (-1, 3), 12),  # Tamaño para rol
+            ('TOPPADDING', (0, 0), (-1, 0), 5),  # Padding superior para firma
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),  # Padding inferior para firma
+            ('TOPPADDING', (0, 1), (-1, 2), 2),  # Padding para nombre y RUT
+            ('BOTTOMPADDING', (0, 1), (-1, 2), 2),
+            ('TOPPADDING', (0, 3), (-1, 3), 10),  # Padding superior para rol
+            ('BOTTOMPADDING', (0, 3), (-1, 3), 5),  # Padding inferior para rol
         ]))
-
         story.append(firma_tabla)
 
         
 
         # Pie de página con lugar y fecha CENTRADO
-                # Pie de página con lugar y fecha CENTRADO (pegado a las firmas)
-        story.append(Spacer(1, 0.1 * cm))
+        story.append(Spacer(1, 1.2 * cm))
         story.append(Paragraph(c["lugar_fecha"], self.styles["PieFecha"]))
-
 
         doc.build(story)
         pdf = buffer.getvalue()
