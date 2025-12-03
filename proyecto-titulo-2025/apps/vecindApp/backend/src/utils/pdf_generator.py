@@ -301,11 +301,11 @@ class CertificadoPDFGenerator:
                     ("BOTTOMPADDING", (1, 0), (1, 0), 0),
 
                     # Muy poco espacio entre línea y texto
-                    ("TOPPADDING", (1, 1), (1, 1), 0),
-                    ("BOTTOMPADDING", (1, 1), (1, 1), 0),
+                    ("TOPPADDING", (1, 1), (1, 1), 1),
+                    ("BOTTOMPADDING", (1, 1), (1, 1), 1),
 
                     # Texto (nombre, RUT, rol) pegado a la línea
-                    ("TOPPADDING", (1, 2), (1, 2), 0),
+                    ("TOPPADDING", (1, 2), (1, 2), 1),
                     ("BOTTOMPADDING", (1, 2), (1, 2), 0),
                 ]
             )
