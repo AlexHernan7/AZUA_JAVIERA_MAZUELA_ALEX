@@ -231,6 +231,89 @@ async def get_juntas_by_comuna(
 
 
 @router.patch(
+    "/{junta_id}/firma-timbre",
+    response_model=JuntaFirmaTimbreUpdateResponse,
+    summary="Actualizar firma y timbre de la junta (Solo Presidente)",
+    description="Permite al presidente activo de la junta actualizar la firma y/o el timbre de la junta.",
+    responses={
+        200: {"description": "Firma y/o timbre actualizados exitosamente"},
+        400: {"model": ErrorResponse, "description": "Error de validación"},
+        401: {"description": "Token de autorización requerido"},
+        403: {"model": ErrorResponse, "description": "Se requieren permisos de presidente activo"},
+        404: {"model": ErrorResponse, "description": "Junta no encontrada"},
+    },
+)
+async def update_junta_firma_timbre(
+    junta_id: int,
+    update_data: JuntaFirmaTimbreUpdateRequest,
+    presidente_info: tuple[int, int] = Depends(verify_presidente_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Actualiza la firma del presidente y/o el timbre de la junta.
+    
+    Solo puede ser ejecutado por el presidente activo de la junta.
+    
+    Args:
+        junta_id: ID de la junta a actualizar
+        update_data: Datos de firma y/o timbre en formato base64
+        presidente_info: Tupla (user_id, junta_id) del presidente (validado automáticamente)
+        db: Sesión de base de datos
+    
+    Returns:
+        Datos actualizados de firma y timbre
+    """
+    logger.info(f"🔍 [FIRMA-TIMBRE] Endpoint llamado: PATCH /juntas/{junta_id}/firma-timbre")
+    try:
+        user_id, presidente_junta_id = presidente_info
+        logger.info(f"🔍 [FIRMA-TIMBRE] Usuario {user_id} es presidente de junta {presidente_junta_id}, solicitando actualizar junta {junta_id}")
+        
+        # Verificar que el presidente pertenece a la junta que está intentando actualizar
+        if presidente_junta_id != junta_id:
+            logger.warning(f"❌ [FIRMA-TIMBRE] Presidente {user_id} intentó actualizar junta {junta_id} pero pertenece a {presidente_junta_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": "Permisos insuficientes", "detalle": "Solo puedes actualizar la firma y timbre de tu propia junta"}
+            )
+        
+        logger.info(f"🔄 [FIRMA-TIMBRE] Presidente {user_id} iniciando actualización de firma/timbre para junta {junta_id}")
+        
+        service = JuntaService(db)
+        resultado = await service.update_firma_timbre(
+            junta_id=junta_id,
+            update_data=update_data,
+            presidente_junta_id=presidente_junta_id
+        )
+        
+        logger.info(f"✅ [FIRMA-TIMBRE] Firma/timbre de junta {junta_id} actualizado exitosamente por presidente {user_id}")
+        return resultado
+        
+    except HTTPException as e:
+        logger.error(f"❌ [FIRMA-TIMBRE] HTTPException: {e.status_code} - {e.detail}")
+        raise
+    except ValueError as e:
+        logger.warning(f"❌ [FIRMA-TIMBRE] Error de validación actualizando firma/timbre de junta {junta_id}: {str(e)}")
+        
+        if "no encontrada" in str(e).lower():
+            status_code = status.HTTP_404_NOT_FOUND
+        else:
+            status_code = status.HTTP_400_BAD_REQUEST
+        
+        raise HTTPException(
+            status_code=status_code,
+            detail={"error": "Error de validación", "detalle": str(e)}
+        )
+    except Exception as e:
+        logger.error(f"💥 [FIRMA-TIMBRE] Error inesperado actualizando firma/timbre de junta {junta_id}: {str(e)}")
+        import traceback
+        logger.error(f"💥 [FIRMA-TIMBRE] Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Error interno del servidor", "detalle": str(e)}
+        )
+
+
+@router.patch(
     "/{junta_id}",
     response_model=JuntaUpdateResponse,
     summary="Actualizar junta (Solo Directiva)",
@@ -302,84 +385,6 @@ async def update_junta(
         )
     except Exception as e:
         logger.error(f"💥 Error inesperado actualizando junta {junta_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": "Error interno del servidor", "detalle": str(e)}
-        )
-
-
-@router.patch(
-    "/{junta_id}/firma-timbre",
-    response_model=JuntaFirmaTimbreUpdateResponse,
-    summary="Actualizar firma y timbre de la junta (Solo Presidente)",
-    description="Permite al presidente activo de la junta actualizar la firma y/o el timbre de la junta.",
-    responses={
-        200: {"description": "Firma y/o timbre actualizados exitosamente"},
-        400: {"model": ErrorResponse, "description": "Error de validación"},
-        401: {"description": "Token de autorización requerido"},
-        403: {"model": ErrorResponse, "description": "Se requieren permisos de presidente activo"},
-        404: {"model": ErrorResponse, "description": "Junta no encontrada"},
-    },
-)
-async def update_junta_firma_timbre(
-    junta_id: int,
-    update_data: JuntaFirmaTimbreUpdateRequest,
-    presidente_info: tuple[int, int] = Depends(verify_presidente_user),
-    db: AsyncSession = Depends(get_db_session)
-):
-    """
-    Actualiza la firma del presidente y/o el timbre de la junta.
-    
-    Solo puede ser ejecutado por el presidente activo de la junta.
-    
-    Args:
-        junta_id: ID de la junta a actualizar
-        update_data: Datos de firma y/o timbre en formato base64
-        presidente_info: Tupla (user_id, junta_id) del presidente (validado automáticamente)
-        db: Sesión de base de datos
-    
-    Returns:
-        Datos actualizados de firma y timbre
-    """
-    try:
-        user_id, presidente_junta_id = presidente_info
-        
-        # Verificar que el presidente pertenece a la junta que está intentando actualizar
-        if presidente_junta_id != junta_id:
-            logger.warning(f"❌ Presidente {user_id} intentó actualizar junta {junta_id} pero pertenece a {presidente_junta_id}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"error": "Permisos insuficientes", "detalle": "Solo puedes actualizar la firma y timbre de tu propia junta"}
-            )
-        
-        logger.info(f"🔄 Presidente {user_id} iniciando actualización de firma/timbre para junta {junta_id}")
-        
-        service = JuntaService(db)
-        resultado = await service.update_firma_timbre(
-            junta_id=junta_id,
-            update_data=update_data,
-            presidente_junta_id=presidente_junta_id
-        )
-        
-        logger.info(f"✅ Firma/timbre de junta {junta_id} actualizado exitosamente por presidente {user_id}")
-        return resultado
-        
-    except HTTPException:
-        raise
-    except ValueError as e:
-        logger.warning(f"❌ Error de validación actualizando firma/timbre de junta {junta_id}: {str(e)}")
-        
-        if "no encontrada" in str(e).lower():
-            status_code = status.HTTP_404_NOT_FOUND
-        else:
-            status_code = status.HTTP_400_BAD_REQUEST
-        
-        raise HTTPException(
-            status_code=status_code,
-            detail={"error": "Error de validación", "detalle": str(e)}
-        )
-    except Exception as e:
-        logger.error(f"💥 Error inesperado actualizando firma/timbre de junta {junta_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Error interno del servidor", "detalle": str(e)}
