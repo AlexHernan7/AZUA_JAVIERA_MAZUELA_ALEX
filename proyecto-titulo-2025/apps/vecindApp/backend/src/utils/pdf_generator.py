@@ -160,7 +160,7 @@ class CertificadoPDFGenerator:
             fontSize=11.5,
             alignment=TA_CENTER,
             textColor=colors.black,
-            spaceAfter=2*cm,   #despues
+            spaceAfter=1.5*cm,   #despues
         ))
         # Cuerpo
         self.styles.add(ParagraphStyle(
@@ -255,50 +255,62 @@ class CertificadoPDFGenerator:
             except Exception as e:
                 logger.warning(f"Error insertando timbre en PDF: {str(e)}")
         
-        # Crear tabla con firma del presidente a la izquierda y timbre a la derecha
-        # Fila 1: Firma y timbre lado a lado
-        fila_firmas = [celda_presidente_firma]
-        if celda_timbre:
-            fila_firmas.append(celda_timbre)
-        else:
-            fila_firmas.append("")  # Espacio vacío si no hay timbre
-        
-        # Fila 2: Nombre completo del presidente (si existe)
-        fila_nombre = [c.get("presidente_nombre_completo", ""), ""]
-        
-        # Fila 3: RUT del presidente (si existe)
-        fila_rut = [c.get("presidente_rut", ""), ""]
-        
-        # Fila 4: Rol "Presidente"
-        fila_rol = ["Presidente", ""]
-        
-        # Crear tabla con las firmas
-        ancho_total = 16*cm
-        ancho_firma = 8*cm
-        ancho_timbre = 8*cm if celda_timbre else 0
-        
-        firma_tabla = Table([
-            fila_firmas,
-            fila_nombre,
-            fila_rut,
-            fila_rol
-        ], colWidths=[ancho_firma, ancho_timbre] if celda_timbre else [ancho_total])
+                # Crear tabla con timbre a la izquierda y firma + texto a la derecha
 
-        firma_tabla.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (0, 1), (0, 2), 'Helvetica'),  # Nombre y RUT en normal
-            ('FONTSIZE', (0, 1), (0, 2), 10),  # Tamaño más pequeño para nombre y RUT
-            ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),  # Rol en negrita
-            ('FONTSIZE', (0, 3), (-1, 3), 12),  # Tamaño para rol
-            ('TOPPADDING', (0, 0), (-1, 0), 5),  # Padding superior para firma
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),  # Padding inferior para firma
-            ('TOPPADDING', (0, 1), (-1, 2), 2),  # Padding para nombre y RUT
-            ('BOTTOMPADDING', (0, 1), (-1, 2), 2),
-            ('TOPPADDING', (0, 3), (-1, 3), 10),  # Padding superior para rol
-            ('BOTTOMPADDING', (0, 3), (-1, 3), 5),  # Padding inferior para rol
-        ]))
+        # Columna izquierda: timbre (o vacío si no hay)
+        col_timbre = celda_timbre if celda_timbre else ""
+
+        # Columna derecha: firma, línea, nombre, rut, rol
+        firma_image = celda_presidente_firma if celda_presidente_firma else ""
+
+        nombre_pres = c.get("presidente_nombre_completo", "")
+        rut_pres = c.get("presidente_rut", "")
+        rol_pres = "Presidente" if nombre_pres or rut_pres else ""
+
+        firma_tabla = Table(
+            [
+                # fila 0: timbre | firma
+                [col_timbre, firma_image],
+                # fila 1: (vacío) | línea bajo firma
+                ["", ""],
+                # fila 2: (vacío) | nombre
+                ["", nombre_pres],
+                # fila 3: (vacío) | RUT
+                ["", rut_pres],
+                # fila 4: (vacío) | rol
+                ["", rol_pres],
+            ],
+            colWidths=[5 * cm, 11 * cm],  # timbre más angosto, firma/texto más ancho
+        )
+
+        firma_tabla.setStyle(
+            TableStyle(
+                [
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+
+                    # Línea bajo la firma: fila 1, columna 1
+                    ("LINEABOVE", (1, 1), (1, 1), 0.7, colors.black),
+
+                    # Nombre y RUT un poco más pequeños
+                    ("FONTNAME", (1, 2), (1, 3), "Helvetica"),
+                    ("FONTSIZE", (1, 2), (1, 3), 10),
+
+                    # Rol en negrita
+                    ("FONTNAME", (1, 4), (1, 4), "Helvetica-Bold"),
+                    ("FONTSIZE", (1, 4), (1, 4), 11),
+
+                    # Un poco de padding vertical para que todo "respire"
+                    ("TOPPADDING", (0, 0), (-1, 0), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 0),
+                    ("TOPPADDING", (1, 2), (1, 4), 1),
+                    ("BOTTOMPADDING", (1, 2), (1, 4), 1),
+                ]
+            )
+        )
+
         story.append(firma_tabla)
+
 
         
 
