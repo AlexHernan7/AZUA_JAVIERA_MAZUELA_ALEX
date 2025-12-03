@@ -1,7 +1,3 @@
-"""
-Generador de PDFs para certificados de residencia (formato carta, igual al ejemplo).
-"""
-
 import logging
 from datetime import datetime
 from typing import Dict, Any
@@ -267,7 +263,7 @@ class CertificadoPDFGenerator:
             lineas_texto.append(nombre_pres)
         # if rut_pres:
         #     lineas_texto.append(rut_pres)
-        lineas_texto.append("<b>Presidente</b>")
+        lineas_texto.append("<br/>Presidente<br/>")
         texto_bajo_firma = "<br/>".join(lineas_texto)
 
         texto_bajo_firma_paragraph = Paragraph(texto_bajo_firma, self.styles["FirmaRol"])
@@ -277,6 +273,7 @@ class CertificadoPDFGenerator:
                 # fila 0: timbre | firma
                 [col_timbre, celda_presidente_firma],
                 # fila 1: (vacío) | línea bajo la firma
+                ["", ""],
                 # fila 2: (vacío) | bloque de texto (nombre, rut, rol)
                 ["", texto_bajo_firma_paragraph],
             ],
@@ -292,8 +289,8 @@ class CertificadoPDFGenerator:
                     # Línea bajo la firma (solo en la celda derecha de la fila 1)
                     ("LINEABOVE", (1, 1), (1, 1), 0.8, colors.black),
                     # Para que la línea no sea tan larga, añadimos padding interno
-                    ("LEFTPADDING", (1, 1), (1, 1), 110),
-                    ("RIGHTPADDING", (1, 1), (1, 1), 110),
+                    ("LEFTPADDING", (1, 1), (1, 1), 100),
+                    ("RIGHTPADDING", (1, 1), (1, 1), 100),
 
                     # Sin espacio extra entre imagen y línea
                     ("TOPPADDING", (1, 0), (1, 0), 0),
