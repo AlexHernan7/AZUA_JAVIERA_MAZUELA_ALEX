@@ -285,7 +285,9 @@ async def update_junta_firma_timbre(
     logger.info(f"🔍 [FIRMA-TIMBRE] junta_id recibido: {junta_id}")
     logger.info(f"🔍 [FIRMA-TIMBRE] update_data recibido: firma_presidente={'presente' if update_data.firma_presidente else 'None'}, timbre={'presente' if update_data.timbre else 'None'}")
     try:
+        logger.info(f"🔍 [FIRMA-TIMBRE] Intentando obtener presidente_info...")
         user_id, presidente_junta_id = presidente_info
+        logger.info(f"🔍 [FIRMA-TIMBRE] ✅ presidente_info obtenido: user_id={user_id}, presidente_junta_id={presidente_junta_id}")
         logger.info(f"🔍 [FIRMA-TIMBRE] Usuario {user_id} es presidente de junta {presidente_junta_id}, solicitando actualizar junta {junta_id}")
         
         # Verificar que el presidente pertenece a la junta que está intentando actualizar

@@ -107,7 +107,12 @@ api_router.include_router(reporte_router)
 logger.info("📋 Rutas de juntas registradas:")
 for route in junta_router.routes:
     if hasattr(route, 'path') and hasattr(route, 'methods'):
-        logger.info(f"   {', '.join(route.methods)} {route.path}")
+        methods_str = ', '.join(route.methods) if hasattr(route, 'methods') else 'N/A'
+        path_str = route.path if hasattr(route, 'path') else 'N/A'
+        logger.info(f"   {methods_str} {path_str}")
+        # Verificar específicamente el endpoint de firma-timbre
+        if 'firma-timbre' in path_str:
+            logger.info(f"   ✅ ENDPOINT FIRMA-TIMBRE ENCONTRADO: {methods_str} {path_str}")
 
 # Middleware para logging de todas las peticiones
 @app.middleware("http")

@@ -255,26 +255,38 @@ async def verify_presidente_user(
     
     # Verificar que tiene cargo de presidente y está activo
     from src.database.models.directiva import Directiva
+    from sqlalchemy import func
     
+    # Buscar directiva del usuario (case-insensitive para el cargo)
     directiva_result = await db.execute(
         select(Directiva).where(
             and_(
                 Directiva.id_usuario == user_id,
-                Directiva.cargo == 'presidente',
+                func.lower(Directiva.cargo) == 'presidente',  # Case-insensitive
                 Directiva.fecha_termino_cargo.is_(None)  # Cargo activo
             )
         )
     )
     directiva = directiva_result.scalar_one_or_none()
     
+    # Si no se encuentra, buscar todas las directivas del usuario para debugging
     if not directiva:
+        all_directivas_result = await db.execute(
+            select(Directiva).where(Directiva.id_usuario == user_id)
+        )
+        all_directivas = all_directivas_result.scalars().all()
+        
         logger.warning(f"[AUTH] Usuario {user_id} no es presidente activo")
+        logger.warning(f"[AUTH] Directivas encontradas para usuario {user_id}:")
+        for d in all_directivas:
+            logger.warning(f"[AUTH]   - Cargo: '{d.cargo}' (lower: '{d.cargo.lower() if d.cargo else None}'), Activo: {d.fecha_termino_cargo is None}, Junta: {d.id_junta}")
+        
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Se requieren permisos de presidente activo",
         )
     
-    logger.info(f"[AUTH] Usuario {user_id} verificado como presidente activo de junta {junta_id}")
+    logger.info(f"[AUTH] Usuario {user_id} verificado como presidente activo de junta {junta_id} (cargo: '{directiva.cargo}')")
     return (user_id, junta_id)
 
 
