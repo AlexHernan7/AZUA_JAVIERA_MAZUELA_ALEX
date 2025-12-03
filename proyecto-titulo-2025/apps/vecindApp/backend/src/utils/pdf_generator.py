@@ -180,7 +180,7 @@ class CertificadoPDFGenerator:
             fontSize=11.5,
             alignment=TA_CENTER,
             textColor=colors.black,
-            spaceAfter= 1.5*cm#despues
+            spaceAfter= 2.5*cm#despues
         ))
 
                 # Pie (lugar y fecha) centrado
