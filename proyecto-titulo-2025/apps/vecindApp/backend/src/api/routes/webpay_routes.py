@@ -289,10 +289,18 @@ async def _process_webpay_return(
                         year = datetime.now().year
                         numero_certificado = f"CERT-{pedido.id_junta}-{year}-{count + 1:04d}"
                         
-                        # Obtener firma y timbre de la junta si existen
+                        # Obtener firma y timbre de la junta si existen, y datos del presidente
                         from src.utils.image_utils import binary_to_base64
+                        from src.database.models.directiva import Directiva
+                        from sqlalchemy import func, or_, and_
+                        from datetime import date
+                        
                         firma_presidente_base64 = None
                         timbre_base64 = None
+                        presidente_nombres = None
+                        presidente_apellido_paterno = None
+                        presidente_apellido_materno = None
+                        presidente_rut = None
                         
                         if pedido.junta:
                             if pedido.junta.firma_presidente:
@@ -313,6 +321,28 @@ async def _process_webpay_return(
                                         timbre_base64 = binary_to_base64(pedido.junta.timbre, "image/png")
                                 except Exception as e:
                                     logger.warning(f"Error convirtiendo timbre a base64: {str(e)}")
+                            
+                            # Obtener datos del presidente activo
+                            fecha_actual = date.today()
+                            presidente_result = await db.execute(
+                                select(Directiva).where(
+                                    and_(
+                                        Directiva.id_junta == pedido.junta.id_junta,
+                                        func.lower(Directiva.cargo) == 'presidente',
+                                        or_(
+                                            Directiva.fecha_termino_cargo.is_(None),
+                                            Directiva.fecha_termino_cargo >= fecha_actual
+                                        )
+                                    )
+                                )
+                            )
+                            presidente = presidente_result.scalar_one_or_none()
+                            
+                            if presidente:
+                                presidente_nombres = presidente.nombres
+                                presidente_apellido_paterno = presidente.apellido_paterno
+                                presidente_apellido_materno = presidente.apellido_materno
+                                presidente_rut = presidente.rut
                         
                         # Preparar datos para el PDF
                         datos_pdf = {
@@ -332,7 +362,11 @@ async def _process_webpay_return(
                             'junta': pedido.junta.nombre if pedido.junta else None,
                             'motivo_solicitud': pedido.motivo.motivo if pedido.motivo else "No especificado",
                             'firma_presidente': firma_presidente_base64,
-                            'timbre': timbre_base64
+                            'timbre': timbre_base64,
+                            'presidente_nombres': presidente_nombres,
+                            'presidente_apellido_paterno': presidente_apellido_paterno,
+                            'presidente_apellido_materno': presidente_apellido_materno,
+                            'presidente_rut': presidente_rut
                         }
                         
                         # Generar PDF

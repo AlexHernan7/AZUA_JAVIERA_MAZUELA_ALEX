@@ -95,6 +95,13 @@ class CertificadoPDFGenerator:
             except Exception as e:
                 logger.warning(f"Error procesando timbre: {str(e)}")
 
+        # Preparar datos del presidente
+        pres_nombres = datos.get("presidente_nombres", "").strip()
+        pres_ap_pa = datos.get("presidente_apellido_paterno", "").strip()
+        pres_ap_ma = datos.get("presidente_apellido_materno", "").strip()
+        pres_nombre_completo = " ".join(x for x in [pres_nombres, pres_ap_pa, pres_ap_ma] if x)
+        pres_rut = datos.get("presidente_rut", "").strip()
+        
         return {
             "folio": datos.get("numero", "CERT-2-2025-0000"),
             "titulo": "CERTIFICADO DE RESIDENCIA",
@@ -110,6 +117,8 @@ class CertificadoPDFGenerator:
             "lugar_fecha": f"Santiago, {datos.get('comuna', 'Maipú')}, {_fecha_es(fecha_emision)}",
             "firma_io": firma_io,
             "timbre_io": timbre_io,
+            "presidente_nombre_completo": pres_nombre_completo or "",
+            "presidente_rut": pres_rut or "",
         }
 
     def _setup_custom_styles(self):
@@ -227,51 +236,69 @@ class CertificadoPDFGenerator:
         # Espacio antes de firmas
         story.append(Spacer(1, 1.6 * cm))
 
-        # Tabla de firmas: imagen de firma (si existe) o línea, y roles debajo
-        # Preparar contenido de las celdas
-        celda_presidente_content = None
-        celda_secretario_content = "_" * 30
-        
-        # Celda del presidente: firma si existe, sino línea
+        # Preparar contenido de la celda del presidente: firma si existe, sino línea
+        celda_presidente_firma = None
         if c.get("firma_io"):
             try:
-                celda_presidente_content = Image(c["firma_io"], width=6*cm, height=2*cm, kind='proportional')
+                celda_presidente_firma = Image(c["firma_io"], width=6*cm, height=2*cm, kind='proportional')
             except Exception as e:
                 logger.warning(f"Error insertando firma en PDF: {str(e)}")
-                celda_presidente_content = "_" * 30
+                celda_presidente_firma = "_" * 30
         else:
-            celda_presidente_content = "_" * 30
+            celda_presidente_firma = "_" * 30
+        
+        # Preparar timbre si existe
+        celda_timbre = None
+        if c.get("timbre_io"):
+            try:
+                celda_timbre = Image(c["timbre_io"], width=3*cm, height=3*cm, kind='proportional')
+            except Exception as e:
+                logger.warning(f"Error insertando timbre en PDF: {str(e)}")
+        
+        # Crear tabla con firma del presidente a la izquierda y timbre a la derecha
+        # Fila 1: Firma y timbre lado a lado
+        fila_firmas = [celda_presidente_firma]
+        if celda_timbre:
+            fila_firmas.append(celda_timbre)
+        else:
+            fila_firmas.append("")  # Espacio vacío si no hay timbre
+        
+        # Fila 2: Nombre completo del presidente (si existe)
+        fila_nombre = [c.get("presidente_nombre_completo", ""), ""]
+        
+        # Fila 3: RUT del presidente (si existe)
+        fila_rut = [c.get("presidente_rut", ""), ""]
+        
+        # Fila 4: Rol "Presidente"
+        fila_rol = ["Presidente", ""]
         
         # Crear tabla con las firmas
+        ancho_total = 16*cm
+        ancho_firma = 8*cm
+        ancho_timbre = 8*cm if celda_timbre else 0
+        
         firma_tabla = Table([
-            [celda_presidente_content, celda_secretario_content],
-            ["Presidente", "Secretario"]
-        ], colWidths=[8*cm, 8*cm])
+            fila_firmas,
+            fila_nombre,
+            fila_rut,
+            fila_rol
+        ], colWidths=[ancho_firma, ancho_timbre] if celda_timbre else [ancho_total])
 
         firma_tabla.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
-            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, 1), 12),
-            ('TOPPADDING', (0, 1), (-1, 1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (0, 1), (0, 2), 'Helvetica'),  # Nombre y RUT en normal
+            ('FONTSIZE', (0, 1), (0, 2), 10),  # Tamaño más pequeño para nombre y RUT
+            ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),  # Rol en negrita
+            ('FONTSIZE', (0, 3), (-1, 3), 12),  # Tamaño para rol
+            ('TOPPADDING', (0, 0), (-1, 0), 5),  # Padding superior para firma
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),  # Padding inferior para firma
+            ('TOPPADDING', (0, 1), (-1, 2), 2),  # Padding para nombre y RUT
+            ('BOTTOMPADDING', (0, 1), (-1, 2), 2),
+            ('TOPPADDING', (0, 3), (-1, 3), 10),  # Padding superior para rol
+            ('BOTTOMPADDING', (0, 3), (-1, 3), 5),  # Padding inferior para rol
         ]))
         story.append(firma_tabla)
-
-        # Agregar timbre si existe (debajo de las firmas, centrado)
-        if c.get("timbre_io"):
-            try:
-                story.append(Spacer(1, 0.5 * cm))
-                timbre_img = Image(c["timbre_io"], width=3*cm, height=3*cm, kind='proportional')
-                # Centrar el timbre
-                timbre_table = Table([[timbre_img]], colWidths=[16*cm])
-                timbre_table.setStyle(TableStyle([
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ]))
-                story.append(timbre_table)
-            except Exception as e:
-                logger.warning(f"Error insertando timbre en PDF: {str(e)}")
 
         
 
