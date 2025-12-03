@@ -273,7 +273,7 @@ class CertificadoPDFGenerator:
                 # fila 0: timbre | firma
                 [col_timbre, celda_presidente_firma],
                 # fila 1: (vacío) | línea bajo la firma
-                ["", ""],
+                
                 # fila 2: (vacío) | bloque de texto (nombre, rut, rol)
                 ["", texto_bajo_firma_paragraph],
             ],
@@ -289,19 +289,19 @@ class CertificadoPDFGenerator:
                     # Línea bajo la firma (solo en la celda derecha de la fila 1)
                     ("LINEABOVE", (1, 1), (1, 1), 0.8, colors.black),
                     # Para que la línea no sea tan larga, añadimos padding interno
-                    ("LEFTPADDING", (1, 1), (1, 1), 100),
-                    ("RIGHTPADDING", (1, 1), (1, 1), 100),
+                    ("LEFTPADDING", (1, 1), (1, 1), 90),
+                    ("RIGHTPADDING", (1, 1), (1, 1), 90),
 
                     # Sin espacio extra entre imagen y línea
                     ("TOPPADDING", (1, 0), (1, 0), 0),
                     ("BOTTOMPADDING", (1, 0), (1, 0), 0),
 
                     # Muy poco espacio entre línea y texto
-                    ("TOPPADDING", (1, 1), (1, 1), 1),
-                    ("BOTTOMPADDING", (1, 1), (1, 1), 1),
+                    ("TOPPADDING", (1, 1), (1, 1), 0),
+                    ("BOTTOMPADDING", (1, 1), (1, 1), 0),
 
                     # Texto (nombre, RUT, rol) pegado a la línea
-                    ("TOPPADDING", (1, 2), (1, 2), 1),
+                    ("TOPPADDING", (1, 2), (1, 2), 0),
                     ("BOTTOMPADDING", (1, 2), (1, 2), 0),
                 ]
             )
