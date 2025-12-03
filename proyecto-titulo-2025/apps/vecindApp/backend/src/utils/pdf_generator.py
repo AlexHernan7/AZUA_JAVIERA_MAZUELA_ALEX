@@ -255,32 +255,33 @@ class CertificadoPDFGenerator:
             except Exception as e:
                 logger.warning(f"Error insertando timbre en PDF: {str(e)}")
         
-                # Crear tabla con timbre a la izquierda y firma + texto a la derecha
+                # Crear tabla con timbre a la izquierda y firma + datos a la derecha
 
-        # Columna izquierda: timbre (o vacío si no hay)
         col_timbre = celda_timbre if celda_timbre else ""
 
-        # Columna derecha: firma, línea, nombre, rut, rol
-        firma_image = celda_presidente_firma if celda_presidente_firma else ""
-
+        # Texto combinado: nombre, RUT y rol en un mismo bloque, una línea debajo de otra
         nombre_pres = c.get("presidente_nombre_completo", "")
         rut_pres = c.get("presidente_rut", "")
-        rol_pres = "Presidente" if nombre_pres or rut_pres else ""
+        lineas_texto = []
+        if nombre_pres:
+            lineas_texto.append(nombre_pres)
+        # if rut_pres:
+        #     lineas_texto.append(rut_pres)
+        lineas_texto.append("Presidente")
+        texto_bajo_firma = "<br/>".join(lineas_texto)
+
+        texto_bajo_firma_paragraph = Paragraph(texto_bajo_firma, self.styles["FirmaRol"])
 
         firma_tabla = Table(
             [
                 # fila 0: timbre | firma
-                [col_timbre, firma_image],
-                # fila 1: (vacío) | línea bajo firma
+                [col_timbre, celda_presidente_firma],
+                # fila 1: (vacío) | línea bajo la firma
                 ["", ""],
-                # fila 2: (vacío) | nombre
-                ["", nombre_pres],
-                # fila 3: (vacío) | RUT
-                # ["", rut_pres],
-                # fila 4: (vacío) | rol
-                ["", rol_pres],
+                # fila 2: (vacío) | bloque de texto (nombre, rut, rol)
+                ["", texto_bajo_firma_paragraph],
             ],
-            colWidths=[5 * cm, 11 * cm],  # timbre más angosto, firma/texto más ancho
+            colWidths=[5 * cm, 11 * cm],  # ajusta si quieres que la firma tenga menos/mas ancho
         )
 
         firma_tabla.setStyle(
@@ -289,22 +290,23 @@ class CertificadoPDFGenerator:
                     ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
 
-                    # Línea bajo la firma: fila 1, columna 1
-                    ("LINEABOVE", (1, 1), (1, 1), 0.7, colors.black),
+                    # Línea bajo la firma (solo en la celda derecha de la fila 1)
+                    ("LINEABOVE", (1, 1), (1, 1), 0.8, colors.black),
+                    # Para que la línea no sea tan larga, añadimos padding interno
+                    ("LEFTPADDING", (1, 1), (1, 1), 40),
+                    ("RIGHTPADDING", (1, 1), (1, 1), 40),
 
-                    # Nombre y RUT un poco más pequeños
-                    ("FONTNAME", (1, 2), (1, 3), "Helvetica"),
-                    ("FONTSIZE", (1, 2), (1, 3), 10),
+                    # Sin espacio extra entre imagen y línea
+                    ("TOPPADDING", (1, 0), (1, 0), 0),
+                    ("BOTTOMPADDING", (1, 0), (1, 0), 0),
 
-                    # Rol en negrita
-                    ("FONTNAME", (1, 4), (1, 4), "Helvetica-Bold"),
-                    ("FONTSIZE", (1, 4), (1, 4), 11),
+                    # Muy poco espacio entre línea y texto
+                    ("TOPPADDING", (1, 1), (1, 1), 1),
+                    ("BOTTOMPADDING", (1, 1), (1, 1), 1),
 
-                    # Un poco de padding vertical para que todo "respire"
-                    ("TOPPADDING", (0, 0), (-1, 0), 0),
-                    ("BOTTOMPADDING", (0, 0), (-1, 0), 0),
-                    ("TOPPADDING", (1, 2), (1, 4), 1),
-                    ("BOTTOMPADDING", (1, 2), (1, 4), 1),
+                    # Texto (nombre, RUT, rol) pegado a la línea
+                    ("TOPPADDING", (1, 2), (1, 2), 1),
+                    ("BOTTOMPADDING", (1, 2), (1, 2), 0),
                 ]
             )
         )
