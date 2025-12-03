@@ -149,20 +149,28 @@ def upgrade() -> None:
     else:
         print("ℹ️  Columna id_motivo ya existe en certificado_pedido")
     
-    # Migrar datos existentes
+    # Migrar datos existentes (solo si las columnas antiguas existen)
     # Para certificados: mapear estados existentes a nuevos IDs
-    op.execute("""
-        UPDATE vecindapp.certificado_pedido 
-        SET id_estado = (
-            CASE 
-                WHEN estado = 'iniciado' THEN 1  -- pendiente_pago
-                WHEN estado = 'pendiente_pago' THEN 1  -- pendiente_pago
-                WHEN estado = 'emitido' THEN 2  -- generado
-                WHEN estado = 'rechazado' THEN 1  -- pendiente_pago (por defecto)
-                ELSE 1  -- pendiente_pago por defecto
-            END
-        )
-    """)
+    if 'estado' in cert_columns:
+        try:
+            op.execute("""
+                UPDATE vecindapp.certificado_pedido 
+                SET id_estado = (
+                    CASE 
+                        WHEN estado = 'iniciado' THEN 1  -- pendiente_pago
+                        WHEN estado = 'pendiente_pago' THEN 1  -- pendiente_pago
+                        WHEN estado = 'emitido' THEN 2  -- generado
+                        WHEN estado = 'rechazado' THEN 1  -- pendiente_pago (por defecto)
+                        ELSE 1  -- pendiente_pago por defecto
+                    END
+                )
+                WHERE id_estado IS NULL
+            """)
+            print("✅ Datos de estado migrados a id_estado en certificado_pedido")
+        except Exception as e:
+            print(f"ℹ️  No se pudieron migrar datos de estado (puede que ya estén migrados): {e}")
+    else:
+        print("ℹ️  Columna estado no existe, datos ya migrados o no hay datos que migrar")
     
     # Para motivos: crear un motivo genérico para datos existentes
     op.execute("""
@@ -171,11 +179,18 @@ def upgrade() -> None:
         ON CONFLICT (motivo) DO NOTHING
     """)
     
-    op.execute("""
-        UPDATE vecindapp.certificado_pedido 
-        SET id_motivo = (SELECT id_motivo FROM vecindapp.motivo_solicitud WHERE motivo = 'Motivo no especificado')
-        WHERE motivo_solicitud IS NOT NULL
-    """)
+    if 'motivo_solicitud' in cert_columns:
+        try:
+            op.execute("""
+                UPDATE vecindapp.certificado_pedido 
+                SET id_motivo = (SELECT id_motivo FROM vecindapp.motivo_solicitud WHERE motivo = 'Motivo no especificado')
+                WHERE motivo_solicitud IS NOT NULL AND id_motivo IS NULL
+            """)
+            print("✅ Datos de motivo_solicitud migrados a id_motivo en certificado_pedido")
+        except Exception as e:
+            print(f"ℹ️  No se pudieron migrar datos de motivo_solicitud (puede que ya estén migrados): {e}")
+    else:
+        print("ℹ️  Columna motivo_solicitud no existe, datos ya migrados o no hay datos que migrar")
     
     # Hacer las columnas NOT NULL después de migrar (solo si no son ya NOT NULL)
     cert_columns_info = {col['name']: col for col in inspector.get_columns('certificado_pedido', schema='vecindapp')}
@@ -260,19 +275,27 @@ def upgrade() -> None:
     else:
         print("ℹ️  Columna id_tipo ya existe en espacio")
     
-    # Migrar tipos de espacio existentes
-    op.execute("""
-        UPDATE vecindapp.espacio 
-        SET id_tipo = (
-            CASE 
-                WHEN tipo = 'cancha' THEN 1
-                WHEN tipo = 'sala' THEN 2
-                WHEN tipo = 'plaza' THEN 3
-                WHEN tipo = 'otro' THEN 4
-                ELSE 4  -- otro por defecto
-            END
-        )
-    """)
+    # Migrar tipos de espacio existentes (solo si la columna tipo existe)
+    if 'tipo' in espacio_columns:
+        try:
+            op.execute("""
+                UPDATE vecindapp.espacio 
+                SET id_tipo = (
+                    CASE 
+                        WHEN tipo = 'cancha' THEN 1
+                        WHEN tipo = 'sala' THEN 2
+                        WHEN tipo = 'plaza' THEN 3
+                        WHEN tipo = 'otro' THEN 4
+                        ELSE 4  -- otro por defecto
+                    END
+                )
+                WHERE id_tipo IS NULL
+            """)
+            print("✅ Datos de tipo migrados a id_tipo en espacio")
+        except Exception as e:
+            print(f"ℹ️  No se pudieron migrar datos de tipo (puede que ya estén migrados): {e}")
+    else:
+        print("ℹ️  Columna tipo no existe, datos ya migrados o no hay datos que migrar")
     
     # Hacer la columna NOT NULL después de migrar (solo si no es ya NOT NULL)
     espacio_columns_info = {col['name']: col for col in inspector.get_columns('espacio', schema='vecindapp')}
@@ -309,21 +332,29 @@ def upgrade() -> None:
     else:
         print("ℹ️  Columna id_estado ya existe en reserva")
     
-    # Migrar estados de reserva existentes
-    op.execute("""
-        UPDATE vecindapp.reserva 
-        SET id_estado = (
-            CASE 
-                WHEN estado = 'pendiente' THEN 1
-                WHEN estado = 'pagada' THEN 2
-                WHEN estado = 'aprobada' THEN 3
-                WHEN estado = 'rechazada' THEN 4
-                WHEN estado = 'cancelada' THEN 5
-                WHEN estado = 'confirmada' THEN 6
-                ELSE 1  -- pendiente por defecto
-            END
-        )
-    """)
+    # Migrar estados de reserva existentes (solo si la columna estado existe)
+    if 'estado' in reserva_columns:
+        try:
+            op.execute("""
+                UPDATE vecindapp.reserva 
+                SET id_estado = (
+                    CASE 
+                        WHEN estado = 'pendiente' THEN 1
+                        WHEN estado = 'pagada' THEN 2
+                        WHEN estado = 'aprobada' THEN 3
+                        WHEN estado = 'rechazada' THEN 4
+                        WHEN estado = 'cancelada' THEN 5
+                        WHEN estado = 'confirmada' THEN 6
+                        ELSE 1  -- pendiente por defecto
+                    END
+                )
+                WHERE id_estado IS NULL
+            """)
+            print("✅ Datos de estado migrados a id_estado en reserva")
+        except Exception as e:
+            print(f"ℹ️  No se pudieron migrar datos de estado (puede que ya estén migrados): {e}")
+    else:
+        print("ℹ️  Columna estado no existe, datos ya migrados o no hay datos que migrar")
     
     # Hacer la columna NOT NULL después de migrar (solo si no es ya NOT NULL)
     reserva_columns_info = {col['name']: col for col in inspector.get_columns('reserva', schema='vecindapp')}
