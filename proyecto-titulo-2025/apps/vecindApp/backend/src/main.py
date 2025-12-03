@@ -109,6 +109,25 @@ for route in junta_router.routes:
     if hasattr(route, 'path') and hasattr(route, 'methods'):
         logger.info(f"   {', '.join(route.methods)} {route.path}")
 
+# Middleware para logging de todas las peticiones
+@app.middleware("http")
+async def log_requests(request, call_next):
+    import time
+    start_time = time.time()
+    
+    # Log de la petición
+    logger.info(f"🌐 [REQUEST] {request.method} {request.url.path}")
+    logger.info(f"🌐 [REQUEST] Query params: {dict(request.query_params)}")
+    
+    # Procesar la petición
+    response = await call_next(request)
+    
+    # Log de la respuesta
+    process_time = time.time() - start_time
+    logger.info(f"🌐 [RESPONSE] {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.3f}s")
+    
+    return response
+
 # Incluir el router en la aplicación
 app.include_router(api_router)
 

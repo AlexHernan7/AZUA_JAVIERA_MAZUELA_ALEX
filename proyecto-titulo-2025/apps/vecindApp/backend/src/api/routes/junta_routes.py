@@ -30,13 +30,21 @@ router = APIRouter(prefix="/juntas", tags=["Juntas"])
 logger = logging.getLogger(__name__)
 
 # Log al cargar el módulo para verificar que se está importando
+print("=" * 60)
+print("📋 CARGANDO MÓDULO junta_routes.py")
+print("=" * 60)
+logger.info("=" * 60)
+logger.info("📋 CARGANDO MÓDULO junta_routes.py")
+logger.info("=" * 60)
 logger.info("📋 Módulo junta_routes cargado - Endpoints disponibles:")
 logger.info("   - POST /juntas/")
 logger.info("   - GET /juntas/")
 logger.info("   - GET /juntas/{junta_id}")
 logger.info("   - GET /juntas/comuna/{comuna_id}")
-logger.info("   - PATCH /juntas/{junta_id}/firma-timbre")
+logger.info("   - PATCH /juntas/{junta_id}/firma-timbre ← ENDPOINT DE FIRMA/TIMBRE")
 logger.info("   - PATCH /juntas/{junta_id}")
+logger.info("=" * 60)
+print("=" * 60)
 
 
 @router.post(
@@ -272,7 +280,10 @@ async def update_junta_firma_timbre(
     Returns:
         Datos actualizados de firma y timbre
     """
+    logger.info(f"🔍 [FIRMA-TIMBRE] ========== INICIO ENDPOINT ==========")
     logger.info(f"🔍 [FIRMA-TIMBRE] Endpoint llamado: PATCH /juntas/{junta_id}/firma-timbre")
+    logger.info(f"🔍 [FIRMA-TIMBRE] junta_id recibido: {junta_id}")
+    logger.info(f"🔍 [FIRMA-TIMBRE] update_data recibido: firma_presidente={'presente' if update_data.firma_presidente else 'None'}, timbre={'presente' if update_data.timbre else 'None'}")
     try:
         user_id, presidente_junta_id = presidente_info
         logger.info(f"🔍 [FIRMA-TIMBRE] Usuario {user_id} es presidente de junta {presidente_junta_id}, solicitando actualizar junta {junta_id}")
