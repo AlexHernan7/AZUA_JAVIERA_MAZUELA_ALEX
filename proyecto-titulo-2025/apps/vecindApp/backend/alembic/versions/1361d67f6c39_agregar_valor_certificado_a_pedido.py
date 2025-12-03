@@ -20,18 +20,36 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Agregar columna valor_certificado a certificado_pedido
-    op.add_column('certificado_pedido', 
-                  sa.Column('valor_certificado', sa.Numeric(10, 2), nullable=False, server_default='2000.00'),
-                  schema='vecindapp')
+    from sqlalchemy import inspect
     
-    # Agregar constraint para valores positivos
-    op.create_check_constraint(
-        'ck_cert_pedido_valor_positivo',
-        'certificado_pedido',
-        'valor_certificado > 0',
-        schema='vecindapp'
-    )
+    # Verificar si la columna ya existe (idempotente)
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('certificado_pedido', schema='vecindapp')]
+    
+    # Agregar columna valor_certificado solo si no existe
+    if 'valor_certificado' not in columns:
+        op.add_column('certificado_pedido', 
+                      sa.Column('valor_certificado', sa.Numeric(10, 2), nullable=False, server_default='2000.00'),
+                      schema='vecindapp')
+        print("✅ Columna valor_certificado agregada")
+    else:
+        print("ℹ️  Columna valor_certificado ya existe")
+    
+    # Verificar si el constraint ya existe
+    constraints = [c['name'] for c in inspector.get_check_constraints('certificado_pedido', schema='vecindapp')]
+    
+    # Agregar constraint para valores positivos solo si no existe
+    if 'ck_cert_pedido_valor_positivo' not in constraints:
+        op.create_check_constraint(
+            'ck_cert_pedido_valor_positivo',
+            'certificado_pedido',
+            'valor_certificado > 0',
+            schema='vecindapp'
+        )
+        print("✅ Constraint ck_cert_pedido_valor_positivo agregado")
+    else:
+        print("ℹ️  Constraint ck_cert_pedido_valor_positivo ya existe")
 
 
 def downgrade() -> None:

@@ -41,9 +41,29 @@ def check_and_fix_alembic_state():
             # Verificar si existe la tabla region (indicador de que las tablas ya fueron creadas)
             has_region = 'region' in tables
             
+            # Verificar columnas de migraciones específicas
+            has_valor_certificado = False
+            has_valor_reserva = False
+            has_firma_timbre = False
+            
+            if 'certificado_pedido' in tables:
+                cert_columns = [col['name'] for col in inspector.get_columns('certificado_pedido', schema='vecindapp')]
+                has_valor_certificado = 'valor_certificado' in cert_columns
+            
+            if 'reserva' in tables:
+                reserva_columns = [col['name'] for col in inspector.get_columns('reserva', schema='vecindapp')]
+                has_valor_reserva = 'valor_reserva' in reserva_columns
+            
+            if 'junta' in tables:
+                junta_columns = [col['name'] for col in inspector.get_columns('junta', schema='vecindapp')]
+                has_firma_timbre = 'firma_presidente' in junta_columns and 'timbre' in junta_columns
+            
             print(f"\nTablas encontradas en schema vecindapp: {len(tables)}")
             print(f"Tabla alembic_version existe: {has_alembic_version}")
             print(f"Tabla region existe: {has_region}")
+            print(f"Columna valor_certificado existe: {has_valor_certificado}")
+            print(f"Columna valor_reserva existe: {has_valor_reserva}")
+            print(f"Columnas firma_presidente y timbre existen: {has_firma_timbre}")
             
             # Si las tablas existen pero Alembic no tiene registro, marcar migración inicial
             if has_region and not has_alembic_version:
@@ -102,6 +122,15 @@ def check_and_fix_alembic_state():
                         print(f"\n✅ Alembic tiene registro en público: versión {version}")
                 except:
                     print("\n✅ Alembic tiene registro (no se pudo leer la versión)")
+            
+            # Si las columnas de migraciones específicas existen, las migraciones ya se aplicaron
+            # Esto es solo informativo, las migraciones idempotentes las manejarán automáticamente
+            if has_valor_certificado:
+                print("\nℹ️  Migración 1361d67f6c39 (valor_certificado) ya aplicada (columna existe)")
+            if has_valor_reserva:
+                print("ℹ️  Migración 3b2e1947553a (valor_reserva) ya aplicada (columna existe)")
+            if has_firma_timbre:
+                print("ℹ️  Migración 8666a42b39cb (firma_presidente y timbre) ya aplicada (columnas existen)")
             else:
                 print("\nℹ️  Base de datos nueva, Alembic creará las tablas")
             
