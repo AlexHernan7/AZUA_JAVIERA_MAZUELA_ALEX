@@ -8,6 +8,9 @@ import { tap, catchError } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, UserLoginData, ApiError, RegisterRequest, RegisterResponse, UpdateProfileRequest, UpdateProfileResponse, ComunasList, JuntasList, ChangePasswordRequest, ChangePasswordResponse, VecinoListItem, DirectivaListItem } from '../interfaces/auth.interface';
 import { environment } from '../../environments/environment';
 
+/**
+ * Guard para proteger rutas que requieren autenticación
+ */
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -17,6 +20,9 @@ export const authGuard: CanActivateFn = () => {
   return false;
 };
 
+/**
+ * Guard para proteger rutas que requieren rol de directiva o admin
+ */
 export const directivaGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -28,6 +34,44 @@ export const directivaGuard: CanActivateFn = () => {
   if (hasAccess) {
     return true;
   }
+  router.navigate(['/']);
+  return false;
+};
+
+/**
+ * Guard para proteger rutas que requieren rol de admin exclusivamente
+ */
+export const adminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const user = auth.getCurrentUser();
+  const isAdmin = auth.isAuthenticated() && user?.roles?.includes('admin');
+  
+  if (isAdmin) {
+    return true;
+  }
+  // Si está autenticado pero no es admin, redirigir al home
+  if (auth.isAuthenticated()) {
+    router.navigate(['/']);
+  } else {
+    // Si no está autenticado, redirigir al login
+    router.navigate(['/login']);
+  }
+  return false;
+};
+
+/**
+ * Guard para evitar que usuarios autenticados accedan a páginas de login/registro
+ */
+export const guestGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated()) {
+    return true;
+  }
+  // Si ya está autenticado, redirigir al home
   router.navigate(['/']);
   return false;
 };
@@ -144,13 +188,60 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Verifica si el token es válido y no ha expirado
+   */
   private hasValidToken(): boolean {
     const token = this.getToken();
     if (!token) return false;
 
-    // Aquí podrías agregar validación de expiración del JWT
-    // Por simplicidad, solo verificamos que existe
-    return true;
+    try {
+      // Decodificar el JWT (sin verificar la firma, solo para leer el payload)
+      const payload = this.decodeJwtToken(token);
+      
+      if (!payload) return false;
+
+      // Verificar expiración si existe el campo 'exp'
+      if (payload.exp) {
+        const expirationDate = new Date(payload.exp * 1000); // exp está en segundos
+        const now = new Date();
+        
+        if (expirationDate < now) {
+          // Token expirado, limpiar datos
+          this.logout();
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      // Si hay error al decodificar, el token es inválido
+      this.logout();
+      return false;
+    }
+  }
+
+  /**
+   * Decodifica un JWT token sin verificar la firma
+   * Solo para leer el payload y verificar expiración
+   */
+  private decodeJwtToken(token: string): any | null {
+    try {
+      const base64Url = token.split('.')[1];
+      if (!base64Url) return null;
+      
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      return null;
+    }
   }
 
   /**

@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { RegisterComponent } from './components/register/register.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { NewsComponent } from './components/news/news.component';
-import { authGuard, directivaGuard } from './services/auth.service';
+import { authGuard, directivaGuard, adminGuard, guestGuard } from './services/auth.service';
 import { DirectivaRegisterComponent } from './components/directiva-register/directiva-register.component';
 import { JuntaCreateComponent } from './components/junta-create/junta-create.component';
 import { CertificadoCreateComponent} from './components/certificado-create/certificado-create.component';
@@ -24,31 +24,38 @@ import { UserManagementComponent } from './components/users-management/user-mana
 
 
 export const appRoutes: Routes = [
+  // Rutas públicas
   { path: '', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'directiva/nuevo', component: DirectivaRegisterComponent },//falta agregar can active, para que solo el admin pueda ingresar a este 
-  { path: 'juntas/nueva', component: JuntaCreateComponent },//falta agregar can active, para que solo el admin pueda ingresar a este 
-  { path: 'certificados/residencia/crear', component: CertificadoCreateComponent },
-  { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
-  { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
-  { path: 'news', component: NewsComponent },
-  { path: 'reservas', component: ReservasComponent },
-  { path: 'espacios/crear', component: CreateEspaciosComponent, canActivate: [authGuard] },
   { path: 'quienes-somos', component: QuienesSomosComponent },
-  { path: 'reportes', component: ReportesComponent },
-  { path: 'tramites', component: TramitesComponent },
-  {  path: 'list_user', loadComponent: () => import('./components/list_user/list_user.component').then(m => m.ListUserComponent)},
+  { path: 'news', component: NewsComponent },
+  { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
+  
+  // Rutas de autenticación (solo para usuarios no autenticados)
+  { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },
+  { path: 'forgot-password', component: ForgotPasswordComponent, canActivate: [guestGuard] },
+  
+  // Rutas que requieren autenticación
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard]},
+  { path: 'certificados/residencia/crear', component: CertificadoCreateComponent, canActivate: [authGuard] },
+  { path: 'reservas', component: ReservasComponent, canActivate: [authGuard] },
+  { path: 'espacios/crear', component: CreateEspaciosComponent, canActivate: [authGuard] },
+  { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
+  { path: 'tramites', component: TramitesComponent, canActivate: [authGuard] },
+  
+  // Rutas que requieren rol de directiva o admin
+  { path: 'list_user', loadComponent: () => import('./components/list_user/list_user.component').then(m => m.ListUserComponent), canActivate: [directivaGuard]},
   { path: 'users-management', component: UserManagementComponent, canActivate: [directivaGuard] },
-
-
-
-
-
-  // Rutas de pago
-  { path: 'payment/success', component: PaymentSuccessComponent },
-  { path: 'payment/failure', component: PaymentFailureComponent },
-  { path: 'payment/pending', component: PaymentPendingComponent },
-  { path: '**', redirectTo: '' }, // opcional
+  
+  // Rutas que requieren rol de admin exclusivamente
+  { path: 'directiva/nuevo', component: DirectivaRegisterComponent, canActivate: [adminGuard] },
+  { path: 'juntas/nueva', component: JuntaCreateComponent, canActivate: [adminGuard] },
+  
+  // Rutas de pago (requieren autenticación)
+  { path: 'payment/success', component: PaymentSuccessComponent, canActivate: [authGuard] },
+  { path: 'payment/failure', component: PaymentFailureComponent, canActivate: [authGuard] },
+  { path: 'payment/pending', component: PaymentPendingComponent, canActivate: [authGuard] },
+  
+  // Ruta catch-all (debe ir al final)
+  { path: '**', redirectTo: '' },
 ];
