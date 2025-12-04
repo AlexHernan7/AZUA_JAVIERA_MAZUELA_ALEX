@@ -134,22 +134,64 @@ export class JuntaProfileComponent implements OnInit {
   }
 
   /**
-   * Carga el perfil de la junta del usuario autenticado
+   * Carga el perfil de la junta del usuario autenticado o por ID de ruta
    */
   loadJuntaProfile(): void {
     this.isLoading = true;
     this.error = null;
 
-    // Obtener datos del usuario logueado (funciona tanto para vecinos como directivos)
+    // Obtener datos del usuario logueado
     const currentUser = this.authService.getCurrentUser();
-    if (!currentUser || !currentUser.vecino || !currentUser.vecino.id_junta) {
-      this.error = 'Usuario no tiene una junta asociada.';
+    
+    // Verificar si es admin - los admins pueden ver cualquier junta por ID
+    const isAdmin = currentUser?.roles?.includes('admin') || false;
+    
+    let juntaId: number | null = null;
+    
+    if (isAdmin) {
+      // Si es admin, usar el ID de la ruta
+      const routeId = this.route.snapshot.paramMap.get('id');
+      if (routeId) {
+        juntaId = parseInt(routeId, 10);
+        if (isNaN(juntaId)) {
+          this.error = 'ID de junta inválido en la URL.';
+          this.isLoading = false;
+          return;
+        }
+      } else {
+        this.error = 'Los administradores deben especificar el ID de la junta en la URL.';
+        this.isLoading = false;
+        return;
+      }
+    } else {
+      // Si no es admin, usar la junta asociada al usuario
+      if (!currentUser || !currentUser.vecino || !currentUser.vecino.id_junta) {
+        this.error = 'Usuario no tiene una junta asociada.';
+        this.isLoading = false;
+        return;
+      }
+      juntaId = currentUser.vecino.id_junta;
+      
+      // Verificar que el ID de la ruta coincida con la junta del usuario (si está presente)
+      const routeId = this.route.snapshot.paramMap.get('id');
+      if (routeId) {
+        const routeIdNum = parseInt(routeId, 10);
+        if (!isNaN(routeIdNum) && routeIdNum !== juntaId) {
+          this.error = 'No tienes permisos para ver esta junta.';
+          this.isLoading = false;
+          return;
+        }
+      }
+    }
+
+    // Cargar información detallada de la junta
+    if (!juntaId) {
+      this.error = 'No se pudo determinar el ID de la junta.';
       this.isLoading = false;
       return;
     }
 
-    // Cargar información detallada de la junta del usuario
-    this.juntaService.getJuntaById(currentUser.vecino.id_junta).subscribe({
+    this.juntaService.getJuntaById(juntaId).subscribe({
       next: (juntaData: JuntaResponse) => {
         // Convertir JuntaResponse a Junta para compatibilidad con el template
         this.junta = {

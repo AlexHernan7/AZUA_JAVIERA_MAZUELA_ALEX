@@ -28,7 +28,19 @@ export class HomeComponent {
   goToRegister() { this.router.navigate(['/register']); }
 
   goToMyJunta() {
-    const idJunta = this.authService.getCurrentUser()?.vecino?.id_junta || 1;
+    // Si es admin, no puede ir a "mi junta" porque no tiene una asociada
+    if (this.isAdmin) {
+      // Los admins pueden ver todas las juntas desde la gestión de usuarios
+      this.router.navigate(['/list_user']);
+      return;
+    }
+    
+    const idJunta = this.authService.getCurrentUser()?.vecino?.id_junta;
+    if (!idJunta) {
+      // Si no tiene junta asociada, mostrar mensaje o redirigir
+      console.warn('Usuario no tiene una junta asociada');
+      return;
+    }
     this.router.navigate(['/juntas', idJunta]);
   }
 

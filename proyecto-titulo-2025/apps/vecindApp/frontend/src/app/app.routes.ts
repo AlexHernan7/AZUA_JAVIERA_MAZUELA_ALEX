@@ -28,7 +28,6 @@ export const appRoutes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'quienes-somos', component: QuienesSomosComponent },
   { path: 'news', component: NewsComponent },
-  { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
   
   // Rutas de autenticación (solo para usuarios no autenticados)
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
@@ -47,7 +46,7 @@ export const appRoutes: Routes = [
   { path: 'list_user', loadComponent: () => import('./components/list_user/list_user.component').then(m => m.ListUserComponent), canActivate: [directivaGuard]},
   { path: 'users-management', component: UserManagementComponent, canActivate: [directivaGuard] },
   
-  // Rutas que requieren rol de admin exclusivamente
+  // Rutas que requieren rol de admin exclusivamente (DEBEN ir ANTES de las rutas con parámetros)
   { path: 'directiva/nuevo', component: DirectivaRegisterComponent, canActivate: [adminGuard] },
   { path: 'juntas/nueva', component: JuntaCreateComponent, canActivate: [adminGuard] },
   
@@ -55,6 +54,9 @@ export const appRoutes: Routes = [
   { path: 'payment/success', component: PaymentSuccessComponent, canActivate: [authGuard] },
   { path: 'payment/failure', component: PaymentFailureComponent, canActivate: [authGuard] },
   { path: 'payment/pending', component: PaymentPendingComponent, canActivate: [authGuard] },
+  
+  // Rutas con parámetros (DEBEN ir DESPUÉS de las rutas específicas)
+  { path: 'juntas/:id', loadComponent: () => import('./components/junta-profile/junta-profile.component').then(m => m.JuntaProfileComponent)},
   
   // Ruta catch-all (debe ir al final)
   { path: '**', redirectTo: '' },

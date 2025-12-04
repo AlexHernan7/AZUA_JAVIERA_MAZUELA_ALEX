@@ -55,9 +55,9 @@ export class CreateEspaciosComponent implements OnInit {
       id_junta: ['', Validators.required] // Ahora es un selector
     });
 
-    // Si es directiva, prefijar su id_junta cuando esté disponible
+    // Si es directiva (no admin), prefijar su id_junta cuando esté disponible
     const myJuntaId = this.authService.getCurrentUser()?.vecino?.id_junta;
-    if (this.isDirectiva() && myJuntaId) {
+    if (this.isDirectiva() && !this.isAdmin() && myJuntaId) {
       this.espacioForm.patchValue({ id_junta: String(myJuntaId) });
     }
   }
@@ -202,7 +202,11 @@ export class CreateEspaciosComponent implements OnInit {
       next: (response) => {
         const all = response.juntas || [];
 
-        if (this.isDirectiva()) {
+        // Si es admin, mostrar todas las juntas
+        if (this.isAdmin()) {
+          this.juntas = all;
+        } else if (this.isDirectiva()) {
+          // Si es directiva, filtrar por su junta
           const currentUser = this.authService.getCurrentUser();
           const myJuntaId = currentUser?.vecino?.id_junta ?? null;
           const myJuntaName = (currentUser?.vecino?.junta || '').toLowerCase();
@@ -221,6 +225,7 @@ export class CreateEspaciosComponent implements OnInit {
             this.espacioForm.patchValue({ id_junta: String(this.juntas[0].id_junta) });
           }
         } else {
+          // Para otros usuarios (vecinos), mostrar todas las juntas
           this.juntas = all;
         }
       },
@@ -309,6 +314,17 @@ export class CreateEspaciosComponent implements OnInit {
       return false;
     }
     return currentUser.roles.includes('directiva');
+  }
+
+  /**
+   * Verifica si el usuario actual es admin
+   */
+  isAdmin(): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser || !currentUser.roles) {
+      return false;
+    }
+    return currentUser.roles.includes('admin');
   }
 
   /**
