@@ -129,7 +129,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   get cargo(): string {
-    return this.currentUser?.vecino?.cargo || 'No especificado';
+    const cargo = this.currentUser?.vecino?.cargo || 'No especificado';
+    if (cargo === 'No especificado') {
+      return cargo;
+    }
+    // Capitalizar primera letra
+    return cargo.charAt(0).toUpperCase() + cargo.slice(1).toLowerCase();
   }
 
   get fechaInicioCargo(): string {
