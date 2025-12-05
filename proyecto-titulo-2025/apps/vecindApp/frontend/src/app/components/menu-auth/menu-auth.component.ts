@@ -53,4 +53,25 @@ export class MenuAuthComponent {
   get isVecino(): boolean {
     return this.auth.getCurrentUser()?.roles?.includes('vecino') || false;
   }
+
+  get avatarUrl(): string {
+    const currentUser = this.auth.getCurrentUser();
+    
+    // Para vecinos y directivos, usar la foto de perfil si existe
+    const foto = currentUser?.vecino?.foto_perfil;
+    if (foto && foto.trim() !== '') {
+      // Verificar que sea una imagen base64 válida
+      if (foto.startsWith('data:image/')) {
+        return foto;
+      }
+      // Si no tiene el prefijo data:image/, agregarlo (por compatibilidad)
+      return `data:image/jpeg;base64,${foto}`;
+    }
+    return 'images/avatar-placeholder2.svg';
+  }
+
+  onImageError(event: any): void {
+    // Si la imagen falla al cargar, usar la imagen por defecto
+    event.target.src = 'images/avatar-placeholder2.svg';
+  }
 }

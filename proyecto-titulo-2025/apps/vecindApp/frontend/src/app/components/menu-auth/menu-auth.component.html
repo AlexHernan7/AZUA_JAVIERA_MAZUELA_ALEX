@@ -25,11 +25,11 @@
   <!-- Perfil breve -->
   <div class="me-brief">
     <div class="avatar">
-      <img src="{{ auth.getCurrentUser()?.vecino?.foto_perfil }}" alt="avatar" />
+      <img [src]="avatarUrl" alt="avatar" (error)="onImageError($event)" />
     </div>
     <div class="who">
       <div class="hi">Hola,</div>
-      <div class="name">{{ auth.getCurrentUser()?.nombres || 'Vecino' }} {{ auth.getCurrentUser()?.apellido_paterno || '' }}</div>
+      <div class="name">{{ auth.getCurrentUser()?.nombres || 'Administrador' }} {{ auth.getCurrentUser()?.apellido_paterno || '' }}</div>
     </div>
   </div>
 
